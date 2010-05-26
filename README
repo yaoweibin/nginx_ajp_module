@@ -1,1 +1,1 @@
-mod_jk ported from apache
+support for jk protocol between nginx and tomcat
