@@ -357,7 +357,7 @@ ngx_module_t  ngx_http_ajp_module = {
 static char *
 ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
-    ngx_http_ajp_loc_conf_t *flcf = conf;
+    ngx_http_ajp_loc_conf_t *alcf = conf;
 
     ngx_url_t                   u;
     ngx_str_t                  *value, *url;
@@ -365,7 +365,7 @@ ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_http_core_loc_conf_t   *clcf;
     ngx_http_script_compile_t   sc;
 
-    if (flcf->upstream.upstream || flcf->ajp_lengths) {
+    if (alcf->upstream.upstream || alcf->ajp_lengths) {
         return "is duplicate";
     }
 
@@ -389,8 +389,8 @@ ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
         sc.cf = cf;
         sc.source = url;
-        sc.lengths = &flcf->ajp_lengths;
-        sc.values = &flcf->ajp_values;
+        sc.lengths = &alcf->ajp_lengths;
+        sc.values = &alcf->ajp_values;
         sc.variables = n;
         sc.complete_lengths = 1;
         sc.complete_values = 1;
@@ -407,8 +407,8 @@ ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     u.url = value[1];
     u.no_resolve = 1;
 
-    flcf->upstream.upstream = ngx_http_upstream_add(cf, &u, 0);
-    if (flcf->upstream.upstream == NULL) {
+    alcf->upstream.upstream = ngx_http_upstream_add(cf, &u, 0);
+    if (alcf->upstream.upstream == NULL) {
         return NGX_CONF_ERROR;
     }
 
@@ -418,13 +418,13 @@ ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 static char *
 ngx_http_ajp_store(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
-    ngx_http_ajp_loc_conf_t *flcf = conf;
+    ngx_http_ajp_loc_conf_t *alcf = conf;
 
     ngx_str_t                  *value;
     ngx_http_script_compile_t   sc;
 
-    if (flcf->upstream.store != NGX_CONF_UNSET
-        || flcf->upstream.store_lengths)
+    if (alcf->upstream.store != NGX_CONF_UNSET
+        || alcf->upstream.store_lengths)
     {
         return "is duplicate";
     }
@@ -432,14 +432,14 @@ ngx_http_ajp_store(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     value = cf->args->elts;
 
     if (ngx_strcmp(value[1].data, "off") == 0) {
-        flcf->upstream.store = 0;
+        alcf->upstream.store = 0;
         return NGX_CONF_OK;
     }
 
 #if (NGX_HTTP_CACHE)
 
-    if (flcf->upstream.cache != NGX_CONF_UNSET_PTR
-        && flcf->upstream.cache != NULL)
+    if (alcf->upstream.cache != NGX_CONF_UNSET_PTR
+        && alcf->upstream.cache != NULL)
     {
         return "is incompatible with \"ajp_cache\"";
     }
@@ -447,7 +447,7 @@ ngx_http_ajp_store(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 #endif
 
     if (ngx_strcmp(value[1].data, "on") == 0) {
-        flcf->upstream.store = 1;
+        alcf->upstream.store = 1;
         return NGX_CONF_OK;
     }
 
@@ -458,8 +458,8 @@ ngx_http_ajp_store(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     sc.cf = cf;
     sc.source = &value[1];
-    sc.lengths = &flcf->upstream.store_lengths;
-    sc.values = &flcf->upstream.store_values;
+    sc.lengths = &alcf->upstream.store_lengths;
+    sc.values = &alcf->upstream.store_values;
     sc.variables = ngx_http_script_variables_count(&value[1]);
     sc.complete_lengths = 1;
     sc.complete_values = 1;
@@ -504,28 +504,28 @@ ngx_http_ajp_lowat_check(ngx_conf_t *cf, void *post, void *data)
 static char *
 ngx_http_ajp_cache(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
-    ngx_http_ajp_loc_conf_t *flcf = conf;
+    ngx_http_ajp_loc_conf_t *alcf = conf;
 
     ngx_str_t  *value;
 
     value = cf->args->elts;
 
-    if (flcf->upstream.cache != NGX_CONF_UNSET_PTR) {
+    if (alcf->upstream.cache != NGX_CONF_UNSET_PTR) {
         return "is duplicate";
     }
 
     if (ngx_strcmp(value[1].data, "off") == 0) {
-        flcf->upstream.cache = NULL;
+        alcf->upstream.cache = NULL;
         return NGX_CONF_OK;
     }
 
-    if (flcf->upstream.store > 0 || flcf->upstream.store_lengths) {
+    if (alcf->upstream.store > 0 || alcf->upstream.store_lengths) {
         return "is incompatible with \"ajp_store\"";
     }
 
-    flcf->upstream.cache = ngx_shared_memory_add(cf, &value[1], 0,
+    alcf->upstream.cache = ngx_shared_memory_add(cf, &value[1], 0,
                                                  &ngx_http_ajp_module);
-    if (flcf->upstream.cache == NULL) {
+    if (alcf->upstream.cache == NULL) {
         return NGX_CONF_ERROR;
     }
 
@@ -536,14 +536,14 @@ ngx_http_ajp_cache(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 static char *
 ngx_http_ajp_cache_key(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
-    ngx_http_ajp_loc_conf_t *flcf = conf;
+    ngx_http_ajp_loc_conf_t *alcf = conf;
 
     ngx_str_t                         *value;
     ngx_http_compile_complex_value_t   ccv;
 
     value = cf->args->elts;
 
-    if (flcf->cache_key.value.len) {
+    if (alcf->cache_key.value.len) {
         return "is duplicate";
     }
 
@@ -551,7 +551,7 @@ ngx_http_ajp_cache_key(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     ccv.cf = cf;
     ccv.value = &value[1];
-    ccv.complex_value = &flcf->cache_key;
+    ccv.complex_value = &alcf->cache_key;
 
     if (ngx_http_compile_complex_value(&ccv) != NGX_OK) {
         return NGX_CONF_ERROR;

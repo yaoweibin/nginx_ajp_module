@@ -5,7 +5,7 @@
 #include <ngx_ajp_handler.h>
 
 static ngx_int_t ngx_http_ajp_eval(ngx_http_request_t *r,
-    ngx_http_ajp_loc_conf_t *flcf);
+    ngx_http_ajp_loc_conf_t *alcf);
 #if (NGX_HTTP_CACHE)
 static ngx_int_t ngx_http_ajp_create_key(ngx_http_request_t *r);
 #endif
@@ -23,8 +23,8 @@ ngx_http_ajp_handler(ngx_http_request_t *r)
 {
     ngx_int_t                     rc;
     ngx_http_upstream_t          *u;
-    ngx_http_ajp_ctx_t       *f;
-    ngx_http_ajp_loc_conf_t  *flcf;
+    ngx_http_ajp_ctx_t       *a;
+    ngx_http_ajp_loc_conf_t  *alcf;
 
     if (r->subrequest_in_memory) {
         ngx_log_error(NGX_LOG_ALERT, r->connection->log, 0,
@@ -37,17 +37,17 @@ ngx_http_ajp_handler(ngx_http_request_t *r)
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
-    f = ngx_pcalloc(r->pool, sizeof(ngx_http_ajp_ctx_t));
-    if (f == NULL) {
+    a = ngx_pcalloc(r->pool, sizeof(ngx_http_ajp_ctx_t));
+    if (a == NULL) {
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
-    ngx_http_set_ctx(r, f, ngx_http_ajp_module);
+    ngx_http_set_ctx(r, a, ngx_http_ajp_module);
 
-    flcf = ngx_http_get_module_loc_conf(r, ngx_http_ajp_module);
+    alcf = ngx_http_get_module_loc_conf(r, ngx_http_ajp_module);
 
-    if (flcf->ajp_lengths) {
-        if (ngx_http_ajp_eval(r, flcf) != NGX_OK) {
+    if (alcf->ajp_lengths) {
+        if (ngx_http_ajp_eval(r, alcf) != NGX_OK) {
             return NGX_HTTP_INTERNAL_SERVER_ERROR;
         }
     }
@@ -59,7 +59,7 @@ ngx_http_ajp_handler(ngx_http_request_t *r)
 
     u->output.tag = (ngx_buf_tag_t) &ngx_http_ajp_module;
 
-    u->conf = &flcf->upstream;
+    u->conf = &alcf->upstream;
 
 #if (NGX_HTTP_CACHE)
     u->create_key = ngx_http_ajp_create_key;
@@ -90,14 +90,14 @@ ngx_http_ajp_handler(ngx_http_request_t *r)
 }
 
 static ngx_int_t
-ngx_http_ajp_eval(ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *flcf)
+ngx_http_ajp_eval(ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *alcf)
 {
     ngx_url_t  u;
 
     ngx_memzero(&u, sizeof(ngx_url_t));
 
-    if (ngx_http_script_run(r, &u.url, flcf->ajp_lengths->elts, 0,
-                            flcf->ajp_values->elts)
+    if (ngx_http_script_run(r, &u.url, alcf->ajp_lengths->elts, 0,
+                            alcf->ajp_values->elts)
         == NULL)
     {
         return NGX_ERROR;
@@ -147,16 +147,16 @@ static ngx_int_t
 ngx_http_ajp_create_key(ngx_http_request_t *r)
 {
     ngx_str_t                    *key;
-    ngx_http_ajp_loc_conf_t  *flcf;
+    ngx_http_ajp_loc_conf_t  *alcf;
 
     key = ngx_array_push(&r->cache->keys);
     if (key == NULL) {
         return NGX_ERROR;
     }
 
-    flcf = ngx_http_get_module_loc_conf(r, ngx_http_ajp_module);
+    alcf = ngx_http_get_module_loc_conf(r, ngx_http_ajp_module);
 
-    if (ngx_http_complex_value(r, &flcf->cache_key, key) != NGX_OK) {
+    if (ngx_http_complex_value(r, &alcf->cache_key, key) != NGX_OK) {
         return NGX_ERROR;
     }
 
