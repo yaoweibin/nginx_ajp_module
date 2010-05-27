@@ -17,6 +17,7 @@
 #include "ajp.h"
 
 
+#if 0
 apr_status_t ajp_ilink_send(apr_socket_t *sock, ajp_msg_t *msg)
 {
     char         *buf;
@@ -124,3 +125,4 @@ apr_status_t ajp_ilink_receive(apr_socket_t *sock, ajp_msg_t *msg)
     return APR_SUCCESS;
 }
 
+#endif

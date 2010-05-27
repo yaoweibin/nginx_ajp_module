@@ -22,13 +22,13 @@
 
 extern volatile ngx_cycle_t  *ngx_cycle;
 
-typedef {
+typedef struct{
     ngx_str_t name;
     ngx_uint_t hash;
     ngx_uint_t code;
 } request_known_headers_t;
 
-static request_known_headers_t know_headers[] = {
+static request_known_headers_t known_headers[] = {
     {ngx_string("accept"), 0, SC_REQ_ACCEPT},
     {ngx_string("accept-charset"), 0, SC_REQ_ACCEPT_CHARSET},
     {ngx_string("accept-encoding"), 0, SC_REQ_ACCEPT_ENCODING},
@@ -44,7 +44,7 @@ static request_known_headers_t know_headers[] = {
     {ngx_string("referer"), 0,  SC_REQ_REFERER},
     {ngx_string("user-agent"), 0, SC_REQ_USER_AGENT},
     {ngx_null_string, 0, 0}
-}
+};
 
 static const char *response_trans_headers[] = {
     "Content-Type",
@@ -60,7 +60,7 @@ static const char *response_trans_headers[] = {
     "WWW-Authenticate"
 };
 
-static const char *long_res_header_for_sc(int sc)
+const char *long_res_header_for_sc(int sc)
 {
     const char *rc = NULL;
     sc = sc & 0X00FF;
@@ -73,10 +73,21 @@ static const char *long_res_header_for_sc(int sc)
 
 #define UNKNOWN_METHOD (-1)
 
-static ngx_int_t is_calc_hash = 0;
+static ngx_uint_t sc_for_req_get_headers_num(ngx_list_part_t *part)
+{
+    ngx_uint_t num = 0;
+
+    while (part->next) {
+        num += part->nelts;
+        part = part->next;
+    }
+
+    return num;
+}
 
 static void request_know_headers_calc_hash (void)
 {
+    static ngx_int_t is_calc_hash = 0;
     request_known_headers_t *header;
 
     if (is_calc_hash) {
@@ -94,7 +105,7 @@ static void request_know_headers_calc_hash (void)
     }
 }
 
-static ngx_uint_t request_know_headers_find_hash (ngx_uint_t hash)
+static ngx_uint_t request_known_headers_find_hash (ngx_uint_t hash)
 {
     request_known_headers_t *header;
 
@@ -127,11 +138,40 @@ static int sc_for_req_header(ngx_table_elt_t *header)
     return (int)request_known_headers_find_hash(header->hash);
 }
 
+static ngx_str_t *sc_for_req_get_header_vaule_by_hash(
+        ngx_list_part_t *part, u_char *lowcase_key, size_t len)
+{
+    ngx_uint_t       i, hash;
+    ngx_table_elt_t *header;
+
+
+    hash = ngx_hash_key(lowcase_key, len);
+
+    for (i = 0; /* void */; i++) {
+
+        if (i >= part->nelts) {
+            if (part->next == NULL) {
+                break;
+            }
+
+            part = part->next;
+            header = part->elts;
+            i = 0;
+        }
+
+        if (header[i].hash == hash) {
+            return &header->value;
+        }
+    }
+
+    return NULL;
+}
+
 static int sc_for_req_method_by_id(ngx_http_request_t *r)
 {
     int method_id = r->method;
 
-    if (method_id <= NGX_HTTP_UNKOWN || method_id > NGX_HTTP_TRACE) {
+    if (method_id <= NGX_HTTP_UNKNOWN || method_id > NGX_HTTP_TRACE) {
         return UNKNOWN_METHOD;
     }
 
@@ -169,6 +209,31 @@ static int sc_for_req_method_by_id(ngx_http_request_t *r)
     }
 }
 
+static void sc_for_req_auth_type(ngx_http_request_t *r, ngx_str_t *auth_type)
+{
+    size_t     i;
+    ngx_str_t *auth;
+
+    auth_type->len = 0;
+
+    if (r->headers_in.authorization == NULL) {
+        return;
+    }
+
+    auth = &r->headers_in.authorization->value;
+
+    for(i = 0; i < auth->len; i++) {
+        if (auth->data[i] == ' ') {
+            break;
+        }
+    }
+
+    if (i > 0) {
+        auth_type->data = auth->data;
+        auth_type->len = i - 1;
+    }
+}
+
 /*
  * Message structure
  *
@@ -201,19 +266,18 @@ static int sc_for_req_method_by_id(ngx_http_request_t *r)
 
  */
 
-static ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
-        ngx_http_request_t *r,
-        apr_uri_t *uri)
+ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
+        ngx_http_request_t *r)
 {
+    int sc;
     int method;
     uint16_t port;
-    uint32_t i, num_headers = 0;
+    ngx_uint_t i, num_headers = 0;
     u_char is_ssl = 0;
-    ngx_str_t *remote_host, *remote_addr;
+    ngx_str_t *remote_host, *remote_addr, temp_str, *jvm_route, port_str;
     struct sockaddr_in *addr;
-    const char *session_route, *envvar;
-    const apr_array_header_t *arr = apr_table_elts(r->subprocess_env);
-    const apr_table_entry_t *elts = (const apr_table_entry_t *)arr->elts;
+    ngx_list_part_t *part;
+    ngx_table_elt_t *header;
 
     ngx_log_error(NGX_LOG_DEBUG, ngx_cycle->log, 0,
             "Into ajp_marshal_into_msgb");
@@ -227,10 +291,9 @@ static ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
 
     /*is_ssl = (u_char) ap_proxy_conn_is_https(r->connection);*/
 
-    if (r->headers_in) {
-        const ngx_list_part_t *p = &r->headers_in.headers.part;
-        num_headers = p->nelts;
-    }
+    part = &r->headers_in.headers.part;
+
+    num_headers = sc_for_req_get_headers_num(part);
 
     remote_host = remote_addr = &r->connection->addr_text;
 
@@ -243,7 +306,7 @@ static ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
     if (ajp_msg_append_uint8(msg, CMD_AJP13_FORWARD_REQUEST)     ||
             ajp_msg_append_uint8(msg, method)                        ||
             ajp_msg_append_string(msg, &r->http_protocol)            ||
-            ajp_msg_append_string(msg, &r->unparsed_uri)             ||
+            ajp_msg_append_string(msg, &r->uri)                      ||
             ajp_msg_append_string(msg, remote_addr)                  ||
             ajp_msg_append_string(msg, remote_host)                  ||
             ajp_msg_append_string(msg, &r->headers_in.server)        ||
@@ -254,15 +317,23 @@ static ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
         ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                 "ajp_marshal_into_msgb: "
                 "Error appending the message begining");
-        return APR_EGENERAL;
+        return AJP_EOVERFLOW;
     }
 
-    for (i = 0 ; i < num_headers ; i++) {
-        int sc;
-        const ngx_list_part_t *p = &r->headers_in.headers.part;
-        const ngx_table_elt_t *elts = p->elts;
+    header = part->elts;
+    for (i = 0; /* void */; i++) {
 
-        if ((sc = sc_for_req_header(&elts[i])) != UNKNOWN_METHOD) {
+        if (i >= part->nelts) {
+            if (part->next == NULL) {
+                break;
+            }
+
+            part = part->next;
+            header = part->elts;
+            i = 0;
+        }
+
+        if ((sc = sc_for_req_header(&header[i])) != UNKNOWN_METHOD) {
             if (ajp_msg_append_uint16(msg, (uint16_t)sc)) {
                 ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                         "ajp_marshal_into_msgb: "
@@ -271,7 +342,7 @@ static ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
             }
         }
         else {
-            if (ajp_msg_append_string(msg, &elts[i].key)) {
+            if (ajp_msg_append_string(msg, &header[i].key)) {
                 ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                         "ajp_marshal_into_msgb: "
                         "Error appending the header name");
@@ -279,7 +350,7 @@ static ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
             }
         }
 
-        if (ajp_msg_append_string(msg, &elts[i].value)) {
+        if (ajp_msg_append_string(msg, &header[i].value)) {
             ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                     "ajp_marshal_into_msgb: "
                     "Error appending the header value");
@@ -287,7 +358,8 @@ static ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
         }
         ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                 "ajp_marshal_into_msgb: Header[%d] [%V] = [%V]",
-                i, &elts[i].key, &elts[i].value);
+                i, &header[i].key, &header[i].value);
+
     }
 
     /* XXXX need to figure out how to do this
@@ -302,43 +374,51 @@ static ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
        }
      */
 
-    if (r->user) {
+    if (r->headers_in.user.len != 0) {
         if (ajp_msg_append_uint8(msg, SC_A_REMOTE_USER) ||
-                ajp_msg_append_string(msg, r->user)) {
+                ajp_msg_append_string(msg, &r->headers_in.user)) {
             ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                     "ajp_marshal_into_msgb: "
                     "Error appending the remote user");
             return AJP_EOVERFLOW;
         }
+
     }
-    if (r->ap_auth_type) {
+
+    sc_for_req_auth_type(r, &temp_str);
+    if (temp_str.len > 0) {
         if (ajp_msg_append_uint8(msg, SC_A_AUTH_TYPE) ||
-                ajp_msg_append_string(msg, r->ap_auth_type)) {
+                ajp_msg_append_string(msg, &temp_str)) {
             ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                     "ajp_marshal_into_msgb: "
                     "Error appending the auth type");
             return AJP_EOVERFLOW;
         }
     }
+
     /* XXXX  ebcdic (args converted?) */
-    if (uri->query) {
+    if (r->args.len > 0) {
         if (ajp_msg_append_uint8(msg, SC_A_QUERY_STRING) ||
-                ajp_msg_append_string(msg, uri->query)) {
+                ajp_msg_append_string(msg, &r->args)) {
             ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                     "ajp_marshal_into_msgb: "
                     "Error appending the query string");
             return AJP_EOVERFLOW;
         }
     }
-    if ((session_route = apr_table_get(r->notes, "session-route"))) {
+
+    jvm_route = sc_for_req_get_header_vaule_by_hash(part,
+            (u_char *)"session-route", sizeof("session-route") - 1);
+    if (jvm_route != NULL) {
         if (ajp_msg_append_uint8(msg, SC_A_JVM_ROUTE) ||
-                ajp_msg_append_string(msg, session_route)) {
+                ajp_msg_append_string(msg, jvm_route)) {
             ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                     "ajp_marshal_into_msgb: "
                     "Error appending the jvm route");
             return AJP_EOVERFLOW;
         }
     }
+
     /* XXX: Is the subprocess_env a right place?
      * <Location /examples>
      *   ProxyPass ajp://remote:8009/servlets-examples
@@ -350,6 +430,8 @@ static ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
      * Furthermore ensure that only variables get set in the AJP message
      * that are not NULL and not empty.
      */
+    /*TODO SSL*/
+    /*
     if (is_ssl) {
         if ((envvar = ap_proxy_ssl_val(r->pool, r->server, r->connection, r,
                         AJP13_SSL_CLIENT_CERT_INDICATOR))
@@ -387,7 +469,6 @@ static ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
             }
         }
 
-        /* ssl_key_size is required by Servlet 2.3 API */
         if ((envvar = ap_proxy_ssl_val(r->pool, r->server, r->connection, r,
                         AJP13_SSL_KEY_SIZE_INDICATOR))
                 && envvar[0]) {
@@ -401,6 +482,8 @@ static ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
             }
         }
     }
+     */
+
     /* Forward the remote port information, which was forgotten
      * from the builtin data of the AJP 13 protocol.
      * Since the servlet spec allows to retrieve it via getRemotePort(),
@@ -409,21 +492,32 @@ static ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
      * the remote port from this attribute.
      */
     {
-        const char *key = SC_A_REQ_REMOTE_PORT;
-        char *val = apr_itoa(r->pool, r->connection->remote_addr->port);
+        u_char buf[6];
+        temp_str.data = (u_char *)SC_A_REQ_REMOTE_PORT;
+        temp_str.len = sizeof(SC_A_REQ_REMOTE_PORT) - 1;
+
+        addr = (struct sockaddr_in *) r->connection->sockaddr;
+        /*'struct sockaddr_in' and 'struct sockaddr_in6' has the same offset of port*/
+        port = addr->sin_port;
+        /*port < 65536*/
+        ngx_snprintf(buf, 6, "%d", port);
+        port_str.data = buf;
+        port_str.len = ngx_strlen(buf);
+
         if (ajp_msg_append_uint8(msg, SC_A_REQ_ATTRIBUTE) ||
-                ajp_msg_append_string(msg, key)   ||
-                ajp_msg_append_string(msg, val)) {
+                ajp_msg_append_string(msg, &temp_str)   ||
+                ajp_msg_append_string(msg, &port_str)) {
             ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                     "ajp_marshal_into_msgb: "
-                    "Error appending attribute %s=%s",
-                    key, val);
+                    "Error appending attribute %V=%V",
+                    &temp_str, &port_str);
             return AJP_EOVERFLOW;
         }
     }
     /* Use the environment vars prefixed with AJP_
      * and pass it to the header striping that prefix.
      */
+    /* TODO
     for (i = 0; i < (uint32_t)arr->nelts; i++) {
         if (!strncmp(elts[i].key, "AJP_", 4)) {
             if (ajp_msg_append_uint8(msg, SC_A_REQ_ATTRIBUTE) ||
@@ -437,6 +531,7 @@ static ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
             }
         }
     }
+    */
 
     if (ajp_msg_append_uint8(msg, SC_A_ARE_DONE)) {
         ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
@@ -445,11 +540,12 @@ static ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
         return AJP_EOVERFLOW;
     }
 
-    ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
+    ngx_log_error(NGX_LOG_DEBUG, ngx_cycle->log, 0,
             "ajp_marshal_into_msgb: Done");
     return NGX_OK;
 }
 
+#if 0
 /*
    AJPV13_RESPONSE/AJPV14_RESPONSE:=
    response_prefix (2)
@@ -643,26 +739,25 @@ ngx_int_t ajp_send_header(apr_socket_t *sock,
                 "ajp_read_header: ajp_msg_reuse failed");
         return rc;
     }
-}
-else {
-    rc = ajp_msg_create(r->pool, buffsize, msg);
+    else {
+        rc = ajp_msg_create(r->pool, buffsize, msg);
+        if (rc != NGX_OK) {
+            ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
+                    "ajp_read_header: ajp_msg_create failed");
+            return rc;
+        }
+    }
+    ajp_msg_reset(*msg);
+    rc = ajp_ilink_receive(sock, *msg);
     if (rc != NGX_OK) {
         ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                "ajp_read_header: ajp_msg_create failed");
+                "ajp_read_header: ajp_ilink_receive failed");
         return rc;
     }
-}
-ajp_msg_reset(*msg);
-rc = ajp_ilink_receive(sock, *msg);
-if (rc != NGX_OK) {
+    rc = ajp_msg_peek_uint8(*msg, &result);
     ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-            "ajp_read_header: ajp_ilink_receive failed");
-    return rc;
-}
-rc = ajp_msg_peek_uint8(*msg, &result);
-ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-        "ajp_read_header: ajp_ilink_received %02x", result);
-return NGX_OK;
+            "ajp_read_header: ajp_ilink_received %02x", result);
+    return NGX_OK;
 }
 
 /* parse the msg to read the type */
@@ -772,3 +867,4 @@ ngx_int_t  ajp_send_data_msg(apr_socket_t *sock,
     return ajp_ilink_send(sock, msg);
 
 }
+#endif

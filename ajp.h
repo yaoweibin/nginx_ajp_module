@@ -275,7 +275,7 @@ ngx_int_t ajp_msg_peek_uint8(ajp_msg_t *msg, u_char *rvalue);
  * @param rvalue    Pointer where value will be returned
  * @return          APR_SUCCESS or error
  */
-ngx_int_t ajp_msg_get_string(ajp_msg_t *msg, const char **rvalue);
+ngx_int_t ajp_msg_get_string(ajp_msg_t *msg, ngx_str_t *rvalue);
 
 
 /**
@@ -349,7 +349,7 @@ char * ajp_msg_dump(ngx_pool_t *pool, ajp_msg_t *msg, char *err);
  * @param smsg      AJP message to put serialized message
  * @return          APR_SUCCESS or error
  */
-ngx_int_t ajp_ilink_send(apr_socket_t *sock, ajp_msg_t *msg);
+/*ngx_int_t ajp_ilink_send(apr_socket_t *sock, ajp_msg_t *msg);*/
 
 /** 
  * Receive an AJP message from backend
@@ -358,7 +358,7 @@ ngx_int_t ajp_ilink_send(apr_socket_t *sock, ajp_msg_t *msg);
  * @param smsg      AJP message to put serialized message
  * @return          APR_SUCCESS or error
  */
-ngx_int_t ajp_ilink_receive(apr_socket_t *sock, ajp_msg_t *msg);
+/*ngx_int_t ajp_ilink_receive(apr_socket_t *sock, ajp_msg_t *msg);*/
 
 /**
  * Build the ajp header message and send it
@@ -368,9 +368,9 @@ ngx_int_t ajp_ilink_receive(apr_socket_t *sock, ajp_msg_t *msg);
  * @uri uri         requested uri
  * @return          APR_SUCCESS or error
  */
-ngx_int_t ajp_send_header(apr_socket_t *sock, request_rec *r,
-                             size_t buffsize,
-                             apr_uri_t *uri);
+/*ngx_int_t ajp_send_header(apr_socket_t *sock, request_rec *r,*/
+/*size_t buffsize,*/
+/*apr_uri_t *uri);*/
 
 /**
  * Read the ajp message and return the type of the message.
@@ -380,10 +380,10 @@ ngx_int_t ajp_send_header(apr_socket_t *sock, request_rec *r,
  * @param msg       returned AJP message
  * @return          APR_SUCCESS or error
  */
-ngx_int_t ajp_read_header(apr_socket_t *sock,
-                             request_rec  *r,
-                             size_t buffsize,
-                             ajp_msg_t **msg);
+/*ngx_int_t ajp_read_header(apr_socket_t *sock,*/
+/*request_rec  *r,*/
+/*size_t buffsize,*/
+/*ajp_msg_t **msg);*/
 
 /**
  * Allocate a msg to send data
@@ -394,7 +394,7 @@ ngx_int_t ajp_read_header(apr_socket_t *sock,
  * @return          APR_SUCCESS or error
  */
 ngx_int_t  ajp_alloc_data_msg(ngx_pool_t *pool, char **ptr,
-                                 size_t *len, ajp_msg_t **msg);
+        size_t *len, ajp_msg_t **msg);
 
 /**
  * Send the data message
@@ -403,8 +403,8 @@ ngx_int_t  ajp_alloc_data_msg(ngx_pool_t *pool, char **ptr,
  * @param len       AJP message length      
  * @return          APR_SUCCESS or error
  */
-ngx_int_t  ajp_send_data_msg(apr_socket_t *sock,
-                                ajp_msg_t *msg, size_t len);
+/*ngx_int_t  ajp_send_data_msg(apr_socket_t *sock,*/
+/*ajp_msg_t *msg, size_t len);*/
 
 /**
  * Parse the message type 
@@ -412,7 +412,7 @@ ngx_int_t  ajp_send_data_msg(apr_socket_t *sock,
  * @param msg       AJP message
  * @return          AJP message type.
  */
-int ajp_parse_type(request_rec  *r, ajp_msg_t *msg);
+/*int ajp_parse_type(request_rec  *r, ajp_msg_t *msg);*/
 
 /**
  * Parse the header message from container 
@@ -420,8 +420,8 @@ int ajp_parse_type(request_rec  *r, ajp_msg_t *msg);
  * @param msg       AJP message
  * @return          APR_SUCCESS or error
  */
-ngx_int_t ajp_parse_header(request_rec *r, proxy_dir_conf *conf,
-                              ajp_msg_t *msg);
+/*ngx_int_t ajp_parse_header(request_rec *r, proxy_dir_conf *conf,*/
+/*ajp_msg_t *msg);*/
 
 /** 
  * Parse the message body and return data address and length 
@@ -431,8 +431,8 @@ ngx_int_t ajp_parse_header(request_rec *r, proxy_dir_conf *conf,
  * @param ptr       returned data
  * @return          APR_SUCCESS or error
  */
-ngx_int_t  ajp_parse_data(request_rec  *r, ajp_msg_t *msg,
-                             uint16_t *len, char **ptr);
+/*ngx_int_t  ajp_parse_data(request_rec  *r, ajp_msg_t *msg,*/
+/*uint16_t *len, char **ptr);*/
 
 
 /** 
@@ -442,9 +442,9 @@ ngx_int_t  ajp_parse_data(request_rec  *r, ajp_msg_t *msg,
  * @param timeout   time window for receiving cpong reply
  * @return          APR_SUCCESS or error
  */
-ngx_int_t ajp_handle_cping_cpong(apr_socket_t *sock,
-                                    request_rec *r,
-                                    apr_interval_time_t timeout);
+/*ngx_int_t ajp_handle_cping_cpong(apr_socket_t *sock,*/
+/*request_rec *r,*/
+/*apr_interval_time_t timeout);*/
 /** @} */
 
 #endif /* AJP_H */

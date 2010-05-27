@@ -136,20 +136,20 @@
  * 
  */
 
-#define SC_ACCEPT               (unsigned short)0xA001
-#define SC_ACCEPT_CHARSET       (unsigned short)0xA002
-#define SC_ACCEPT_ENCODING      (unsigned short)0xA003
-#define SC_ACCEPT_LANGUAGE      (unsigned short)0xA004
-#define SC_AUTHORIZATION        (unsigned short)0xA005
-#define SC_CONNECTION           (unsigned short)0xA006
-#define SC_CONTENT_TYPE         (unsigned short)0xA007
-#define SC_CONTENT_LENGTH       (unsigned short)0xA008
-#define SC_COOKIE               (unsigned short)0xA009    
-#define SC_COOKIE2              (unsigned short)0xA00A
-#define SC_HOST                 (unsigned short)0xA00B
-#define SC_PRAGMA               (unsigned short)0xA00C
-#define SC_REFERER              (unsigned short)0xA00D
-#define SC_USER_AGENT           (unsigned short)0xA00E
+#define SC_REQ_ACCEPT               (unsigned short)0xA001
+#define SC_REQ_ACCEPT_CHARSET       (unsigned short)0xA002
+#define SC_REQ_ACCEPT_ENCODING      (unsigned short)0xA003
+#define SC_REQ_ACCEPT_LANGUAGE      (unsigned short)0xA004
+#define SC_REQ_AUTHORIZATION        (unsigned short)0xA005
+#define SC_REQ_CONNECTION           (unsigned short)0xA006
+#define SC_REQ_CONTENT_TYPE         (unsigned short)0xA007
+#define SC_REQ_CONTENT_LENGTH       (unsigned short)0xA008
+#define SC_REQ_COOKIE               (unsigned short)0xA009    
+#define SC_REQ_COOKIE2              (unsigned short)0xA00A
+#define SC_REQ_HOST                 (unsigned short)0xA00B
+#define SC_REQ_PRAGMA               (unsigned short)0xA00C
+#define SC_REQ_REFERER              (unsigned short)0xA00D
+#define SC_REQ_USER_AGENT           (unsigned short)0xA00E
 
 /*
  * Frequent response headers, these headers are coded as numbers

@@ -3,8 +3,10 @@ ngx_feature_name=
 ngx_feature_run=no
 ngx_feature_incs=
 ngx_feature_path="$ngx_addon_dir/modules $ngx_addon_dir"
-ngx_feature_deps="$ngx_addon_dir/ngx_ajp_module.h $ngx_addon_dir/ngx_ajp_handler.h"
-ngx_ajp_src="$ngx_addon_dir/ngx_ajp_module.c $ngx_addon_dir/ngx_ajp_handler.c"
+ajp_deps="$ngx_addon_dir/ajp.h $ngx_addon_dir/ajp_header.h" 
+ajp_src="$ngx_addon_dir/ajp_msg.c $ngx_addon_dir/ajp_header.c $ngx_addon_dir/ajp_link.c $ngx_addon_dir/ajp_utils.c" 
+ngx_feature_deps="$ngx_addon_dir/ngx_ajp_module.h $ngx_addon_dir/ngx_ajp_handler.h $ajp_deps"
+ngx_ajp_src="$ajp_src $ngx_addon_dir/ngx_ajp_module.c $ngx_addon_dir/ngx_ajp_handler.c"
 ngx_feature_test="int a;"
 . auto/feature
 
@@ -12,13 +14,13 @@ if [ $ngx_found = yes ]; then
     have=NGX_HTTP_AJP_TEMP_PATH value="\"ajp_temp\""
     . auto/define
     CORE_INCS="$CORE_INCS $ngx_feature_path"
-    ngx_addon_name=ngx_tcp_module
+    ngx_addon_name=ngx_ajp_module
     HTTP_MODULES="$HTTP_MODULES ngx_http_ajp_module"
     NGX_ADDON_DEPS="$NGX_ADDON_DEPS $ngx_feature_deps"
     NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_ajp_src"
 else 
     cat << END
-    $0: error: the ngx_tcp_module addon error.
+    $0: error: the ngx_ajp_module addon error.
 END
     exit 1
 fi

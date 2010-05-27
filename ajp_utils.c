@@ -19,6 +19,7 @@
 /*
  * Handle the CPING/CPONG
  */
+#if 0
 apr_status_t ajp_handle_cping_cpong(apr_socket_t *sock,
                                     request_rec *r,
                                     apr_interval_time_t timeout)
@@ -103,3 +104,4 @@ cleanup:
                          "ajp_handle_cping_cpong: Done");
     return rv;
 }
+#endif
