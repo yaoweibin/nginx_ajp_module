@@ -30,7 +30,13 @@ typedef struct{
     ngx_uint_t code;
 } request_known_headers_t;
 
-static request_known_headers_t known_headers[] = {
+typedef struct{
+    ngx_str_t name;
+    ngx_str_t lowcase_name;
+    ngx_uint_t hash;
+} response_known_headers_t;
+
+static request_known_headers_t request_known_headers[] = {
     {ngx_string("accept"), 0, SC_REQ_ACCEPT},
     {ngx_string("accept-charset"), 0, SC_REQ_ACCEPT_CHARSET},
     {ngx_string("accept-encoding"), 0, SC_REQ_ACCEPT_ENCODING},
@@ -48,29 +54,79 @@ static request_known_headers_t known_headers[] = {
     {ngx_null_string, 0, 0}
 };
 
-static const char *response_trans_headers[] = {
-    "Content-Type",
-    "Content-Language",
-    "Content-Length",
-    "Date",
-    "Last-Modified",
-    "Location",
-    "Set-Cookie",
-    "Set-Cookie2",
-    "Servlet-Engine",
-    "Status",
-    "WWW-Authenticate"
+static response_known_headers_t response_known_headers[] = {
+    {ngx_string("Content-Type\0"), ngx_string("content-type\0"), 0},
+    {ngx_string("Content-Language\0"), ngx_string("content-language\0"), 0},
+    {ngx_string("Content-Length\0"), ngx_string("content-length\0"), 0}, 
+    {ngx_string("Date\0"), ngx_string("date\0"), 0},
+    {ngx_string("Last-Modified\0"), ngx_string("last-modified\0"), 0},
+    {ngx_string("Location\0"), ngx_string("location\0"), 0},
+    {ngx_string("Set-Cookie\0"), ngx_string("set-cookie\0"), 0},
+    {ngx_string("Set-Cookie2\0"), ngx_string("set-cookie2\0"), 0},
+    {ngx_string("Servlet-Engine\0"), ngx_string("servlet-engine\0"), 0},
+    {ngx_string("Status\0"), ngx_string("status\0"), 0},
+    {ngx_string("WWW-Authenticate\0"), ngx_string("www-authenticate\0"), 0},
+    {ngx_null_string, ngx_null_string, 0}
 };
 
-const char *long_res_header_for_sc(int sc)
+static void response_known_headers_calc_hash (void)
 {
-    const char *rc = NULL;
-    sc = sc & 0X00FF;
-    if(sc <= SC_RES_HEADERS_NUM && sc > 0) {
-        rc = response_trans_headers[sc - 1];
+    static ngx_int_t is_calc_response_hash = 0;
+    response_known_headers_t *header;
+
+    if (is_calc_response_hash) {
+        return;
     }
 
-    return rc;
+    is_calc_response_hash = 1;
+
+    header = response_known_headers;
+
+    while (header->name.len != 0) {
+        header->hash = 
+            ngx_hash_key(header->lowcase_name.data, header->lowcase_name.len - 1);
+
+        header++;
+    }
+}
+
+static ngx_int_t get_res_header_for_sc(int sc, ngx_table_elt_t *h)
+{
+    response_known_headers_t *header;
+
+    sc = sc & 0X00FF;
+
+    response_known_headers_calc_hash();
+
+    if(sc <= SC_RES_HEADERS_NUM && sc > 0) {
+        header = &response_known_headers[sc - 1];
+
+        h->key = header->name;
+        h->lowcase_key = header->lowcase_name.data;
+        h->hash = header->hash;
+    }
+    else {
+        return NGX_ERROR;
+    }
+
+    return NGX_OK;
+}
+
+static ngx_int_t get_res_unknown_header_by_str(ngx_str_t *name,
+        ngx_table_elt_t *h, ngx_pool_t *pool) 
+{
+    h->key = *name;
+
+    h->lowcase_key = ngx_pnalloc(pool, h->key.len + 1);
+    if (h->lowcase_key == NULL) {
+        return NGX_ERROR;
+    }
+
+    h->hash = ngx_hash_strlow(h->lowcase_key, h->key.data, h->key.len); 
+
+    h->lowcase_key[h->key.len] = '\0';
+
+    return NGX_OK;
 }
 
 #define UNKNOWN_METHOD (-1)
@@ -87,18 +143,18 @@ static ngx_uint_t sc_for_req_get_headers_num(ngx_list_part_t *part)
     return num;
 }
 
-static void request_know_headers_calc_hash (void)
+static void request_known_headers_calc_hash (void)
 {
-    static ngx_int_t is_calc_hash = 0;
+    static ngx_int_t is_calc_request_hash = 0;
     request_known_headers_t *header;
 
-    if (is_calc_hash) {
+    if (is_calc_request_hash) {
         return;
     }
 
-    is_calc_hash = 1;
+    is_calc_request_hash = 1;
 
-    header = known_headers;
+    header = request_known_headers;
 
     while (header->name.len != 0) {
         header->hash = ngx_hash_key(header->name.data, header->name.len);
@@ -111,7 +167,7 @@ static ngx_uint_t request_known_headers_find_hash (ngx_uint_t hash)
 {
     request_known_headers_t *header;
 
-    header = known_headers;
+    header = request_known_headers;
 
     while (header->name.len != 0) {
         if (header->hash == hash) {
@@ -135,7 +191,7 @@ static int sc_for_req_header(ngx_table_elt_t *header)
         return UNKNOWN_METHOD;
     }
 
-    request_know_headers_calc_hash();
+    request_known_headers_calc_hash();
     
     return (int)request_known_headers_find_hash(header->hash);
 }
@@ -551,7 +607,6 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
     return NGX_OK;
 }
 
-#if 0
 /*
    AJPV13_RESPONSE/AJPV14_RESPONSE:=
    response_prefix (2)
@@ -577,21 +632,27 @@ body    length*(var binary)
 
  */
 
-static int addit_dammit(void *v, const char *key, const char *val)
-{
-    apr_table_addn(v, key, val);
-    return 1;
-}
-
 static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
-        ngx_http_request_t *r,
-        proxy_dir_conf *dconf)
+        ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *alcf)
 {
     uint16_t status;
     ngx_int_t rc;
-    const char *ptr;
+    ngx_str_t str;
+    uint16_t name;
     uint16_t  num_headers;
     int i;
+    u_char line[1024], *last;
+    ngx_table_elt_t              *h;
+    ngx_http_upstream_header_t     *hh;
+    ngx_http_upstream_t          *u;
+    ngx_http_ajp_ctx_t           *a;
+    ngx_http_upstream_main_conf_t  *umcf;
+
+    umcf = ngx_http_get_module_main_conf(r, ngx_http_upstream_module);
+
+    a = ngx_http_get_module_ctx(r, ngx_http_ajp_module);
+
+    u = r->upstream;
 
     rc = ajp_msg_get_uint16(msg, &status);
 
@@ -600,37 +661,33 @@ static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
                 "ajp_unmarshal_response: Null status");
         return rc;
     }
-    r->status = status;
+    u->headers_in.status_n = status;
 
-    rc = ajp_msg_get_string(msg, &ptr);
+    rc = ajp_msg_get_string(msg, &str);
+
     if (rc == NGX_OK) {
-#if defined(AS400) || defined(_OSD_POSIX) /* EBCDIC platforms */
-        ptr = apr_pstrdup(r->pool, ptr);
-        ap_xlate_proto_from_ascii(ptr, strlen(ptr));
-#endif
-        r->status_line =  apr_psprintf(r->pool, "%d %s", status, ptr);
+        last = ngx_snprintf(line, 1024, "%d %V", status, &str);
+
+        str.data = line;
+        str.len = last - line;
+
+        u->headers_in.status_line.data = ngx_pstrdup(r->pool, &str);
+        u->headers_in.status_line.len = str.len;
     } else {
-        r->status_line = NULL;
+        u->headers_in.status_line.data = NULL;
+        u->headers_in.status_line.len = 0;
     }
 
-    ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
+    if (u->state) {
+        u->state->status = u->headers_in.status_n;
+    }
+
+    ngx_log_error(NGX_LOG_DEBUG, ngx_cycle->log, 0,
             "ajp_unmarshal_response: status = %d", status);
 
     rc = ajp_msg_get_uint16(msg, &num_headers);
-    if (rc == NGX_OK) {
-        apr_table_t *save_table;
 
-        /* First, tuck away all already existing cookies */
-        /*
-         * Could optimize here, but just in case we want to
-         * also save other headers, keep this logic.
-         */
-        save_table = apr_table_make(r->pool, num_headers + 2);
-        apr_table_do(addit_dammit, save_table, r->headers_out,
-                "Set-Cookie", NULL);
-        r->headers_out = save_table;
-    } else {
-        r->headers_out = NULL;
+    if (rc != NGX_OK) {
         num_headers = 0;
     }
 
@@ -639,39 +696,50 @@ static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
             num_headers);
 
     for(i = 0 ; i < (int) num_headers ; i++) {
-        uint16_t name;
-        const char *stringname;
-        const char *value;
+
         rc  = ajp_msg_peek_uint16(msg, &name);
         if (rc != NGX_OK) {
             return rc;
         }
 
+        /* a header line has been parsed successfully */
+
+        h = ngx_list_push(&u->headers_in.headers);
+        if (h == NULL) {
+            return NGX_ERROR;
+        }
+
         if ((name & 0XFF00) == 0XA000) {
             ajp_msg_get_uint16(msg, &name);
-            stringname = long_res_header_for_sc(name);
-            if (stringname == NULL) {
+
+            rc = get_res_header_for_sc(name, h);
+
+            if (rc != NGX_OK) {
                 ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                         "ajp_unmarshal_response: "
                         "No such sc (%08x)",
                         name);
                 return AJP_EBAD_HEADER;
             }
+
         } else {
             name = 0;
-            rc = ajp_msg_get_string(msg, &stringname);
+            rc = ajp_msg_get_string(msg, &str);
+
             if (rc != NGX_OK) {
                 ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                         "ajp_unmarshal_response: "
                         "Null header name");
                 return rc;
             }
-#if defined(AS400) || defined(_OSD_POSIX)
-            ap_xlate_proto_from_ascii(stringname, strlen(stringname));
-#endif
+
+            rc = get_res_unknown_header_by_str(&str, h, r->pool);
+            if (rc != NGX_OK) {
+                return rc;
+            }
         }
 
-        rc = ajp_msg_get_string(msg, &value);
+        rc = ajp_msg_get_string(msg, &h->value);
         if (rc != NGX_OK) {
             ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                     "ajp_unmarshal_response: "
@@ -679,106 +747,24 @@ static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
             return rc;
         }
 
-        /* Set-Cookie need additional processing */
-        if (!strcasecmp(stringname, "Set-Cookie")) {
-            value = ap_proxy_cookie_reverse_map(r, dconf, value);
-        }
-        /* Location, Content-Location, URI and Destination need additional
-         * processing */
-        else if (!strcasecmp(stringname, "Location")
-                || !strcasecmp(stringname, "Content-Location")
-                || !strcasecmp(stringname, "URI")
-                || !strcasecmp(stringname, "Destination"))
-        {
-            value = ap_proxy_location_reverse_map(r, dconf, value);
+        hh = ngx_hash_find(&umcf->headers_in_hash, h->hash,
+                h->lowcase_key, h->key.len);
+
+        if (hh && hh->handler(r, h, hh->offset) != NGX_OK) {
+            return NGX_ERROR;
         }
 
-#if defined(AS400) || defined(_OSD_POSIX)
-        ap_xlate_proto_from_ascii(value, strlen(value));
-#endif
-        ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                "ajp_unmarshal_response: Header[%d] [%s] = [%s]",
-                i, stringname, value);
+        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                "http ajp header: \"%V: %V\"",
+                &h->key, &h->value);
 
-        apr_table_add(r->headers_out, stringname, value);
-
-        /* Content-type needs an additional handling */
-        if (strcasecmp(stringname, "Content-Type") == 0) {
-            /* add corresponding filter */
-            ap_set_content_type(r, apr_pstrdup(r->pool, value));
-            ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                    "ajp_unmarshal_response: ap_set_content_type done");
-        }
     }
 
     return NGX_OK;
-}
-
-/*
- * Build the ajp header message and send it
- */
-ngx_int_t ajp_send_header(apr_socket_t *sock,
-        ngx_http_request_t *r,
-        apr_size_t buffsize,
-        apr_uri_t *uri)
-{
-    ajp_msg_t *msg;
-    ngx_int_t rc;
-
-    rc = ajp_msg_create(r->pool, buffsize, &msg);
-    if (rc != NGX_OK) {
-        ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                "ajp_send_header: ajp_msg_create failed");
-        return rc;
-    }
-
-    rc = ajp_marshal_into_msgb(msg, r, uri);
-    if (rc != NGX_OK) {
-        ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                "ajp_send_header: ajp_marshal_into_msgb failed");
-        return rc;
-    }
-
-    rc = ajp_ilink_send(sock, msg);
-    if (rc != NGX_OK) {
-        ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                "ajp_read_header: ajp_msg_reuse failed");
-        return rc;
-    }
-    else {
-        rc = ajp_msg_create(r->pool, buffsize, msg);
-        if (rc != NGX_OK) {
-            ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                    "ajp_read_header: ajp_msg_create failed");
-            return rc;
-        }
-    }
-    ajp_msg_reset(*msg);
-    rc = ajp_ilink_receive(sock, *msg);
-    if (rc != NGX_OK) {
-        ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                "ajp_read_header: ajp_ilink_receive failed");
-        return rc;
-    }
-    rc = ajp_msg_peek_uint8(*msg, &result);
-    ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-            "ajp_read_header: ajp_ilink_received %02x", result);
-    return NGX_OK;
-}
-
-/* parse the msg to read the type */
-int ajp_parse_type(ngx_http_request_t  *r, ajp_msg_t *msg)
-{
-    u_char result;
-    ajp_msg_peek_uint8(msg, &result);
-    ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-            "ajp_parse_type: got %02x", result);
-    return (int) result;
 }
 
 /* parse the header */
-ngx_int_t ajp_parse_header(ngx_http_request_t  *r, proxy_dir_conf *conf,
-        ajp_msg_t *msg)
+ngx_int_t ajp_parse_header(ngx_http_request_t  *r, ngx_http_ajp_loc_conf_t *alcf, ajp_msg_t *msg)
 {
     u_char result;
     ngx_int_t rc;
@@ -794,9 +780,11 @@ ngx_int_t ajp_parse_header(ngx_http_request_t  *r, proxy_dir_conf *conf,
                 "ajp_parse_headers: wrong type %02x expecting 0x04", result);
         return AJP_EBAD_HEADER;
     }
-    return ajp_unmarshal_response(msg, r, conf);
+
+    return ajp_unmarshal_response(msg, r, alcf);
 }
 
+#if 0
 /* parse the body and return data address and length */
 ngx_int_t  ajp_parse_data(ngx_http_request_t  *r, ajp_msg_t *msg,
         uint16_t *len, char **ptr)
@@ -838,9 +826,23 @@ ngx_int_t  ajp_parse_data(ngx_http_request_t  *r, ajp_msg_t *msg,
         return AJP_EBAD_HEADER;
     }
     *ptr = (char *)&(msg->buf[msg->pos]);
+
     return NGX_OK;
 }
 #endif
+
+/* parse the msg to read the type */
+int ajp_parse_type(ngx_http_request_t  *r, ajp_msg_t *msg)
+{
+    u_char result;
+
+    ajp_msg_peek_uint8(msg, &result);
+
+    ngx_log_error(NGX_LOG_DEBUG, ngx_cycle->log, 0,
+            "ajp_parse_type: got %02x", result);
+
+    return (int) result;
+}
 
 /*
  * Allocate a msg to send data

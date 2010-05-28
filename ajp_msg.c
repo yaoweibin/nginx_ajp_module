@@ -549,6 +549,31 @@ ngx_int_t ajp_msg_create(ngx_pool_t *pool, size_t size, ajp_msg_t **rmsg)
 }
 
 /**
+ * Create an AJP Message from pool without buffer
+ *
+ * @param pool      memory pool to allocate AJP message from
+ * @param rmsg      Pointer to newly created AJP message
+ * @return          NGX_OK or error
+ */
+ngx_int_t ajp_msg_create_without_buffer(ngx_pool_t *pool, ajp_msg_t **rmsg)
+{
+    ajp_msg_t *msg = (ajp_msg_t *)ngx_pcalloc(pool, sizeof(ajp_msg_t));
+
+    if (!msg) {
+        ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
+                "ajp_msg_create(): can't allocate AJP message memory");
+        return NGX_ERROR;
+    }
+
+    msg->server_side = 0;
+
+    msg->header_len = AJP_HEADER_LEN;
+    *rmsg = msg;
+
+    return NGX_OK;
+}
+
+/**
  * Recopy an AJP Message to another
  *
  * @param smsg      source AJP message

@@ -299,13 +299,155 @@ ngx_http_ajp_create_request(ngx_http_request_t *r)
 static ngx_int_t
 ngx_http_ajp_reinit_request(ngx_http_request_t *r)
 {
+
+    /*some stuff with the state ?*/
+
     return NGX_OK;
 }
 
+static void
+ngx_http_upstream_send_request_handler(ngx_http_request_t *r,
+    ngx_http_upstream_t *u)
+{
+}
+
+static void
+ngx_http_upstream_dummy_handler(ngx_http_request_t *r,
+    ngx_http_upstream_t *u)
+{
+}
+
+static ngx_int_t
+ngx_http_upstream_send_request_body(ngx_http_request_t *r, ngx_http_upstream_t *u)
+{
+    ngx_int_t                     rc;
+    ngx_chain_t                  *cl;
+    ngx_connection_t             *c;
+    ngx_http_ajp_ctx_t           *a;
+    ngx_http_ajp_loc_conf_t      *alcf;
+
+    c = u->peer.connection;
+
+    a = ngx_http_get_module_ctx(r, ngx_http_ajp_module);
+    alcf = ngx_http_get_module_loc_conf(r, ngx_http_ajp_module);
+
+
+    cl = ajp_data_msg_send_body(r, alcf->max_ajp_data_packet_size_conf, &a->body);
+
+    if (cl) {
+        c->log->action = "sending request body again to upstream";
+
+        rc = ngx_output_chain(&u->output, cl);
+
+        if (rc == NGX_ERROR) {
+            return NGX_ERROR;
+        }
+
+        if (c->write->timer_set) {
+            ngx_del_timer(c->write);
+        }
+
+        if (rc == NGX_AGAIN) {
+            ngx_add_timer(c->write, u->conf->send_timeout);
+
+            if (ngx_handle_write_event(c->write, u->conf->send_lowat) != NGX_OK) {
+                return NGX_ERROR;
+            }
+
+            u->write_event_handler = ngx_http_upstream_send_request_handler;
+
+            return NGX_AGAIN;
+        }
+
+        /* rc == NGX_OK */
+
+        if (c->tcp_nopush == NGX_TCP_NOPUSH_SET) {
+            if (ngx_tcp_push(c->fd) == NGX_ERROR) {
+                ngx_log_error(NGX_LOG_CRIT, c->log, ngx_socket_errno,
+                        ngx_tcp_push_n " failed");
+                return NGX_ERROR;
+            }
+
+            c->tcp_nopush = NGX_TCP_NOPUSH_UNSET;
+        }
+
+        ngx_add_timer(c->read, u->conf->read_timeout);
+
+        if (ngx_handle_write_event(c->write, 0) != NGX_OK) {
+            return NGX_ERROR;
+        }
+
+        u->write_event_handler = ngx_http_upstream_dummy_handler;
+    }
+
+    return NGX_OK;
+}
 
 static ngx_int_t
 ngx_http_ajp_process_header(ngx_http_request_t *r)
 {
+    ngx_int_t                     type, rc;
+    ajp_msg_t                    *msg;
+    ngx_http_upstream_t          *u;
+    ngx_http_ajp_ctx_t           *a;
+    ngx_http_ajp_loc_conf_t      *alcf;
+
+
+    a = ngx_http_get_module_ctx(r, ngx_http_ajp_module);
+    alcf = ngx_http_get_module_loc_conf(r, ngx_http_ajp_module);
+
+    if (a == NULL || alcf == NULL) {
+        return NGX_ERROR;
+    }
+
+    u = r->upstream;
+
+    if (NGX_OK != ajp_msg_create_without_buffer(r->pool, &msg)) {
+        return NGX_ERROR;
+    }
+
+    msg->buf = &u->buffer;
+
+    while (1) {
+        msg->buf->start = msg->buf->pos;
+        ajp_msg_reset(msg);
+
+        type = ajp_parse_type(r, msg);
+
+        switch (type) {
+            case CMD_AJP13_GET_BODY_CHUNK:
+
+                /*move the buffer*/
+                ajp_msg_get_uint8(msg, (u_char *)&type);
+                rc = ngx_http_upstream_send_request_body(r, u);
+
+                if (rc != NGX_OK) {
+                    return rc;
+                }
+
+                break;
+
+            case CMD_AJP13_SEND_HEADERS:
+                /*xxx: have not think about the uncomplete headline*/
+                rc = ajp_parse_header(r, alcf, msg);
+                if (rc != NGX_OK) {
+                    return rc;
+                }
+
+                break;
+
+            case CMD_AJP13_SEND_BODY_CHUNK:
+                break;
+
+            case CMD_AJP13_END_RESPONSE:
+                break;
+
+            default:
+                break;
+        }
+    }
+
+
     return NGX_OK;
 }
 

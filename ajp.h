@@ -302,6 +302,8 @@ ngx_int_t ajp_msg_get_bytes(ajp_msg_t *msg, u_char **rvalue,
  */
 ngx_int_t ajp_msg_create(ngx_pool_t *pool, size_t size, ajp_msg_t **rmsg);
 
+ngx_int_t ajp_msg_create_without_buffer(ngx_pool_t *pool, ajp_msg_t **rmsg);
+
 /**
  * Recopy an AJP Message to another
  *
@@ -413,7 +415,7 @@ ngx_int_t  ajp_data_msg_end(ajp_msg_t *msg, size_t len);
  * @param msg       AJP message
  * @return          AJP message type.
  */
-/*int ajp_parse_type(request_rec  *r, ajp_msg_t *msg);*/
+int ajp_parse_type(ngx_http_request_t *r, ajp_msg_t *msg);
 
 /**
  * Parse the header message from container 
@@ -421,8 +423,7 @@ ngx_int_t  ajp_data_msg_end(ajp_msg_t *msg, size_t len);
  * @param msg       AJP message
  * @return          APR_SUCCESS or error
  */
-/*ngx_int_t ajp_parse_header(request_rec *r, proxy_dir_conf *conf,*/
-/*ajp_msg_t *msg);*/
+ngx_int_t ajp_parse_header(ngx_http_request_t  *r, ngx_http_ajp_loc_conf_t *alcf, ajp_msg_t *msg);
 
 /** 
  * Parse the message body and return data address and length 
