@@ -32,6 +32,9 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
+#include "ajp_header.h"
+#include "ngx_ajp_handler.h"
+#include "ngx_ajp_module.h"
 
 #define AJP13_DEF_HOST "127.0.0.1"
 #ifdef NETWARE
@@ -385,26 +388,24 @@ char * ajp_msg_dump(ngx_pool_t *pool, ajp_msg_t *msg, char *err);
 /*size_t buffsize,*/
 /*ajp_msg_t **msg);*/
 
+ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
+        ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *alcf);
+
 /**
  * Allocate a msg to send data
  * @param pool      pool to allocate from
- * @param ptr       data buffer
- * @param len       the length of allocated data buffer
  * @param msg       returned AJP message
  * @return          APR_SUCCESS or error
  */
-ngx_int_t  ajp_alloc_data_msg(ngx_pool_t *pool, char **ptr,
-        size_t *len, ajp_msg_t **msg);
+ngx_int_t  ajp_alloc_data_msg(ngx_pool_t *pool, ajp_msg_t **msg);
 
 /**
  * Send the data message
- * @param sock      backend socket
- * @param msg       AJP message to send
- * @param len       AJP message length      
- * @return          APR_SUCCESS or error
  */
-/*ngx_int_t  ajp_send_data_msg(apr_socket_t *sock,*/
-/*ajp_msg_t *msg, size_t len);*/
+ngx_chain_t *ajp_data_msg_send_body(ngx_http_request_t *r, size_t max_size,
+        ngx_chain_t **body);
+
+ngx_int_t  ajp_data_msg_end(ajp_msg_t *msg, size_t len);
 
 /**
  * Parse the message type 

@@ -535,7 +535,6 @@ ngx_int_t ajp_msg_create(ngx_pool_t *pool, size_t size, ajp_msg_t **rmsg)
     msg->server_side = 0;
 
     msg->buf = ngx_create_temp_buf(pool, size);
-    msg->buf->memory = 1;
 
     if (msg->buf == NULL) {
         ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,

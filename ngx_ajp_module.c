@@ -2,6 +2,8 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
+#include <ajp.h>
+#include <ajp_header.h>
 #include <ngx_ajp_module.h>
 #include <ngx_ajp_handler.h>
 
@@ -99,6 +101,20 @@ static ngx_command_t  ngx_http_ajp_commands[] = {
       ngx_conf_set_str_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_ajp_loc_conf_t, index),
+      NULL },
+
+    { ngx_string("ajp_header_packet_buffer_size"),
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+      ngx_conf_set_size_slot,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      offsetof(ngx_http_ajp_loc_conf_t, ajp_header_packet_buffer_size_conf),
+      NULL },
+
+    { ngx_string("max_ajp_data_packet_size"),
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+      ngx_conf_set_str_slot,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      offsetof(ngx_http_ajp_loc_conf_t, max_ajp_data_packet_size_conf),
       NULL },
 
     { ngx_string("ajp_store"),
@@ -617,6 +633,8 @@ ngx_http_ajp_create_loc_conf(ngx_conf_t *cf)
      *     conf->index.len = 0;
      *     conf->index.data = NULL;
      */
+    conf->ajp_header_packet_buffer_size_conf = NGX_CONF_UNSET_SIZE;
+    conf->max_ajp_data_packet_size_conf = NGX_CONF_UNSET_SIZE;
 
     conf->upstream.store = NGX_CONF_UNSET;
     conf->upstream.store_access = NGX_CONF_UNSET_UINT;
@@ -682,6 +700,14 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
         }
     }
 
+    ngx_conf_merge_size_value(conf->ajp_header_packet_buffer_size_conf,
+            prev->ajp_header_packet_buffer_size_conf,
+            (size_t) AJP_MSG_BUFFER_SZ);
+
+    ngx_conf_merge_size_value(conf->max_ajp_data_packet_size_conf,
+            prev->max_ajp_data_packet_size_conf,
+            (size_t) AJP_MAX_BUFFER_SZ);
+
     ngx_conf_merge_uint_value(conf->upstream.store_access,
                               prev->upstream.store_access, 0600);
 
@@ -717,6 +743,17 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
         return NGX_CONF_ERROR;
     }
 
+
+    if (conf->ajp_header_packet_buffer_size_conf > AJP_MAX_BUFFER_SZ) {
+        conf->ajp_header_packet_buffer_size_conf = AJP_MAX_BUFFER_SZ;
+    }
+
+    if(conf->max_ajp_data_packet_size_conf < AJP_MAX_BUFFER_SZ) {
+        conf->max_ajp_data_packet_size_conf = AJP_MSG_BUFFER_SZ;
+    }
+    else if(conf->max_ajp_data_packet_size_conf > AJP_MAX_BUFFER_SZ ) {
+        conf->max_ajp_data_packet_size_conf = AJP_MAX_BUFFER_SZ;
+    }
 
     size = conf->upstream.buffer_size;
     if (size < conf->upstream.bufs.size) {

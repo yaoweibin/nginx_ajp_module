@@ -12,6 +12,8 @@ extern ngx_module_t  ngx_http_ajp_module;
 typedef struct {
     ngx_http_upstream_conf_t       upstream;
 
+    size_t                         ajp_header_packet_buffer_size_conf;
+    size_t                         max_ajp_data_packet_size_conf;
     ngx_str_t                      index;
 
     ngx_array_t                   *flushes;

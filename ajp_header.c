@@ -17,8 +17,10 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
-#include "ajp_header.h"
 #include "ajp.h"
+#include "ajp_header.h"
+#include "ngx_ajp_handler.h"
+#include "ngx_ajp_module.h"
 
 extern volatile ngx_cycle_t  *ngx_cycle;
 
@@ -267,7 +269,7 @@ static void sc_for_req_auth_type(ngx_http_request_t *r, ngx_str_t *auth_type)
  */
 
 ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
-        ngx_http_request_t *r)
+        ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *alcf)
 {
     int sc;
     int method;
@@ -293,7 +295,9 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
 
     part = &r->headers_in.headers.part;
 
-    num_headers = sc_for_req_get_headers_num(part);
+    if (alcf->upstream.pass_request_headers) {
+        num_headers = sc_for_req_get_headers_num(part);
+    }
 
     remote_host = remote_addr = &r->connection->addr_text;
 
@@ -321,45 +325,47 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
     }
 
     header = part->elts;
-    for (i = 0; /* void */; i++) {
+    if (alcf->upstream.pass_request_headers) {
+        for (i = 0; /* void */; i++) {
 
-        if (i >= part->nelts) {
-            if (part->next == NULL) {
-                break;
+            if (i >= part->nelts) {
+                if (part->next == NULL) {
+                    break;
+                }
+
+                part = part->next;
+                header = part->elts;
+                i = 0;
             }
 
-            part = part->next;
-            header = part->elts;
-            i = 0;
-        }
+            if ((sc = sc_for_req_header(&header[i])) != UNKNOWN_METHOD) {
+                if (ajp_msg_append_uint16(msg, (uint16_t)sc)) {
+                    ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
+                            "ajp_marshal_into_msgb: "
+                            "Error appending the header name");
+                    return AJP_EOVERFLOW;
+                }
+            }
+            else {
+                if (ajp_msg_append_string(msg, &header[i].key)) {
+                    ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
+                            "ajp_marshal_into_msgb: "
+                            "Error appending the header name");
+                    return AJP_EOVERFLOW;
+                }
+            }
 
-        if ((sc = sc_for_req_header(&header[i])) != UNKNOWN_METHOD) {
-            if (ajp_msg_append_uint16(msg, (uint16_t)sc)) {
+            if (ajp_msg_append_string(msg, &header[i].value)) {
                 ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                         "ajp_marshal_into_msgb: "
-                        "Error appending the header name");
+                        "Error appending the header value");
                 return AJP_EOVERFLOW;
             }
-        }
-        else {
-            if (ajp_msg_append_string(msg, &header[i].key)) {
-                ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                        "ajp_marshal_into_msgb: "
-                        "Error appending the header name");
-                return AJP_EOVERFLOW;
-            }
-        }
-
-        if (ajp_msg_append_string(msg, &header[i].value)) {
             ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                    "ajp_marshal_into_msgb: "
-                    "Error appending the header value");
-            return AJP_EOVERFLOW;
-        }
-        ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                "ajp_marshal_into_msgb: Header[%d] [%V] = [%V]",
-                i, &header[i].key, &header[i].value);
+                    "ajp_marshal_into_msgb: Header[%d] [%V] = [%V]",
+                    i, &header[i].key, &header[i].value);
 
+        }
     }
 
     /* XXXX need to figure out how to do this
@@ -834,37 +840,141 @@ ngx_int_t  ajp_parse_data(ngx_http_request_t  *r, ajp_msg_t *msg,
     *ptr = (char *)&(msg->buf[msg->pos]);
     return NGX_OK;
 }
+#endif
 
 /*
  * Allocate a msg to send data
  */
-ngx_int_t  ajp_alloc_data_msg(ngx_pool_t *pool, char **ptr, apr_size_t *len,
-        ajp_msg_t **msg)
+ngx_int_t  ajp_alloc_data_msg(ngx_pool_t *pool, ajp_msg_t **msg)
 {
     ngx_int_t rc;
 
-    if ((rc = ajp_msg_create(pool, *len, msg)) != NGX_OK)
+    if ((rc = ajp_msg_create(pool, AJP_HEADER_SZ, msg)) != NGX_OK) {
         return rc;
+    }
+
     ajp_msg_reset(*msg);
-    *ptr = (char *)&((*msg)->buf[6]);
-    *len =  *len - 6;
 
     return NGX_OK;
 }
 
-/*
- * Send the data message
- */
-ngx_int_t  ajp_send_data_msg(apr_socket_t *sock,
-        ajp_msg_t *msg, apr_size_t len)
+ngx_chain_t *ajp_data_msg_send_body(ngx_http_request_t *r, size_t max_size,
+        ngx_chain_t **body)
 {
+    size_t size;
+    ngx_buf_t *b_in, *b_out;
+    ngx_chain_t *out, *cl, *in;
+    ajp_msg_t *msg;
 
-    msg->buf[4] = (u_char)((len >> 8) & 0xFF);
-    msg->buf[5] = (u_char)(len & 0xFF);
+    if (*body == NULL) {
+        return NULL;
+    }
 
-    msg->len += len + 2; /* + 1 XXXX where is '\0' */
+    if (ajp_alloc_data_msg(r->pool, &msg) != NGX_OK) {
+        return NULL;
+    }
 
-    return ajp_ilink_send(sock, msg);
+    out = cl = ngx_alloc_chain_link(r->pool);
+    if (cl == NULL) {
+        return NULL;
+    }
 
+    cl->buf = msg->buf;
+
+    size = cl->buf->last - cl->buf->pos;
+    in = *body;
+
+    b_out = NULL;
+    while (in) {
+        b_in = in->buf;
+
+        b_out = ngx_alloc_buf(r->pool);
+        if (b_out == NULL) {
+            return NULL;
+        }
+        ngx_memcpy(b_out, b_in, sizeof(ngx_buf_t));
+
+        if (b_in->in_file) {
+            if (b_in->file_last - b_in->file_pos <= (max_size - size)){
+
+                b_out->file_pos = b_in->file_pos;
+                b_out->file_last = b_in->file_pos = b_in->file_last;
+
+                size += b_out->file_last - b_out->file_pos;
+            }
+            else if (b_in->file_last - b_in->file_pos > (max_size - size))
+            {
+                b_out->file_pos = b_in->file_pos;
+                b_in->file_pos += max_size - size;
+                b_out->file_last = b_in->file_pos;
+
+                size += b_out->file_last - b_out->file_pos;
+            }
+        }
+        else {
+            if ((size_t)(b_in->last - b_in->pos) <= (max_size - size)){
+
+                b_out->pos = b_in->pos;
+                b_out->last = b_in->pos = b_in->last;
+
+                size += b_out->last - b_out->pos;
+            }
+            else if ((size_t)(b_in->last - b_in->pos) > (max_size - size))
+            {
+                b_out->pos = b_in->pos;
+                b_in->pos += max_size - size;
+                b_out->last = b_in->pos;
+
+                size += b_out->last - b_out->pos;
+            }
+        }
+
+        cl->next = ngx_alloc_chain_link(r->pool);
+        if (cl->next == NULL) {
+            return NULL;
+        }
+
+        cl = cl->next;
+        cl->buf = b_out;
+
+        if (size >= max_size) {
+            break;
+        }
+        else {
+            in = in->next;
+        }
+    }
+
+    if (b_out != NULL && b_out->last) {
+        /*the last buffer ?*/
+    }
+
+    *body = in;
+    cl->next = NULL;
+    
+    ajp_data_msg_end(msg, size);
+
+    return out;
 }
-#endif
+
+ngx_int_t  ajp_data_msg_end(ajp_msg_t *msg, size_t len)
+{
+    ngx_buf_t *buf;
+
+    buf = msg->buf;
+
+    buf->pos = buf->start;
+    buf->last = buf->start + AJP_HEADER_SZ;
+
+    ajp_msg_end(msg);
+
+    buf->last[AJP_HEADER_SZ - 2] = (u_char)((len >> 8) & 0xFF);
+    buf->last[AJP_HEADER_SZ - 1] = (u_char)(len & 0xFF);
+
+    /*len include AJP_HEADER_SIZE_LEN*/
+    len += AJP_HEADER_SZ_LEN;
+    buf->start[AJP_HEADER_LEN - 2] = (u_char)((len >> 8) & 0xFF);
+    buf->start[AJP_HEADER_LEN - 1] = (u_char)(len & 0xFF);
+
+    return NGX_OK;
+}

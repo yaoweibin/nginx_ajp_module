@@ -18,6 +18,7 @@ typedef struct {
 
     ngx_uint_t                     ajp_stdout; /* unsigned :1 */
 
+    ngx_chain_t                   *body;
     ngx_str_t                      script_name;
     ngx_str_t                      path_info;
 } ngx_http_ajp_ctx_t;
