@@ -322,6 +322,7 @@ ngx_http_upstream_send_request_body(ngx_http_request_t *r, ngx_http_upstream_t *
 {
     ngx_int_t                     rc;
     ngx_chain_t                  *cl;
+    ajp_msg_t                    *msg;
     ngx_connection_t             *c;
     ngx_http_ajp_ctx_t           *a;
     ngx_http_ajp_loc_conf_t      *alcf;
@@ -333,6 +334,27 @@ ngx_http_upstream_send_request_body(ngx_http_request_t *r, ngx_http_upstream_t *
 
 
     cl = ajp_data_msg_send_body(r, alcf->max_ajp_data_packet_size_conf, &a->body);
+
+    if (cl == NULL) {
+        /*If there is no more data in the body (i.e. the servlet container is
+          trying to read past the end of the body), the server will send back
+          an "empty" packet, which is a body packet with a payload length of 0.
+          (0x12,0x34,0x00,0x00)*/
+
+        if (ajp_alloc_data_msg(r->pool, &msg) != NGX_OK) {
+            return NGX_ERROR;
+        }
+
+        ajp_data_msg_end(msg, 0);
+
+        cl = ngx_alloc_chain_link(r->pool);
+        if (cl == NULL) {
+            return NGX_ERROR;
+        }
+
+        cl->buf = msg->buf;
+        cl->next = NULL;
+    }
 
     if (cl) {
         c->log->action = "sending request body again to upstream";
@@ -417,7 +439,7 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
         switch (type) {
             case CMD_AJP13_GET_BODY_CHUNK:
 
-                /*move the buffer*/
+                /*move on the buffer's postion*/
                 ajp_msg_get_uint8(msg, (u_char *)&type);
                 rc = ngx_http_upstream_send_request_body(r, u);
 
@@ -428,6 +450,7 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
                 break;
 
             case CMD_AJP13_SEND_HEADERS:
+
                 /*xxx: have not think about the uncomplete headline*/
                 rc = ajp_parse_header(r, alcf, msg);
                 if (rc != NGX_OK) {
@@ -440,6 +463,7 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
                 break;
 
             case CMD_AJP13_END_RESPONSE:
+                u->buffer.last_buf = 1;
                 break;
 
             default:
@@ -454,6 +478,129 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
 static ngx_int_t
 ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
 {
+    /*ngx_int_t                rc;*/
+    ngx_buf_t               *b, **prev;
+    ajp_msg_t               *msg;
+    ngx_chain_t             *cl;
+    ngx_http_request_t      *r;
+    ngx_http_ajp_ctx_t      *a;
+
+    if (buf->pos == buf->last) {
+        return NGX_OK;
+    }
+
+    r = p->input_ctx;
+    a = ngx_http_get_module_ctx(r, ngx_http_ajp_module);
+
+    b = NULL;
+    prev = &buf->shadow;
+
+    a->pos = buf->pos;
+    a->last = buf->last;
+
+    if (NGX_OK != ajp_msg_create_without_buffer(r->pool, &msg)) {
+        return NGX_ERROR;
+    }
+
+    msg->buf = buf;
+
+    while(1) {
+        if (a->pos == a->last) {
+            break;
+        }
+
+        if (a->length == 0) {
+            if (NGX_OK != ajp_parse_data(r, msg, (uint16_t *)&a->length)) {
+                return NGX_ERROR;
+            }
+            
+            if (a->length == 0) {
+                /*finish this request and decide wether reuse this connection.*/
+            }
+        }
+
+        if (p->free) {
+            b = p->free->buf;
+            p->free = p->free->next;
+
+        } else {
+            b = ngx_alloc_buf(p->pool);
+            if (b == NULL) {
+                return NGX_ERROR;
+            }
+        }
+
+        ngx_memzero(b, sizeof(ngx_buf_t));
+
+        b->pos = a->pos;
+        b->start = buf->start;
+        b->end = buf->end;
+        b->tag = p->tag;
+        b->temporary = 1;
+        b->recycled = 1;
+
+        *prev = b;
+        prev = &b->shadow;
+
+        cl = ngx_alloc_chain_link(p->pool);
+        if (cl == NULL) {
+            return NGX_ERROR;
+        }
+
+        cl->buf = b;
+        cl->next = NULL;
+
+        if (p->in) {
+            *p->last_in = cl;
+        } else {
+            p->in = cl;
+        }
+        p->last_in = &cl->next;
+
+
+        /* STUB */ b->num = buf->num;
+
+        ngx_log_debug2(NGX_LOG_DEBUG_EVENT, p->log, 0,
+                       "input buf #%d %p", b->num, b->pos);
+
+        if (a->pos + a->length < a->last) {
+
+            a->pos += a->length;
+            b->last = a->pos;
+
+            continue;
+        }
+
+        if (a->pos + a->length == a->last) {
+
+            b->last = a->last;
+
+            break;
+        }
+
+        a->length -= a->last - a->pos;
+
+        b->last = a->last;
+
+        break;
+    }
+
+    if (b) {
+        b->shadow = buf;
+        b->last_shadow = 1;
+
+        ngx_log_debug2(NGX_LOG_DEBUG_EVENT, p->log, 0,
+                       "input buf %p %z", b->pos, b->last - b->pos);
+
+        return NGX_OK;
+    }
+
+    /* there is no data record in the buf, add it to free chain */
+
+    if (ngx_event_pipe_add_free_buf(p, buf) != NGX_OK) {
+        return NGX_ERROR;
+    }
+
     return NGX_OK;
 }
 

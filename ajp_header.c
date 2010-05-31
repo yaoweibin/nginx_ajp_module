@@ -1,3 +1,6 @@
+
+/*copy from Apache's mod_ajp_proxy*/
+
 /* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -775,6 +778,7 @@ ngx_int_t ajp_parse_header(ngx_http_request_t  *r, ngx_http_ajp_loc_conf_t *alcf
                 "ajp_parse_headers: ajp_msg_get_byte failed");
         return rc;
     }
+
     if (result != CMD_AJP13_SEND_HEADERS) {
         ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                 "ajp_parse_headers: wrong type %02x expecting 0x04", result);
@@ -784,14 +788,12 @@ ngx_int_t ajp_parse_header(ngx_http_request_t  *r, ngx_http_ajp_loc_conf_t *alcf
     return ajp_unmarshal_response(msg, r, alcf);
 }
 
-#if 0
 /* parse the body and return data address and length */
 ngx_int_t  ajp_parse_data(ngx_http_request_t  *r, ajp_msg_t *msg,
-        uint16_t *len, char **ptr)
+        uint16_t *len)
 {
     u_char result;
     ngx_int_t rc;
-    uint16_t expected_len;
 
     rc = ajp_msg_get_uint8(msg, &result);
     if (rc != NGX_OK) {
@@ -799,37 +801,25 @@ ngx_int_t  ajp_parse_data(ngx_http_request_t  *r, ajp_msg_t *msg,
                 "ajp_parse_data: ajp_msg_get_byte failed");
         return rc;
     }
-    if (result != CMD_AJP13_SEND_BODY_CHUNK) {
+
+    if (result != CMD_AJP13_SEND_BODY_CHUNK || 
+            result != CMD_AJP13_END_RESPONSE ) {
         ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                 "ajp_parse_data: wrong type %02x expecting 0x03", result);
         return AJP_EBAD_HEADER;
     }
+
+    if (result == CMD_AJP13_END_RESPONSE) {
+        *len = 0;
+    }
+
     rc = ajp_msg_get_uint16(msg, len);
     if (rc != NGX_OK) {
         return rc;
     }
-    /*
-     * msg->len contains the complete length of the message including all
-     * headers. So the expected length for a CMD_AJP13_SEND_BODY_CHUNK is
-     * msg->len minus the sum of
-     * AJP_HEADER_LEN    : The length of the header to every AJP message.
-     * AJP_HEADER_SZ_LEN : The header giving the size of the chunk.
-     * 1                 : The CMD_AJP13_SEND_BODY_CHUNK indicator byte (0x03).
-     * 1                 : The last byte of this message always seems to be
-     *                     0x00 and is not part of the chunk.
-     */
-    expected_len = msg->len - (AJP_HEADER_LEN + AJP_HEADER_SZ_LEN + 1 + 1);
-    if (*len != expected_len) {
-        ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                "ajp_parse_data: Wrong chunk length. Length of chunk is %i,"
-                " expected length is %i.", *len, expected_len);
-        return AJP_EBAD_HEADER;
-    }
-    *ptr = (char *)&(msg->buf[msg->pos]);
 
     return NGX_OK;
 }
-#endif
 
 /* parse the msg to read the type */
 int ajp_parse_type(ngx_http_request_t  *r, ajp_msg_t *msg)

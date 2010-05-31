@@ -128,7 +128,6 @@ struct ajp_msg
 
 /**
  * @defgroup AJP_api AJP API functions
- * @ingroup  MOD_PROXY
  * @{
  */
 /**
@@ -136,7 +135,7 @@ struct ajp_msg
  *
  * @param msg       AJP Message to check
  * @param len       Pointer to returned len
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_check_header(ajp_msg_t *msg, size_t *len);
 
@@ -144,7 +143,7 @@ ngx_int_t ajp_msg_check_header(ajp_msg_t *msg, size_t *len);
  * Reset an AJP Message
  *
  * @param msg       AJP Message to reset
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_reset(ajp_msg_t *msg);
 
@@ -152,7 +151,7 @@ ngx_int_t ajp_msg_reset(ajp_msg_t *msg);
  * Reuse an AJP Message
  *
  * @param msg       AJP Message to reuse
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_reuse(ajp_msg_t *msg);
 
@@ -160,7 +159,7 @@ ngx_int_t ajp_msg_reuse(ajp_msg_t *msg);
  * Mark the end of an AJP Message
  *
  * @param msg       AJP Message to end
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_end(ajp_msg_t *msg);
 
@@ -169,7 +168,7 @@ ngx_int_t ajp_msg_end(ajp_msg_t *msg);
  *
  * @param msg       AJP Message to get value from
  * @param value     value to add to AJP Message
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_append_uint32(ajp_msg_t *msg, uint32_t value);
 
@@ -178,7 +177,7 @@ ngx_int_t ajp_msg_append_uint32(ajp_msg_t *msg, uint32_t value);
  *
  * @param msg       AJP Message to get value from
  * @param value     value to add to AJP Message
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_append_uint16(ajp_msg_t *msg, uint16_t value);
 
@@ -187,7 +186,7 @@ ngx_int_t ajp_msg_append_uint16(ajp_msg_t *msg, uint16_t value);
  *
  * @param msg       AJP Message to get value from
  * @param value     value to add to AJP Message
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_append_uint8(ajp_msg_t *msg, u_char value);
 
@@ -198,7 +197,7 @@ ngx_int_t ajp_msg_append_uint8(ajp_msg_t *msg, u_char value);
  * @param msg       AJP Message to get value from
  * @param value     Pointer to String
  * @param convert   When set told to convert String to ASCII
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_append_string_ex(ajp_msg_t *msg, ngx_str_t *value,
                                       int convert);
@@ -219,7 +218,7 @@ ngx_int_t ajp_msg_append_string_ex(ajp_msg_t *msg, ngx_str_t *value,
  * @param msg       AJP Message to get value from
  * @param value     Pointer to Byte array
  * @param valuelen  Byte array len
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_append_bytes(ajp_msg_t *msg, const u_char *value,
                                   size_t valuelen);
@@ -229,7 +228,7 @@ ngx_int_t ajp_msg_append_bytes(ajp_msg_t *msg, const u_char *value,
  *
  * @param msg       AJP Message to get value from
  * @param rvalue    Pointer where value will be returned
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_get_uint32(ajp_msg_t *msg, uint32_t *rvalue);
 
@@ -238,7 +237,7 @@ ngx_int_t ajp_msg_get_uint32(ajp_msg_t *msg, uint32_t *rvalue);
  *
  * @param msg       AJP Message to get value from
  * @param rvalue    Pointer where value will be returned
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_get_uint16(ajp_msg_t *msg, uint16_t *rvalue);
 
@@ -248,7 +247,7 @@ ngx_int_t ajp_msg_get_uint16(ajp_msg_t *msg, uint16_t *rvalue);
  *
  * @param msg       AJP Message to get value from
  * @param rvalue    Pointer where value will be returned
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_peek_uint16(ajp_msg_t *msg, uint16_t *rvalue);
 
@@ -257,7 +256,7 @@ ngx_int_t ajp_msg_peek_uint16(ajp_msg_t *msg, uint16_t *rvalue);
  *
  * @param msg       AJP Message to get value from
  * @param rvalue    Pointer where value will be returned
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_get_uint8(ajp_msg_t *msg, u_char *rvalue);
 
@@ -267,7 +266,7 @@ ngx_int_t ajp_msg_get_uint8(ajp_msg_t *msg, u_char *rvalue);
  *
  * @param msg       AJP Message to get value from
  * @param rvalue    Pointer where value will be returned
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_peek_uint8(ajp_msg_t *msg, u_char *rvalue);
 
@@ -276,7 +275,7 @@ ngx_int_t ajp_msg_peek_uint8(ajp_msg_t *msg, u_char *rvalue);
  *
  * @param msg       AJP Message to get value from
  * @param rvalue    Pointer where value will be returned
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_get_string(ajp_msg_t *msg, ngx_str_t *rvalue);
 
@@ -287,7 +286,7 @@ ngx_int_t ajp_msg_get_string(ajp_msg_t *msg, ngx_str_t *rvalue);
  * @param msg       AJP Message to get value from
  * @param rvalue    Pointer where value will be returned
  * @param rvalueLen Pointer where Byte array len will be returned
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_get_bytes(ajp_msg_t *msg, u_char **rvalue,
                                size_t *rvalue_len);
@@ -298,7 +297,7 @@ ngx_int_t ajp_msg_get_bytes(ajp_msg_t *msg, u_char **rvalue,
  * @param pool      memory pool to allocate AJP message from
  * @param size      size of the buffer to create
  * @param rmsg      Pointer to newly created AJP message
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_create(ngx_pool_t *pool, size_t size, ajp_msg_t **rmsg);
 
@@ -309,7 +308,7 @@ ngx_int_t ajp_msg_create_without_buffer(ngx_pool_t *pool, ajp_msg_t **rmsg);
  *
  * @param smsg      source AJP message
  * @param dmsg      destination AJP message
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_copy(ajp_msg_t *smsg, ajp_msg_t *dmsg);
 
@@ -321,7 +320,7 @@ ngx_int_t ajp_msg_copy(ajp_msg_t *smsg, ajp_msg_t *dmsg);
  * +-----------------------+
  *
  * @param smsg      AJP message to put serialized message
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_serialize_ping(ajp_msg_t *msg);
 
@@ -333,7 +332,7 @@ ngx_int_t ajp_msg_serialize_ping(ajp_msg_t *msg);
  * +-----------------------+
  *
  * @param smsg      AJP message to put serialized message
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_serialize_cping(ajp_msg_t *msg);
 
@@ -347,48 +346,6 @@ ngx_int_t ajp_msg_serialize_cping(ajp_msg_t *msg);
  */
 char * ajp_msg_dump(ngx_pool_t *pool, ajp_msg_t *msg, char *err);
 
-/** 
- * Send an AJP message to backend
- *
- * @param soct      backend socket
- * @param smsg      AJP message to put serialized message
- * @return          APR_SUCCESS or error
- */
-/*ngx_int_t ajp_ilink_send(apr_socket_t *sock, ajp_msg_t *msg);*/
-
-/** 
- * Receive an AJP message from backend
- *
- * @param sock      backend socket
- * @param smsg      AJP message to put serialized message
- * @return          APR_SUCCESS or error
- */
-/*ngx_int_t ajp_ilink_receive(apr_socket_t *sock, ajp_msg_t *msg);*/
-
-/**
- * Build the ajp header message and send it
- * @param sock      backend socket
- * @param r         current request
- * @param buffsize  max size of the AJP packet.
- * @uri uri         requested uri
- * @return          APR_SUCCESS or error
- */
-/*ngx_int_t ajp_send_header(apr_socket_t *sock, request_rec *r,*/
-/*size_t buffsize,*/
-/*apr_uri_t *uri);*/
-
-/**
- * Read the ajp message and return the type of the message.
- * @param sock      backend socket
- * @param r         current request
- * @param buffsize  size of the buffer.
- * @param msg       returned AJP message
- * @return          APR_SUCCESS or error
- */
-/*ngx_int_t ajp_read_header(apr_socket_t *sock,*/
-/*request_rec  *r,*/
-/*size_t buffsize,*/
-/*ajp_msg_t **msg);*/
 
 ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
         ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *alcf);
@@ -397,7 +354,7 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
  * Allocate a msg to send data
  * @param pool      pool to allocate from
  * @param msg       returned AJP message
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t  ajp_alloc_data_msg(ngx_pool_t *pool, ajp_msg_t **msg);
 
@@ -421,7 +378,7 @@ int ajp_parse_type(ngx_http_request_t *r, ajp_msg_t *msg);
  * Parse the header message from container 
  * @param r         current request
  * @param msg       AJP message
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 ngx_int_t ajp_parse_header(ngx_http_request_t  *r, ngx_http_ajp_loc_conf_t *alcf, ajp_msg_t *msg);
 
@@ -430,11 +387,9 @@ ngx_int_t ajp_parse_header(ngx_http_request_t  *r, ngx_http_ajp_loc_conf_t *alcf
  * @param r         current request
  * @param msg       AJP message
  * @param len       returned AJP message length 
- * @param ptr       returned data
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
-/*ngx_int_t  ajp_parse_data(request_rec  *r, ajp_msg_t *msg,*/
-/*uint16_t *len, char **ptr);*/
+ngx_int_t  ajp_parse_data(ngx_http_request_t  *r, ajp_msg_t *msg, uint16_t *len);
 
 
 /** 
@@ -442,7 +397,7 @@ ngx_int_t ajp_parse_header(ngx_http_request_t  *r, ngx_http_ajp_loc_conf_t *alcf
  * @param sock      backend socket
  * @param r         current request
  * @param timeout   time window for receiving cpong reply
- * @return          APR_SUCCESS or error
+ * @return          NGX_OK or error
  */
 /*ngx_int_t ajp_handle_cping_cpong(apr_socket_t *sock,*/
 /*request_rec *r,*/
