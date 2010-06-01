@@ -174,7 +174,7 @@ ngx_int_t ajp_msg_end(ajp_msg_t *msg)
     ngx_buf_t *buf;
 
     buf = msg->buf;
-    len = buf->end - buf->start - AJP_HEADER_LEN;
+    len = buf->last - buf->start - AJP_HEADER_LEN;
 
     if (msg->server_side) {
         buf->start[0] = 0x41;
@@ -187,6 +187,8 @@ ngx_int_t ajp_msg_end(ajp_msg_t *msg)
 
     buf->start[2] = (u_char)((len >> 8) & 0xFF);
     buf->start[3] = (u_char)(len & 0xFF);
+
+    buf->pos = buf->start;
 
     return NGX_OK;
 }

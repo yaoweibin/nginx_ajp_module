@@ -208,6 +208,7 @@ static ngx_str_t *sc_for_req_get_header_vaule_by_hash(
 
     hash = ngx_hash_key(lowcase_key, len);
 
+    header = part->elts;
     for (i = 0; /* void */; i++) {
 
         if (i >= part->nelts) {
@@ -420,10 +421,9 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
                         "Error appending the header value");
                 return AJP_EOVERFLOW;
             }
-            ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                    "ajp_marshal_into_msgb: Header[%d] [%V] = [%V]",
-                    i, &header[i].key, &header[i].value);
-
+            ngx_log_error(NGX_LOG_DEBUG, ngx_cycle->log, 0,
+                    "ajp_marshal_into_msgb: Header[%d] [%V] = [%V], size:%z",
+                    i, &header[i].key, &header[i].value, ngx_buf_size(msg->buf));
         }
     }
 
@@ -472,7 +472,7 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
         }
     }
 
-    jvm_route = sc_for_req_get_header_vaule_by_hash(part,
+    jvm_route = sc_for_req_get_header_vaule_by_hash(&r->headers_in.headers.part,
             (u_char *)"session-route", sizeof("session-route") - 1);
     if (jvm_route != NULL) {
         if (ajp_msg_append_uint8(msg, SC_A_JVM_ROUTE) ||
@@ -606,7 +606,8 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
     }
 
     ngx_log_error(NGX_LOG_DEBUG, ngx_cycle->log, 0,
-            "ajp_marshal_into_msgb: Done");
+            "ajp_marshal_into_msgb: Done, buff_size:%z", ngx_buf_size(msg->buf));
+
     return NGX_OK;
 }
 
@@ -658,7 +659,6 @@ static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
     u = r->upstream;
 
     rc = ajp_msg_get_uint16(msg, &status);
-
     if (rc != NGX_OK) {
         ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                 "ajp_unmarshal_response: Null status");
@@ -694,7 +694,7 @@ static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
         num_headers = 0;
     }
 
-    ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
+    ngx_log_error(NGX_LOG_DEBUG, ngx_cycle->log, 0,
             "ajp_unmarshal_response: Number of headers is = %d",
             num_headers);
 

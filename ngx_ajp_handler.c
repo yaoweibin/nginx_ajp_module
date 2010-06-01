@@ -227,6 +227,8 @@ ngx_http_ajp_create_request(ngx_http_request_t *r)
         return NGX_ERROR;
     }
 
+    ajp_msg_end(msg);
+
     cl = ngx_alloc_chain_link(r->pool);
     if (cl == NULL) {
         return NGX_ERROR;
@@ -438,8 +440,8 @@ ngx_http_upstream_send_request_body(ngx_http_request_t *r, ngx_http_upstream_t *
 static ngx_int_t
 ngx_http_ajp_process_header(ngx_http_request_t *r)
 {
-    u_char                       *pos;
-    ngx_int_t                     type, rc;
+    u_char                       *pos, type;
+    ngx_int_t                     rc;
     ajp_msg_t                    *msg;
     ngx_http_upstream_t          *u;
     ngx_http_ajp_ctx_t           *a;
@@ -468,7 +470,7 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
             return NGX_AGAIN;
         }
 
-        ajp_msg_reset(msg);
+        msg->buf->pos = msg->buf->start + AJP_HEADER_LEN;
 
         type = ajp_parse_type(r, msg);
 
