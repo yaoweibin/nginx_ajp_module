@@ -720,7 +720,7 @@ static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
             if (rc != NGX_OK) {
                 ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                         "ajp_unmarshal_response: "
-                        "No such sc (%08x)",
+                        "No such sc (%08Xd)",
                         name);
                 return AJP_EBAD_HEADER;
             }
@@ -781,7 +781,7 @@ ngx_int_t ajp_parse_header(ngx_http_request_t  *r, ngx_http_ajp_loc_conf_t *alcf
 
     if (result != CMD_AJP13_SEND_HEADERS) {
         ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                "ajp_parse_headers: wrong type %02x expecting 0x04", result);
+                "ajp_parse_headers: wrong type %02Xd expecting 0x04", result);
         return AJP_EBAD_HEADER;
     }
 
@@ -805,17 +805,18 @@ ngx_int_t  ajp_parse_data(ngx_http_request_t  *r, ajp_msg_t *msg,
     if (result != CMD_AJP13_SEND_BODY_CHUNK || 
             result != CMD_AJP13_END_RESPONSE ) {
         ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                "ajp_parse_data: wrong type %02x expecting 0x03", result);
+                "ajp_parse_data: wrong type %02Xd expecting 0x03", result);
         return AJP_EBAD_HEADER;
     }
 
     if (result == CMD_AJP13_END_RESPONSE) {
         *len = 0;
     }
-
-    rc = ajp_msg_get_uint16(msg, len);
-    if (rc != NGX_OK) {
-        return rc;
+    else {
+        rc = ajp_msg_get_uint16(msg, len);
+        if (rc != NGX_OK) {
+            return rc;
+        }
     }
 
     return NGX_OK;
@@ -829,7 +830,7 @@ int ajp_parse_type(ngx_http_request_t  *r, ajp_msg_t *msg)
     ajp_msg_peek_uint8(msg, &result);
 
     ngx_log_error(NGX_LOG_DEBUG, ngx_cycle->log, 0,
-            "ajp_parse_type: got %02x", result);
+            "ajp_parse_type: got %02Xd", result);
 
     return (int) result;
 }

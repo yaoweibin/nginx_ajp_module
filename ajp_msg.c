@@ -102,7 +102,7 @@ ngx_int_t ajp_msg_check_header(ajp_msg_t *msg, size_t *len)
           (head[0] == 0x12 && head[1] == 0x34))) {
 
         ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                "ajp_check_msg_header() got bad signature %x%x",
+                "ajp_check_msg_header() got bad signature %Xd%Xd",
                 head[0], head[1]);
 
         return AJP_EBAD_SIGNATURE;
@@ -134,7 +134,11 @@ ngx_int_t ajp_msg_check_header(ajp_msg_t *msg, size_t *len)
  */
 ngx_int_t ajp_msg_reset(ajp_msg_t *msg)
 {
-    msg->buf->pos = msg->buf->last = msg->buf->start + AJP_HEADER_LEN;
+    ngx_buf_t *buf = msg->buf;
+
+    if (buf->end > buf->start + AJP_HEADER_LEN) {
+        buf->pos = buf->last = buf->start + AJP_HEADER_LEN;
+    }
 
     return NGX_OK;
 }

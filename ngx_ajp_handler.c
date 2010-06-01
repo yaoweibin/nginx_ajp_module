@@ -20,6 +20,9 @@ static void ngx_http_ajp_abort_request(ngx_http_request_t *r);
 static void ngx_http_ajp_finalize_request(ngx_http_request_t *r,
     ngx_int_t rc);
 
+static ngx_int_t ngx_http_upstream_send_request_body(ngx_http_request_t *r, 
+        ngx_http_upstream_t *u);
+
 ngx_int_t
 ngx_http_ajp_handler(ngx_http_request_t *r)
 {
@@ -220,7 +223,6 @@ ngx_http_ajp_create_request(ngx_http_request_t *r)
         return NGX_ERROR;
     }
 
-
     if (NGX_OK != ajp_marshal_into_msgb(msg, r, alcf)) {
         return NGX_ERROR;
     }
@@ -231,6 +233,8 @@ ngx_http_ajp_create_request(ngx_http_request_t *r)
     }
 
     cl->buf = msg->buf;
+
+    a->state = ngx_http_ajp_st_forward_request_sent;
 
     /*
     if (alcf->params_len) {
@@ -287,7 +291,14 @@ ngx_http_ajp_create_request(ngx_http_request_t *r)
 
         cl->next = ajp_data_msg_send_body(r, 
                 alcf->max_ajp_data_packet_size_conf ,&a->body);
+        if (a->body) {
+            a->state = ngx_http_ajp_st_request_body_data_sending;
+        }
+        else {
+            a->state = ngx_http_ajp_st_request_send_all_done;
+        }
     } else {
+        a->state = ngx_http_ajp_st_request_send_all_done;
         r->upstream->request_bufs = cl;
         cl->next = NULL;
     }
@@ -306,9 +317,17 @@ ngx_http_ajp_reinit_request(ngx_http_request_t *r)
 }
 
 static void
-ngx_http_upstream_send_request_handler(ngx_http_request_t *r,
+ngx_http_upstream_send_request_body_handler(ngx_http_request_t *r,
     ngx_http_upstream_t *u)
 {
+    ngx_int_t rc;
+
+    rc = ngx_http_upstream_send_request_body(r, u);
+
+    if (rc == NGX_ERROR) {
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                "ngx_http_upstream_send_request_body error");
+    }
 }
 
 static void
@@ -332,75 +351,86 @@ ngx_http_upstream_send_request_body(ngx_http_request_t *r, ngx_http_upstream_t *
     a = ngx_http_get_module_ctx(r, ngx_http_ajp_module);
     alcf = ngx_http_get_module_loc_conf(r, ngx_http_ajp_module);
 
+    if (a->state > ngx_http_ajp_st_request_body_data_sending) {
+        ngx_log_error(NGX_LOG_WARN, r->connection->log, 0,
+                "ngx_http_upstream_send_request_body: bad state(%d)", a->state);
+    }
 
     cl = ajp_data_msg_send_body(r, alcf->max_ajp_data_packet_size_conf, &a->body);
 
-    if (cl == NULL) {
-        /*If there is no more data in the body (i.e. the servlet container is
-          trying to read past the end of the body), the server will send back
-          an "empty" packet, which is a body packet with a payload length of 0.
-          (0x12,0x34,0x00,0x00)*/
-
-        if (ajp_alloc_data_msg(r->pool, &msg) != NGX_OK) {
-            return NGX_ERROR;
-        }
-
-        ajp_data_msg_end(msg, 0);
-
-        cl = ngx_alloc_chain_link(r->pool);
+    if (u->output.in == NULL && u->output.busy == NULL) {
         if (cl == NULL) {
-            return NGX_ERROR;
-        }
+            /*If there is no more data in the body (i.e. the servlet container is
+              trying to read past the end of the body), the server will send back
+              an "empty" packet, which is a body packet with a payload length of 0.
+              (0x12,0x34,0x00,0x00)*/
 
-        cl->buf = msg->buf;
-        cl->next = NULL;
-    }
-
-    if (cl) {
-        c->log->action = "sending request body again to upstream";
-
-        rc = ngx_output_chain(&u->output, cl);
-
-        if (rc == NGX_ERROR) {
-            return NGX_ERROR;
-        }
-
-        if (c->write->timer_set) {
-            ngx_del_timer(c->write);
-        }
-
-        if (rc == NGX_AGAIN) {
-            ngx_add_timer(c->write, u->conf->send_timeout);
-
-            if (ngx_handle_write_event(c->write, u->conf->send_lowat) != NGX_OK) {
+            if (ajp_alloc_data_msg(r->pool, &msg) != NGX_OK) {
                 return NGX_ERROR;
             }
 
-            u->write_event_handler = ngx_http_upstream_send_request_handler;
+            ajp_data_msg_end(msg, 0);
 
-            return NGX_AGAIN;
-        }
-
-        /* rc == NGX_OK */
-
-        if (c->tcp_nopush == NGX_TCP_NOPUSH_SET) {
-            if (ngx_tcp_push(c->fd) == NGX_ERROR) {
-                ngx_log_error(NGX_LOG_CRIT, c->log, ngx_socket_errno,
-                        ngx_tcp_push_n " failed");
+            cl = ngx_alloc_chain_link(r->pool);
+            if (cl == NULL) {
                 return NGX_ERROR;
             }
 
-            c->tcp_nopush = NGX_TCP_NOPUSH_UNSET;
+            cl->buf = msg->buf;
+            cl->next = NULL;
         }
+    }
 
-        ngx_add_timer(c->read, u->conf->read_timeout);
+    if (a->body) {
+        a->state = ngx_http_ajp_st_request_body_data_sending;
+    }
+    else {
+        a->state = ngx_http_ajp_st_request_send_all_done;
+    }
 
-        if (ngx_handle_write_event(c->write, 0) != NGX_OK) {
+    c->log->action = "sending request body again to upstream";
+
+    rc = ngx_output_chain(&u->output, cl);
+
+    if (rc == NGX_ERROR) {
+        return NGX_ERROR;
+    }
+
+    if (c->write->timer_set) {
+        ngx_del_timer(c->write);
+    }
+
+    if (rc == NGX_AGAIN) {
+        ngx_add_timer(c->write, u->conf->send_timeout);
+
+        if (ngx_handle_write_event(c->write, u->conf->send_lowat) != NGX_OK) {
             return NGX_ERROR;
         }
 
-        u->write_event_handler = ngx_http_upstream_dummy_handler;
+        u->write_event_handler = ngx_http_upstream_send_request_body_handler;
+
+        return NGX_AGAIN;
     }
+
+    /* rc == NGX_OK */
+
+    if (c->tcp_nopush == NGX_TCP_NOPUSH_SET) {
+        if (ngx_tcp_push(c->fd) == NGX_ERROR) {
+            ngx_log_error(NGX_LOG_CRIT, c->log, ngx_socket_errno,
+                    ngx_tcp_push_n " failed");
+            return NGX_ERROR;
+        }
+
+        c->tcp_nopush = NGX_TCP_NOPUSH_UNSET;
+    }
+
+    ngx_add_timer(c->read, u->conf->read_timeout);
+
+    if (ngx_handle_write_event(c->write, 0) != NGX_OK) {
+        return NGX_ERROR;
+    }
+
+    u->write_event_handler = ngx_http_upstream_dummy_handler;
 
     return NGX_OK;
 }
@@ -408,6 +438,7 @@ ngx_http_upstream_send_request_body(ngx_http_request_t *r, ngx_http_upstream_t *
 static ngx_int_t
 ngx_http_ajp_process_header(ngx_http_request_t *r)
 {
+    u_char                       *pos;
     ngx_int_t                     type, rc;
     ajp_msg_t                    *msg;
     ngx_http_upstream_t          *u;
@@ -430,8 +461,13 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
 
     msg->buf = &u->buffer;
 
-    while (1) {
-        msg->buf->start = msg->buf->pos;
+    while (msg->buf->pos < msg->buf->last) {
+        pos = msg->buf->start = msg->buf->pos;
+
+        if (ngx_buf_size(msg->buf) < AJP_HEADER_LEN + 1) {
+            return NGX_AGAIN;
+        }
+
         ajp_msg_reset(msg);
 
         type = ajp_parse_type(r, msg);
@@ -453,17 +489,32 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
 
                 /*xxx: have not think about the uncomplete headline*/
                 rc = ajp_parse_header(r, alcf, msg);
-                if (rc != NGX_OK) {
+
+                if (rc == NGX_OK) {
+                    a->state = ngx_http_ajp_st_response_parse_headers_done;
+                }
+                else if (rc == AJP_EOVERFLOW) {
+                    /*move back to the header of packet, and parse the 
+                      header again next call*/
+                    msg->buf->start = msg->buf->pos = pos;
+                    a->state = ngx_http_ajp_st_response_recv_headers;
+
+                    return NGX_AGAIN;
+                }
+                else {
                     return rc;
                 }
 
                 break;
 
             case CMD_AJP13_SEND_BODY_CHUNK:
+                a->state = ngx_http_ajp_st_response_body_data_sending;
+                /*left for input_filter*/
                 break;
 
             case CMD_AJP13_END_RESPONSE:
                 u->buffer.last_buf = 1;
+                a->state = ngx_http_ajp_st_response_end;
                 break;
 
             default:
@@ -471,14 +522,13 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
         }
     }
 
-
     return NGX_OK;
 }
 
 static ngx_int_t
 ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
 {
-    /*ngx_int_t                rc;*/
+    u_char                   reuse;
     ngx_buf_t               *b, **prev;
     ajp_msg_t               *msg;
     ngx_chain_t             *cl;
@@ -491,6 +541,11 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
 
     r = p->input_ctx;
     a = ngx_http_get_module_ctx(r, ngx_http_ajp_module);
+
+    if (a->state < ngx_http_ajp_st_response_parse_headers_done) {
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                "ngx_http_ajp_input_filter: bad_state(%d)", a->state);
+    }
 
     b = NULL;
     prev = &buf->shadow;
@@ -505,18 +560,32 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
     msg->buf = buf;
 
     while(1) {
-        if (a->pos == a->last) {
+        if (a->pos >= a->last) {
             break;
         }
 
         if (a->length == 0) {
+            if (ngx_buf_size(buf) < AJP_HEADER_LEN + 1) {
+                break;
+            }
+
             if (NGX_OK != ajp_parse_data(r, msg, (uint16_t *)&a->length)) {
                 return NGX_ERROR;
             }
             
             if (a->length == 0) {
+                if (NGX_OK != ajp_msg_get_uint8(msg, (u_char *) &reuse)) {
+                    return NGX_ERROR;
+                }
+
                 /*finish this request and decide wether reuse this connection.*/
+                a->ajp_reuse = reuse;
+                p->upstream_done = 1;
+                a->state = ngx_http_ajp_st_response_end;
+                break;
             }
+
+            a->pos = buf->pos;
         }
 
         if (p->free) {
