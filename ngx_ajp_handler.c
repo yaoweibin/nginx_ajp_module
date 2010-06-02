@@ -46,6 +46,7 @@ ngx_http_ajp_handler(ngx_http_request_t *r)
     if (a == NULL) {
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
+    a->response_length = NGX_CONF_UNSET_SIZE;
 
     ngx_http_set_ctx(r, a, ngx_http_ajp_module);
 
@@ -442,6 +443,7 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
 {
     u_char                       *pos, type;
     ngx_int_t                     rc;
+    ngx_buf_t                    *buf;
     ajp_msg_t                    *msg;
     ngx_http_upstream_t          *u;
     ngx_http_ajp_ctx_t           *a;
@@ -455,22 +457,30 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
         return NGX_ERROR;
     }
 
+    ngx_log_error(NGX_LOG_DEBUG, r->connection->log, 0,
+            "ngx_http_ajp_process_header: state(%d)", a->state);
+
     u = r->upstream;
 
     if (NGX_OK != ajp_msg_create_without_buffer(r->pool, &msg)) {
         return NGX_ERROR;
     }
 
-    msg->buf = &u->buffer;
+    buf = msg->buf = &u->buffer;
 
-    while (msg->buf->pos < msg->buf->last) {
-        pos = msg->buf->start = msg->buf->pos;
+    while (buf->pos < buf->last) {
+
+        ngx_log_error(NGX_LOG_DEBUG, r->connection->log, 0,
+                "ngx_http_ajp_process_header: parse response, pos:%p, last:%p", 
+                buf->pos, buf->last);
+
+        pos = buf->pos;
 
         if (ngx_buf_size(msg->buf) < AJP_HEADER_LEN + 1) {
             return NGX_AGAIN;
         }
 
-        msg->buf->pos = msg->buf->start + AJP_HEADER_LEN;
+        buf->pos = buf->pos + AJP_HEADER_LEN;
 
         type = ajp_parse_type(r, msg);
 
@@ -492,13 +502,18 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
                 /*xxx: have not think about the uncomplete headline*/
                 rc = ajp_parse_header(r, alcf, msg);
 
+                /*ctx->response_length =*/
+                /*ngx_atoof(r->headers_in.content_length->value.data,*/
+                /*r->headers_in.content_length->value.len);*/
+
                 if (rc == NGX_OK) {
                     a->state = ngx_http_ajp_st_response_parse_headers_done;
+                    return NGX_OK;
                 }
                 else if (rc == AJP_EOVERFLOW) {
                     /*move back to the header of packet, and parse the 
                       header again next call*/
-                    msg->buf->start = msg->buf->pos = pos;
+                    buf->pos = pos;
                     a->state = ngx_http_ajp_st_response_recv_headers;
 
                     return NGX_AGAIN;
@@ -512,11 +527,15 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
             case CMD_AJP13_SEND_BODY_CHUNK:
                 a->state = ngx_http_ajp_st_response_body_data_sending;
                 /*left for input_filter*/
+                return NGX_OK;
+
                 break;
 
             case CMD_AJP13_END_RESPONSE:
                 u->buffer.last_buf = 1;
                 a->state = ngx_http_ajp_st_response_end;
+                return NGX_OK;
+
                 break;
 
             default:
@@ -524,13 +543,13 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
         }
     }
 
-    return NGX_OK;
+    return NGX_AGAIN;
 }
 
 static ngx_int_t
 ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
 {
-    u_char                   reuse;
+    u_char                   reuse, type;
     ngx_buf_t               *b, **prev;
     ajp_msg_t               *msg;
     ngx_chain_t             *cl;
@@ -549,11 +568,11 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
                 "ngx_http_ajp_input_filter: bad_state(%d)", a->state);
     }
 
+    ngx_log_error(NGX_LOG_DEBUG, r->connection->log, 0,
+            "ngx_http_ajp_input_filter: state(%d)", a->state);
+
     b = NULL;
     prev = &buf->shadow;
-
-    a->pos = buf->pos;
-    a->last = buf->last;
 
     if (NGX_OK != ajp_msg_create_without_buffer(r->pool, &msg)) {
         return NGX_ERROR;
@@ -562,7 +581,7 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
     msg->buf = buf;
 
     while(1) {
-        if (a->pos >= a->last) {
+        if (buf->pos >= buf->last) {
             break;
         }
 
@@ -571,24 +590,45 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
                 break;
             }
 
-            if (NGX_OK != ajp_parse_data(r, msg, (uint16_t *)&a->length)) {
-                return NGX_ERROR;
-            }
-            
-            if (a->length == 0) {
-                if (NGX_OK != ajp_msg_get_uint8(msg, (u_char *) &reuse)) {
+            buf->pos = buf->pos + AJP_HEADER_LEN;
+
+            type = ajp_parse_type(r, msg);
+
+            switch (type) {
+                case CMD_AJP13_SEND_BODY_CHUNK:
+                    a->state = ngx_http_ajp_st_response_body_data_sending;
+                    if (NGX_OK != ajp_parse_data(r, msg, (uint16_t *)&a->length)) {
+                        return NGX_ERROR;
+                    }
+
+                    break;
+
+                case CMD_AJP13_END_RESPONSE:
+                    /*finish this request and decide wether reuse this connection.*/
+                    ajp_msg_get_uint8(msg, &type);
+                    ajp_msg_get_uint8(msg, &reuse);
+
+                    a->ajp_reuse = reuse;
+                    p->upstream_done = 1;
+                    a->state = ngx_http_ajp_st_response_end;
+                    buf->pos = buf->last;
+
+                    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, p->log, 0,
+                            "input filter packet with End response, reuse:%d", reuse);
+
+                    return NGX_OK;
+
+                default:
+
+                    ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                            "ngx_http_ajp_input_filter: bad_packet_type(%d)", type);
                     return NGX_ERROR;
-                }
-
-                /*finish this request and decide wether reuse this connection.*/
-                a->ajp_reuse = reuse;
-                p->upstream_done = 1;
-                a->state = ngx_http_ajp_st_response_end;
-                break;
             }
-
-            a->pos = buf->pos;
         }
+
+        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, p->log, 0,
+                       "input filter packet, length:%z, buffer_size:%z",
+                       a->length, ngx_buf_size(buf));
 
         if (p->free) {
             b = p->free->buf;
@@ -603,7 +643,7 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
 
         ngx_memzero(b, sizeof(ngx_buf_t));
 
-        b->pos = a->pos;
+        b->pos = buf->pos;
         b->start = buf->start;
         b->end = buf->end;
         b->tag = p->tag;
@@ -634,26 +674,16 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
         ngx_log_debug2(NGX_LOG_DEBUG_EVENT, p->log, 0,
                        "input buf #%d %p", b->num, b->pos);
 
-        if (a->pos + a->length < a->last) {
-
-            a->pos += a->length;
-            b->last = a->pos;
-
-            continue;
+        if (buf->pos + a->length < buf->last) {
+            buf->pos += a->length;
+            b->last = buf->pos;
+            a->length = 0;
         }
-
-        if (a->pos + a->length == a->last) {
-
-            b->last = a->last;
-
+        else {
+            a->length -= buf->last - buf->pos;
+            b->last = buf->last;
             break;
         }
-
-        a->length -= a->last - a->pos;
-
-        b->last = a->last;
-
-        break;
     }
 
     if (b) {

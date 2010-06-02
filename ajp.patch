@@ -1,0 +1,39 @@
+diff --git a/src/event/ngx_event_pipe.c b/src/event/ngx_event_pipe.c
+index 5d5035c..ab076c0 100644
+--- a/src/event/ngx_event_pipe.c
++++ b/src/event/ngx_event_pipe.c
+@@ -306,23 +306,24 @@ ngx_event_pipe_read_upstream(ngx_event_pipe_t *p)
+             if (n >= size) {
+                 cl->buf->last = cl->buf->end;
+ 
+-                /* STUB */ cl->buf->num = p->num++;
+-
+-                if (p->input_filter(p, cl->buf) == NGX_ERROR) {
+-                    return NGX_ABORT;
+-                }
+-
+                 n -= size;
+-                ln = cl;
+-                cl = cl->next;
+-                ngx_free_chain(p->pool, ln);
+-
+             } else {
+                 cl->buf->last += n;
+                 n = 0;
+             }
+         }
+ 
++        /* STUB */ cl->buf->num = p->num++;
++
++        if (p->input_filter(p, cl->buf) == NGX_ERROR) {
++            return NGX_ABORT;
++        }
++
++        ln = cl;
++        cl = cl->next;
++        ngx_free_chain(p->pool, ln);
++
++
+         if (cl) {
+             for (ln = cl; ln->next; ln = ln->next) { /* void */ }
+ 

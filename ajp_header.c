@@ -138,7 +138,7 @@ static ngx_uint_t sc_for_req_get_headers_num(ngx_list_part_t *part)
 {
     ngx_uint_t num = 0;
 
-    while (part->next) {
+    while (part) {
         num += part->nelts;
         part = part->next;
     }
@@ -363,7 +363,7 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
 
     addr = (struct sockaddr_in *) r->connection->local_sockaddr;
     /*'struct sockaddr_in' and 'struct sockaddr_in6' has the same offset of port*/
-    port = addr->sin_port;
+    port = ntohs(addr->sin_port);
 
     ajp_msg_reset(msg);
 
@@ -557,13 +557,13 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
      * the remote port from this attribute.
      */
     {
-        u_char buf[6];
+        u_char buf[6] = {0};
         temp_str.data = (u_char *)SC_A_REQ_REMOTE_PORT;
         temp_str.len = sizeof(SC_A_REQ_REMOTE_PORT) - 1;
 
         addr = (struct sockaddr_in *) r->connection->sockaddr;
         /*'struct sockaddr_in' and 'struct sockaddr_in6' has the same offset of port*/
-        port = addr->sin_port;
+        port = ntohs(addr->sin_port);
         /*port < 65536*/
         ngx_snprintf(buf, 6, "%d", port);
         port_str.data = buf;
@@ -578,6 +578,9 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
                     &temp_str, &port_str);
             return AJP_EOVERFLOW;
         }
+
+        ngx_log_error(NGX_LOG_DEBUG, ngx_cycle->log, 0,
+                "ajp_marshal_into_msgb: attribute %V %V", &temp_str, &port_str);
     }
     /* Use the environment vars prefixed with AJP_
      * and pass it to the header striping that prefix.
@@ -802,21 +805,15 @@ ngx_int_t  ajp_parse_data(ngx_http_request_t  *r, ajp_msg_t *msg,
         return rc;
     }
 
-    if (result != CMD_AJP13_SEND_BODY_CHUNK || 
-            result != CMD_AJP13_END_RESPONSE ) {
+    if (result != CMD_AJP13_SEND_BODY_CHUNK) {
         ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                 "ajp_parse_data: wrong type %02Xd expecting 0x03", result);
         return AJP_EBAD_HEADER;
     }
 
-    if (result == CMD_AJP13_END_RESPONSE) {
-        *len = 0;
-    }
-    else {
-        rc = ajp_msg_get_uint16(msg, len);
-        if (rc != NGX_OK) {
-            return rc;
-        }
+    rc = ajp_msg_get_uint16(msg, len);
+    if (rc != NGX_OK) {
+        return rc;
     }
 
     return NGX_OK;
@@ -830,7 +827,7 @@ int ajp_parse_type(ngx_http_request_t  *r, ajp_msg_t *msg)
     ajp_msg_peek_uint8(msg, &result);
 
     ngx_log_error(NGX_LOG_DEBUG, ngx_cycle->log, 0,
-            "ajp_parse_type: got %02Xd", result);
+            "ajp_parse_type: got 0x%02Xd", result);
 
     return (int) result;
 }
