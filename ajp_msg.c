@@ -20,7 +20,6 @@ extern volatile ngx_cycle_t  *ngx_cycle;
 
 /*static char *hex_table = "0123456789ABCDEF";*/
 
-#if 0
 /**
  * Dump up to the first 1024 bytes on an AJP Message
  *
@@ -29,62 +28,39 @@ extern volatile ngx_cycle_t  *ngx_cycle;
  * @param err       error string to display
  * @return          dump message
  */
-char * ajp_msg_dump(ngx_pool_t *pool, ajp_msg_t *msg, char *err)
+u_char * ajp_msg_dump(ngx_pool_t *pool, ajp_msg_t *msg, u_char *err)
 {
-    size_t  i, j;
-    char        line[80];
-    char        *current;
-    char        *rv, *p;
+    size_t  i, len;
+    u_char   *rv, *p, *last;
     size_t  bl = 8192;
-    u_char  x;
-    size_t  len = msg->len;
+    ngx_buf_t *buf;
 
+    buf = msg->buf;
+
+    len = buf->last - buf->start;
     /* Display only first 1024 bytes */
-    if (len > 1024)
-        len = 1024;
+    if (len > 16) {
+        len = 16;
+    }
+
     rv = ngx_palloc(pool, bl);
-    ngx_snprintf(rv, bl,
-                 "ajp_msg_dump(): %s pos=%p last=%p end=%p\n",
-                 err, msg->buf->pos, msg->buf->last, msg->buf->end);
-    bl -= strlen(rv);
-    p = rv + strlen(rv);
-    for (i = 0; i < len; i += 16) {
-        current = line;
+    if (rv == NULL) {
+        return NULL;
+    }
 
-        for (j = 0; j < 16; j++) {
-             x = msg->buf->start[i + j];
+    last = rv + bl;
+    p = rv;
 
-            *current++ = hex_table[x >> 4];
-            *current++ = hex_table[x & 0x0f];
-            *current++ = ' ';
-        }
-        *current++ = ' ';
-        *current++ = '-';
-        *current++ = ' ';
-        for (j = 0; j < 16; j++) {
-            x = msg->buf->start[i + j];
+    p = ngx_snprintf(p, last - p, 
+            "ajp_msg_dump(): \"%s\", start:%p, pos:%p, last:%p, \ndump line: ",
+            err, buf->start, buf->pos, buf->last);
 
-            if (x > 0x20 && x < 0x7F) {
-                *current++ = x;
-            }
-            else {
-                *current++ = '.';
-            }
-        }
-
-        *current++ = '\0';
-        ngx_snprintf(p, bl,
-                     "ajp_msg_dump(): %.4lx    %s\n",
-                     (unsigned long)i, line);
-        bl -= strlen(rv);
-        p = rv + strlen(rv);
-
+    for (i = 0; i < len; i ++) {
+        p = ngx_snprintf(p, last - p, "%02xd ", buf->start[i]);
     }
 
     return rv;
 }
-
-#endif
 
 /**
  * Check a new AJP Message by looking at signature and return its size
@@ -215,7 +191,7 @@ ngx_int_t ajp_msg_append_uint32(ajp_msg_t *msg, uint32_t value)
 
     buf = msg->buf;
 
-    if ( (buf->last + 4) > buf->end) {
+    if ((buf->last + 4) > buf->end) {
         return ajp_log_overflow(msg, "ajp_msg_append_uint32");
     }
 
@@ -240,7 +216,7 @@ ngx_int_t ajp_msg_append_uint16(ajp_msg_t *msg, uint16_t value)
 
     buf = msg->buf;
 
-    if ( buf->last + 2 > buf->end) {
+    if ((buf->last + 2) > buf->end) {
         return ajp_log_overflow(msg, "ajp_msg_append_uint16");
     }
 
@@ -263,7 +239,7 @@ ngx_int_t ajp_msg_append_uint8(ajp_msg_t *msg, u_char value)
 
     buf = msg->buf;
 
-    if ( buf->last + 1 > buf->end) {
+    if ((buf->last + 1) > buf->end) {
         return ajp_log_overflow(msg, "ajp_msg_append_uint8");
     }
 
@@ -353,7 +329,7 @@ ngx_int_t ajp_msg_get_uint32(ajp_msg_t *msg, uint32_t *rvalue)
     ngx_buf_t *buf;
 
     buf = msg->buf;
-    if ((buf->pos + 3) > buf->last) {
+    if ((buf->pos + 4) > buf->last) {
         return ajp_log_overflow(msg, "ajp_msg_get_uint32");
     }
 
@@ -380,7 +356,8 @@ ngx_int_t ajp_msg_get_uint16(ajp_msg_t *msg, uint16_t *rvalue)
     ngx_buf_t *buf;
 
     buf = msg->buf;
-    if ((buf->pos + 1) > buf->last) {
+
+    if ((buf->pos + 2) > buf->last) {
         return ajp_log_overflow(msg, "ajp_msg_get_uint16");
     }
 
@@ -388,6 +365,7 @@ ngx_int_t ajp_msg_get_uint16(ajp_msg_t *msg, uint16_t *rvalue)
     value += ((*buf->pos++) & 0xFF);
 
     *rvalue = value;
+
     return NGX_OK;
 }
 
@@ -405,7 +383,7 @@ ngx_int_t ajp_msg_peek_uint16(ajp_msg_t *msg, uint16_t *rvalue)
     ngx_buf_t *buf;
 
     buf = msg->buf;
-    if ((buf->pos + 1) > buf->last) {
+    if ((buf->pos + 2) > buf->last) {
         return ajp_log_overflow(msg, "ajp_msg_peek_uint16");
     }
 
@@ -426,11 +404,12 @@ ngx_int_t ajp_msg_peek_uint16(ajp_msg_t *msg, uint16_t *rvalue)
  */
 ngx_int_t ajp_msg_peek_uint8(ajp_msg_t *msg, u_char *rvalue)
 {
-    if (msg->buf->pos > msg->buf->last) {
+    if ((msg->buf->pos + 1) > msg->buf->last) {
         return ajp_log_overflow(msg, "ajp_msg_peek_uint8");
     }
 
     *rvalue = *msg->buf->pos;
+
     return NGX_OK;
 }
 
@@ -444,11 +423,14 @@ ngx_int_t ajp_msg_peek_uint8(ajp_msg_t *msg, u_char *rvalue)
 ngx_int_t ajp_msg_get_uint8(ajp_msg_t *msg, u_char *rvalue)
 {
 
-    if (msg->buf->pos > msg->buf->last) {
+    if ((msg->buf->pos + 1) > msg->buf->last) {
         return ajp_log_overflow(msg, "ajp_msg_get_uint8");
     }
 
-    *rvalue = *msg->buf->pos++;
+    *rvalue = *(u_char *)(msg->buf->pos);
+
+    msg->buf->pos = msg->buf->pos + 1;
+
     return NGX_OK;
 }
 

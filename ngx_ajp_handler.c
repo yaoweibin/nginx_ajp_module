@@ -574,21 +574,21 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
     b = NULL;
     prev = &buf->shadow;
 
-    if (NGX_OK != ajp_msg_create_without_buffer(r->pool, &msg)) {
-        return NGX_ERROR;
-    }
-
-    msg->buf = buf;
-
     while(1) {
         if (buf->pos >= buf->last) {
             break;
         }
 
         if (a->length == 0) {
-            if (ngx_buf_size(buf) < AJP_HEADER_LEN + 1) {
+            if (ngx_buf_size(buf) < (AJP_HEADER_LEN + 1)) {
                 break;
             }
+
+            if (NGX_OK != ajp_msg_create_without_buffer(r->pool, &msg)) {
+                return NGX_ERROR;
+            }
+
+            msg->buf = buf;
 
             buf->pos = buf->pos + AJP_HEADER_LEN;
 
@@ -621,7 +621,8 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
                 default:
 
                     ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                            "ngx_http_ajp_input_filter: bad_packet_type(%d)", type);
+                            "ngx_http_ajp_input_filter: bad_packet_type(%d), %s\n",
+                            type, ajp_msg_dump(r->pool, msg, (u_char *)"bad type"));
                     return NGX_ERROR;
             }
         }
@@ -677,14 +678,23 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
         if (buf->pos + a->length < buf->last) {
             buf->pos += a->length;
             b->last = buf->pos;
+
+            /*The last byte of this message always seems to be*/
+            /*0x00 and is not part of the chunk.*/
+            buf->pos++;
+
             a->length = 0;
         }
         else {
             a->length -= buf->last - buf->pos;
+            buf->pos = buf->last;
             b->last = buf->last;
             break;
         }
     }
+
+    ngx_log_debug2(NGX_LOG_DEBUG_EVENT, p->log, 0,
+            "free buf %p %z", buf->pos, buf->last - buf->pos);
 
     if (b) {
         b->shadow = buf;

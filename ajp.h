@@ -344,7 +344,7 @@ ngx_int_t ajp_msg_serialize_cping(ajp_msg_t *msg);
  * @param err       error string to display
  * @return          dump message
  */
-char * ajp_msg_dump(ngx_pool_t *pool, ajp_msg_t *msg, char *err);
+u_char * ajp_msg_dump(ngx_pool_t *pool, ajp_msg_t *msg, u_char *err);
 
 
 ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
