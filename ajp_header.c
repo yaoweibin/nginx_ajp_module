@@ -840,7 +840,7 @@ ngx_int_t  ajp_alloc_data_msg(ngx_pool_t *pool, ajp_msg_t **msg)
 {
     ngx_int_t rc;
 
-    if ((rc = ajp_msg_create(pool, AJP_HEADER_SZ, msg)) != NGX_OK) {
+    if ((rc = ajp_msg_create(pool, AJP_HEADER_SZ + 1, msg)) != NGX_OK) {
         return rc;
     }
 
@@ -959,8 +959,8 @@ ngx_int_t  ajp_data_msg_end(ajp_msg_t *msg, size_t len)
 
     ajp_msg_end(msg);
 
-    buf->last[AJP_HEADER_SZ - 2] = (u_char)((len >> 8) & 0xFF);
-    buf->last[AJP_HEADER_SZ - 1] = (u_char)(len & 0xFF);
+    buf->start[AJP_HEADER_SZ - 2] = (u_char)((len >> 8) & 0xFF);
+    buf->start[AJP_HEADER_SZ - 1] = (u_char)(len & 0xFF);
 
     /*len include AJP_HEADER_SIZE_LEN*/
     len += AJP_HEADER_SZ_LEN;

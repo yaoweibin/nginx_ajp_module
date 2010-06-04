@@ -293,17 +293,25 @@ ngx_http_ajp_create_request(ngx_http_request_t *r)
         r->upstream->request_bufs = cl;
 
         cl->next = ajp_data_msg_send_body(r, 
-                alcf->max_ajp_data_packet_size_conf ,&a->body);
+                alcf->max_ajp_data_packet_size_conf, &a->body);
+
         if (a->body) {
             a->state = ngx_http_ajp_st_request_body_data_sending;
         }
         else {
             a->state = ngx_http_ajp_st_request_send_all_done;
         }
+
     } else {
         a->state = ngx_http_ajp_st_request_send_all_done;
         r->upstream->request_bufs = cl;
         cl->next = NULL;
+    }
+
+    for (cl = r->upstream->request_bufs; cl; cl = cl->next) {
+        ngx_log_error(NGX_LOG_DEBUG, r->connection->log, 0,
+                "ngx_http_ajp_create_request: chain:%p, buffer:%p", 
+                cl, cl->buf);
     }
 
     return NGX_OK;
@@ -477,6 +485,8 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
         pos = buf->pos;
 
         if (ngx_buf_size(msg->buf) < AJP_HEADER_LEN + 1) {
+            /*The first buffer, there should be have enough buffer room,
+              so I do't save it.*/
             return NGX_AGAIN;
         }
 
@@ -546,11 +556,49 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
     return NGX_AGAIN;
 }
 
+static ngx_int_t ngx_http_ajp_input_filter_save_tiny_buffer(ngx_http_request_t *r,
+        ngx_buf_t *buf)
+{
+    size_t                   size;
+    ngx_buf_t               *sb;
+    ngx_http_ajp_ctx_t      *a;
+
+    a = ngx_http_get_module_ctx(r, ngx_http_ajp_module);
+
+    /*no buffer space any more*/
+    if (buf->last == buf->end) {
+        if (a->save == NULL) {
+            a->save = ngx_alloc_chain_link(r->pool);
+            if (a->save == NULL) {
+                return NGX_ERROR;
+            }
+
+            sb = ngx_create_temp_buf(r->pool, AJP_HEADER_SAVE_SZ);
+            if (sb == NULL) {
+                return NGX_ERROR;
+            }
+
+            a->save->buf = sb;
+            a->save->next = NULL;
+        }
+
+        sb = a->save->buf;
+
+        size = buf->last - buf->pos;
+        ngx_memcpy(sb->last, buf->pos, size);
+        sb->last += size;
+        buf->pos += size;
+    }
+
+    return NGX_OK;
+}
+
 static ngx_int_t
 ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
 {
-    u_char                   reuse, type;
-    ngx_buf_t               *b, **prev;
+    size_t                   size, offset;
+    u_char                   reuse, type, save_used;
+    ngx_buf_t               *b, **prev, *sb;
     ajp_msg_t               *msg;
     ngx_chain_t             *cl;
     ngx_http_request_t      *r;
@@ -574,6 +622,7 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
     b = NULL;
     prev = &buf->shadow;
 
+    save_used = 0;
     while(1) {
         if (buf->pos >= buf->last) {
             break;
@@ -581,6 +630,7 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
 
         if (a->length == 0) {
             if (ngx_buf_size(buf) < (AJP_HEADER_LEN + 1)) {
+                ngx_http_ajp_input_filter_save_tiny_buffer(r, buf);
                 break;
             }
 
@@ -588,18 +638,42 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
                 return NGX_ERROR;
             }
 
-            msg->buf = buf;
+            if ((a->save != NULL) && ngx_buf_size(a->save->buf)) {
+                sb = a->save->buf;
+                size = sb->last - sb->pos;
 
-            buf->pos = buf->pos + AJP_HEADER_LEN;
+                offset = AJP_HEADER_LEN + 1 - size + AJP_HEADER_SZ_LEN;
+
+                size = AJP_HEADER_SAVE_SZ - size;
+                ngx_memcpy(sb->last, buf->pos, size);
+                sb->last += size;
+
+                msg->buf = sb;
+                sb->pos = sb->pos + AJP_HEADER_LEN;
+                save_used = 1;
+            }
+            else {
+                msg->buf = buf;
+                buf->pos = buf->pos + AJP_HEADER_LEN;
+                offset = 0;
+            }
 
             type = ajp_parse_type(r, msg);
 
             switch (type) {
                 case CMD_AJP13_SEND_BODY_CHUNK:
                     a->state = ngx_http_ajp_st_response_body_data_sending;
+
+                    if (ngx_buf_size(buf) < (AJP_HEADER_SZ_LEN)) {
+                        buf->pos = buf->pos - AJP_HEADER_LEN;
+                        ngx_http_ajp_input_filter_save_tiny_buffer(r, buf);
+                    }
+
                     if (NGX_OK != ajp_parse_data(r, msg, (uint16_t *)&a->length)) {
                         return NGX_ERROR;
                     }
+
+                    buf->pos += offset;
 
                     break;
 
@@ -692,6 +766,12 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
             break;
         }
     }
+
+    if (save_used) {
+        sb = a->save->buf;
+        sb->last = sb->pos = sb->start; 
+    }
+
 
     ngx_log_debug2(NGX_LOG_DEBUG_EVENT, p->log, 0,
             "free buf %p %z", buf->pos, buf->last - buf->pos);

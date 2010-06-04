@@ -22,14 +22,14 @@ typedef enum {
 
 typedef struct {
     ngx_http_ajp_state_e           state;
-    /*u_char                        *pos;*/
-    /*u_char                        *last;*/
     ngx_uint_t                     type;
     size_t                         response_length;
     size_t                         length;
     size_t                         padding;
 
     ngx_uint_t                     ajp_reuse; /* unsigned :1 */
+
+    ngx_chain_t                   *save;
 
     ngx_chain_t                   *body;
     ngx_str_t                      script_name;

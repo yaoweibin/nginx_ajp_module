@@ -706,7 +706,7 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_conf_merge_size_value(conf->max_ajp_data_packet_size_conf,
             prev->max_ajp_data_packet_size_conf,
-            (size_t) AJP_MAX_BUFFER_SZ);
+            (size_t) AJP_MSG_BUFFER_SZ);
 
     ngx_conf_merge_uint_value(conf->upstream.store_access,
                               prev->upstream.store_access, 0600);
