@@ -872,7 +872,8 @@ ngx_chain_t *ajp_data_msg_send_body(ngx_http_request_t *r, size_t max_size,
 
     cl->buf = msg->buf;
 
-    size = cl->buf->last - cl->buf->pos;
+    max_size -= AJP_HEADER_SZ;
+    size = 0;
     in = *body;
 
     b_out = NULL;

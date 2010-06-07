@@ -236,6 +236,7 @@ ngx_http_ajp_create_request(ngx_http_request_t *r)
     }
 
     cl->buf = msg->buf;
+    cl->buf->flush = 1;
 
     a->state = ngx_http_ajp_st_forward_request_sent;
 
@@ -292,7 +293,7 @@ ngx_http_ajp_create_request(ngx_http_request_t *r)
         a->body = r->upstream->request_bufs;
         r->upstream->request_bufs = cl;
 
-        cl->next = ajp_data_msg_send_body(r, 
+        cl->next = ajp_data_msg_send_body(r,
                 alcf->max_ajp_data_packet_size_conf, &a->body);
 
         if (a->body) {
@@ -316,7 +317,6 @@ ngx_http_ajp_create_request(ngx_http_request_t *r)
 
     return NGX_OK;
 }
-
 
 static ngx_int_t
 ngx_http_ajp_reinit_request(ngx_http_request_t *r)
@@ -449,6 +449,7 @@ ngx_http_upstream_send_request_body(ngx_http_request_t *r, ngx_http_upstream_t *
 static ngx_int_t
 ngx_http_ajp_process_header(ngx_http_request_t *r)
 {
+    uint16_t length;
     u_char                       *pos, type;
     ngx_int_t                     rc;
     ngx_buf_t                    *buf;
@@ -499,6 +500,7 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
 
                 /*move on the buffer's postion*/
                 ajp_msg_get_uint8(msg, (u_char *)&type);
+                ajp_msg_get_uint16(msg, &length);
                 rc = ngx_http_upstream_send_request_body(r, u);
 
                 if (rc != NGX_OK) {
