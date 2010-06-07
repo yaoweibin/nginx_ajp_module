@@ -1,0 +1,336 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Name</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:root@localhost" />
+</head>
+
+<body style="background-color: white">
+
+
+<!-- INDEX BEGIN -->
+<div name="index">
+<p><a name="__index__"></a></p>
+
+<ul>
+
+	<li><a href="#name">Name</a></li>
+	<li><a href="#status">Status</a></li>
+	<li><a href="#synopsis">Synopsis</a></li>
+	<li><a href="#description">Description</a></li>
+	<li><a href="#directives">Directives</a></li>
+	<ul>
+
+		<li><a href="#ajp_buffers">ajp_buffers</a></li>
+		<li><a href="#ajp_buffer_size">ajp_buffer_size</a></li>
+		<li><a href="#ajp_cache">ajp_cache</a></li>
+		<li><a href="#ajp_cache_key">ajp_cache_key</a></li>
+		<li><a href="#ajp_cache_methods">ajp_cache_methods</a></li>
+		<li><a href="#ajp_cache_min_uses">ajp_cache_min_uses</a></li>
+		<li><a href="#ajp_cache_path">ajp_cache_path</a></li>
+		<li><a href="#ajp_cache_use_stale">ajp_cache_use_stale</a></li>
+		<li><a href="#ajp_cache_valid">ajp_cache_valid</a></li>
+		<li><a href="#ajp_index">ajp_index</a></li>
+		<li><a href="#ajp_hide_header">ajp_hide_header</a></li>
+		<li><a href="#ajp_ignore_client_abort">ajp_ignore_client_abort</a></li>
+		<li><a href="#ajp_intercept_errors">ajp_intercept_errors</a></li>
+		<li><a href="#ajp_max_temp_file_size">ajp_max_temp_file_size</a></li>
+		<li><a href="#ajp_pass_header">ajp_pass_header</a></li>
+		<li><a href="#ajp_read_timeout">ajp_read_timeout</a></li>
+		<li><a href="#ajp_store">ajp_store</a></li>
+		<li><a href="#ajp_store_access">ajp_store_access</a></li>
+	</ul>
+
+	<li><a href="#installation">Installation</a></li>
+	<li><a href="#compatibility">Compatibility</a></li>
+	<li><a href="#todo">TODO</a></li>
+	<li><a href="#known_issues">Known Issues</a></li>
+	<li><a href="#changelogs">Changelogs</a></li>
+	<ul>
+
+		<li><a href="#v0_1">v0.1</a></li>
+	</ul>
+
+	<li><a href="#authors">Authors</a></li>
+	<li><a href="#copyright___license">Copyright &amp; License</a></li>
+</ul>
+
+<hr name="index" />
+</div>
+<!-- INDEX END -->
+
+<p>
+</p>
+<hr />
+<h1><a name="name">Name</a></h1>
+<p><strong>nginx_ajp_module</strong> - support AJP protocol proxy with Nginx</p>
+<p>
+</p>
+<hr />
+<h1><a name="status">Status</a></h1>
+<p>This module is at its very early phase of development and considered highly experimental. But you're encouraged to test it out on your side and report any quirks that you experience.</p>
+<p>We need your help! If you find this module useful and/or interesting, please consider joining the development!</p>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">Synopsis</a></h1>
+<p>http {
+    upstream tomcats {
+        server 127.0.0.1:8009;
+    }</p>
+<pre>
+    server {
+        listen 80;</pre>
+<pre>
+        location / {
+            ajp_pass tomcats;
+        }
+    }
+}</pre>
+<p>
+</p>
+<hr />
+<h1><a name="description">Description</a></h1>
+<p>The motivation of writing these modules is Nginx's high performance and robustness.</p>
+<p>
+</p>
+<hr />
+<h1><a name="directives">Directives</a></h1>
+<p>
+</p>
+<h2><a name="ajp_buffers">ajp_buffers</a></h2>
+<p><strong>syntax:</strong> <em>ajp_buffers the_number is_size;</em></p>
+<p><strong>default:</strong> <em>ajp_buffers 8k;</em></p>
+<p><strong>context:</strong> <em>http, server, location</em></p>
+<p>This directive sets the number and the size of buffers, into which will be read the answer, obtained from the ajp server.
+By default, the size of one buffer is equal to the size of two pages. Depending on platform this is either 4K, 8K or 16K.</p>
+<p>
+</p>
+<h2><a name="ajp_buffer_size">ajp_buffer_size</a></h2>
+<p><strong>syntax:</strong> <em>ajp_buffer_size the_size</em></p>
+<p><strong>default:</strong> <em>ajp_buffer_size 4k/8k</em></p>
+<p><strong>context:</strong> <em>http, server, location</em></p>
+<p>This directive sets the buffersize, into which will be read the first part of the response, obtained from the ajp server.</p>
+<p>In this part of response the small response-header is located, as a rule.</p>
+<p>By default, the buffersize is equal to the size of one buffer in directive <code>ajp_buffers</code>; however, it is possible to set it to less.</p>
+<p>
+</p>
+<h2><a name="ajp_cache">ajp_cache</a></h2>
+<p><strong>syntax:</strong> <em>ajp_cache zone;</em></p>
+<p><strong>default:</strong> <em>off</em></p>
+<p><strong>context:</strong> <em>http, server, location</em></p>
+<p>The directive specifies the area  which actually is the share memory's name for caching. The same area can be used in several places.</p>
+<p>
+</p>
+<h2><a name="ajp_cache_key">ajp_cache_key</a></h2>
+<p><strong>syntax:</strong> <em>ajp_cache_key line ;</em></p>
+<p><strong>default:</strong> <em>none</em></p>
+<p><strong>context:</strong> <em>http, server, location</em></p>
+<p>The directive sets the key for caching, for example:
+ajp_cache_key localhost: 9000 $ request_uri;</p>
+<p>
+</p>
+<h2><a name="ajp_cache_methods">ajp_cache_methods</a></h2>
+<p><strong>syntax:</strong> <em>ajp_cache_methods [GET HEAD POST];</em></p>
+<p><strong>default:</strong> <em>ajp_cache_methods GET HEAD;</em></p>
+<p><strong>context:</strong> <em>main,http,location</em></p>
+<p>GET/HEAD is syntax sugar, i.e. you can not disable GET/HEAD even
+if you set just
+ajp_cache_methods  POST;</p>
+<p>
+</p>
+<h2><a name="ajp_cache_min_uses">ajp_cache_min_uses</a></h2>
+<p><strong>syntax:</strong> <em>ajp_cache_min_uses n</em></p>
+<p><strong>default:</strong> <em>ajp_cache_min_uses 1</em></p>
+<p><strong>context:</strong> <em>http, server, location</em></p>
+<p>TODO: Description.</p>
+<p>
+</p>
+<h2><a name="ajp_cache_path">ajp_cache_path</a></h2>
+<p><strong>syntax:</strong> <em>ajp_cache_path /path/to/cache [levels=m:n keys_zone=name:time inactive=time clean_time=time]</em></p>
+<p><strong>default:</strong> <em>none</em></p>
+<p><strong>context:</strong> <em>http, server, location</em></p>
+<p>TODO: Description.</p>
+<p>
+</p>
+<h2><a name="ajp_cache_use_stale">ajp_cache_use_stale</a></h2>
+<p><strong>syntax:</strong> <em>ajp_cache_use_stale [updating|error|timeout|invalid_header|http_500]</em></p>
+<p><strong>default:</strong> <em>ajp_cache_use_stale off;</em></p>
+<p><strong>context:</strong> <em>http, server, location</em></p>
+<p>TODO: Description.</p>
+<p>
+</p>
+<h2><a name="ajp_cache_valid">ajp_cache_valid</a></h2>
+<p><strong>syntax:</strong> <em>ajp_cache_valid [http_error_code|time]</em></p>
+<p><strong>default:</strong> <em>none</em></p>
+<p><strong>context:</strong> <em>http, server, location</em></p>
+<p>TODO: Description.</p>
+<p>
+</p>
+<h2><a name="ajp_index">ajp_index</a></h2>
+<p><strong>syntax:</strong> <em>ajp_index file</em></p>
+<p><strong>default:</strong> <em>none</em></p>
+<p><strong>context:</strong> <em>http, server, location</em></p>
+<p>The name of the file which will be appended to the URI and stored in the variable $ajp_script_name if URI concludes with a slash.</p>
+<p>
+</p>
+<h2><a name="ajp_hide_header">ajp_hide_header</a></h2>
+<p><strong>syntax:</strong> <em>ajp_hide_header name</em></p>
+<p><strong>context:</strong> <em>http, server, location</em></p>
+<p>By default, Nginx does not pass headers &quot;Status&quot; and &quot;X-Accel-...&quot; from the AJP process back to the client. 
+This directive can be used to hide other headers as well.</p>
+<p>If the headers &quot;Status&quot; and &quot;X-Accel-...&quot; must be provided, then it is necessary to use directive ajp_pass_header to force them to be returned to the client.</p>
+<p>
+</p>
+<h2><a name="ajp_ignore_client_abort">ajp_ignore_client_abort</a></h2>
+<p><strong>syntax:</strong> <em>ajp_ignore_client_abort on|off</em></p>
+<p><strong>default:</strong> <em>ajp_ignore_client_abort off</em></p>
+<p><strong>context:</strong> <em>http, server, location</em></p>
+<p>This directive determines if current request to the AJP-server must be aborted in case the client aborts the request to the server.</p>
+<p>
+</p>
+<h2><a name="ajp_intercept_errors">ajp_intercept_errors</a></h2>
+<p><strong>syntax:</strong> <em>ajp_intercept_errors on|off</em></p>
+<p><strong>default:</strong> <em>ajp_intercept_errors off</em></p>
+<p><strong>context:</strong> <em>http, server, location</em></p>
+<p>This directive determines whether or not to transfer 4xx and 5xx errors back to the client or to allow Nginx to answer with directive error_page.</p>
+<p>Note: You need to explicitly define the error_page handler for this for it to be useful. As Igor says, &quot;nginx does not intercept an error if there is no custom handler for it it does not show its default pages. This allows to intercept some errors, while passing others as are.&quot;</p>
+<p>
+</p>
+<h2><a name="ajp_max_temp_file_size">ajp_max_temp_file_size</a></h2>
+<p><strong>syntax:</strong> <em>ajp_max_temp_file_size 0</em></p>
+<p><strong>default:</strong> <em>?</em></p>
+<p><strong>context:</strong> <em>?</em></p>
+<p>This directive turns off ajp buffering according to the source code.</p>
+<p>
+</p>
+<h2><a name="ajp_pass_header">ajp_pass_header</a></h2>
+<p><strong>syntax:</strong> <em>ajp_pass_header name</em></p>
+<p><strong>context:</strong> <em>http, server, location</em></p>
+<p>
+</p>
+<h2><a name="ajp_read_timeout">ajp_read_timeout</a></h2>
+<p><strong>syntax:</strong> <em>ajp_read_timeout time</em></p>
+<p><strong>default:</strong> <em>60</em></p>
+<p><strong>context:</strong> <em>http, server, location</em></p>
+<p>Directive sets the amount of time for upstream to wait for a ajp process to send data.  Change this directive if you have long running ajp processes that do not produce output until they have finished processing.  If you are seeing an upstream timed out error in the error log, then increase this parameter to something more appropriate.</p>
+<p>
+</p>
+<h2><a name="ajp_store">ajp_store</a></h2>
+<p><strong>syntax:</strong> <em>ajp_store [on | off | path] </em></p>
+<p><strong>default:</strong> <em>ajp_store off</em></p>
+<p><strong>context:</strong> <em>http, server, location</em></p>
+<p>This directive sets the path in which upstream files are stored. The parameter &quot;on&quot; preserves files in accordance with path specified in directives <em>alias</em> or <em>root</em>. The parameter &quot;off&quot; forbids storing. Furthermore, the name of the path can be clearly assigned with the aid of the line with the variables:</p>
+<p>ajp_store   /data/www$original_uri;</p>
+<p>The time of modification for the file will be set to the date of &quot;Last-Modified&quot; header in the response. To be able to safe files in this directory it is necessary that the path is under the directory with temporary files, given by directive ajp_temp_path for the data location.</p>
+<p>This directive can be used for creating the local copies for dynamic output of the backend which is not very often changed, for example:</p>
+<p>location /images/ {
+    root                 /data/www;
+    error_page           404 = /fetch$uri;
+}</p>
+<p>location /fetch {
+    internal;</p>
+<pre>
+    ajp_pass           backend;
+    ajp_store          on;
+    ajp_store_access   user:rw  group:rw  all:r;
+    ajp_temp_path      /data/temp;</pre>
+<pre>
+    alias             /data/www;
+}</pre>
+<p>To be clear ajp_store is not a cache, it's rather mirror on demand.</p>
+<p>
+</p>
+<h2><a name="ajp_store_access">ajp_store_access</a></h2>
+<p><strong>syntax:</strong> <em>ajp_store_access users:permissions [users:permission ...] </em></p>
+<p><strong>default:</strong> <em>ajp_store_access user:rw</em></p>
+<p><strong>context:</strong> <em>http, server, location</em></p>
+<p>This directive assigns the permissions for the created files and directories, for example:</p>
+<p>ajp_store_access  user:rw  group:rw  all:r;</p>
+<p>If any rights for groups or all are assigned, then it is not necessary to assign rights for user:</p>
+<p>ajp_store_access  group:rw  all:r;</p>
+<p>
+</p>
+<hr />
+<h1><a name="installation">Installation</a></h1>
+<p>Download the latest version of the release tarball of this module from github (<a href="http://github.com/yaoweibin/nginx_ajp_module">http://github.com/yaoweibin/nginx_ajp_module</a>)</p>
+<p>Grab the nginx source code from nginx.org (<a href="http://nginx.org/">http://nginx.org/</a>), for example, the version 0.7.65 (see nginx compatibility), and then build the source with this module:</p>
+<pre>
+    $ wget '<a href="http://nginx.org/download/nginx-0.7.65.tar.gz">http://nginx.org/download/nginx-0.7.65.tar.gz</a>'
+    $ tar -xzvf nginx-0.7.65.tar.gz
+    $ cd nginx-0.7.65/
+    $ patch -p1 &lt; /path/to/nginx_ajp_module/ajp.patch</pre>
+<pre>
+    $ ./configure --add-module=/path/to/nginx_ajp_module</pre>
+<pre>
+    $ make
+    $ make install</pre>
+<p>
+</p>
+<hr />
+<h1><a name="compatibility">Compatibility</a></h1>
+<ul>
+<li>
+<p>My test bed is 0.7.65 and 0.8.34.</p>
+</li>
+</ul>
+<p>
+</p>
+<hr />
+<h1><a name="todo">TODO</a></h1>
+<ul>
+<li>
+<p>Keepalive</p>
+</li>
+</ul>
+<p>
+</p>
+<hr />
+<h1><a name="known_issues">Known Issues</a></h1>
+<ul>
+<li>
+<p>Developing</p>
+</li>
+</ul>
+<p>
+</p>
+<hr />
+<h1><a name="changelogs">Changelogs</a></h1>
+<p>
+</p>
+<h2><a name="v0_1">v0.1</a></h2>
+<ul>
+<li>
+<p>first release</p>
+</li>
+</ul>
+<p>
+</p>
+<hr />
+<h1><a name="authors">Authors</a></h1>
+<p>Weibin Yao(姚伟斌) <em>yaoweibin at gmail dot com</em></p>
+<p>
+</p>
+<hr />
+<h1><a name="copyright___license">Copyright &amp; License</a></h1>
+<p>This README template copy from agentzh (<a href="http://github.com/agentzh">http://github.com/agentzh</a>).</p>
+<p>I borrowed a lot of codes from Fastcgi module of Nginx. This part of code is copyrighted by Igor Sysoev. And the AJP library code from apache's mod_ajp_proxy (<a href="http://httpd.apache.org/docs/trunk/mod/mod_proxy_ajp.html">http://httpd.apache.org/docs/trunk/mod/mod_proxy_ajp.html</a>). Thanks for their hard work.</p>
+<p>This module is licensed under the BSD license.</p>
+<p>Copyright (C) 2010 by Weibin Yao &lt;<a href="mailto:yaoweibin@gmail.com">yaoweibin@gmail.com</a>&gt;.</p>
+<p>All rights reserved.</p>
+<p>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</p>
+<ul>
+<li>
+<p>Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.</p>
+</li>
+<li>
+<p>Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.</p>
+</li>
+</ul>
+<p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
+
+</body>
+
+</html>

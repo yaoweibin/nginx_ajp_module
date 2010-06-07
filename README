@@ -1,1 +1,326 @@
-support for jk protocol between nginx and tomcat
+Name
+    nginx_ajp_module - support AJP protocol proxy with Nginx
+
+Status
+    This module is at its very early phase of development and considered
+    highly experimental. But you're encouraged to test it out on your side
+    and report any quirks that you experience.
+
+    We need your help! If you find this module useful and/or interesting,
+    please consider joining the development!
+
+Synopsis
+    http { upstream tomcats { server 127.0.0.1:8009; }
+
+        server {
+            listen 80;
+
+            location / {
+                ajp_pass tomcats;
+            }
+        }
+    }
+
+Description
+    The motivation of writing these modules is Nginx's high performance and
+    robustness.
+
+Directives
+  ajp_buffers
+    syntax: *ajp_buffers the_number is_size;*
+
+    default: *ajp_buffers 8k;*
+
+    context: *http, server, location*
+
+    This directive sets the number and the size of buffers, into which will
+    be read the answer, obtained from the ajp server. By default, the size
+    of one buffer is equal to the size of two pages. Depending on platform
+    this is either 4K, 8K or 16K.
+
+  ajp_buffer_size
+    syntax: *ajp_buffer_size the_size*
+
+    default: *ajp_buffer_size 4k/8k*
+
+    context: *http, server, location*
+
+    This directive sets the buffersize, into which will be read the first
+    part of the response, obtained from the ajp server.
+
+    In this part of response the small response-header is located, as a
+    rule.
+
+    By default, the buffersize is equal to the size of one buffer in
+    directive "ajp_buffers"; however, it is possible to set it to less.
+
+  ajp_cache
+    syntax: *ajp_cache zone;*
+
+    default: *off*
+
+    context: *http, server, location*
+
+    The directive specifies the area which actually is the share memory's
+    name for caching. The same area can be used in several places.
+
+  ajp_cache_key
+    syntax: *ajp_cache_key line ;*
+
+    default: *none*
+
+    context: *http, server, location*
+
+    The directive sets the key for caching, for example: ajp_cache_key
+    localhost: 9000 $ request_uri;
+
+  ajp_cache_methods
+    syntax: *ajp_cache_methods [GET HEAD POST];*
+
+    default: *ajp_cache_methods GET HEAD;*
+
+    context: *main,http,location*
+
+    GET/HEAD is syntax sugar, i.e. you can not disable GET/HEAD even if you
+    set just ajp_cache_methods POST;
+
+  ajp_cache_min_uses
+    syntax: *ajp_cache_min_uses n*
+
+    default: *ajp_cache_min_uses 1*
+
+    context: *http, server, location*
+
+    TODO: Description.
+
+  ajp_cache_path
+    syntax: *ajp_cache_path /path/to/cache [levels=m:n keys_zone=name:time
+    inactive=time clean_time=time]*
+
+    default: *none*
+
+    context: *http, server, location*
+
+    TODO: Description.
+
+  ajp_cache_use_stale
+    syntax: *ajp_cache_use_stale
+    [updating|error|timeout|invalid_header|http_500]*
+
+    default: *ajp_cache_use_stale off;*
+
+    context: *http, server, location*
+
+    TODO: Description.
+
+  ajp_cache_valid
+    syntax: *ajp_cache_valid [http_error_code|time]*
+
+    default: *none*
+
+    context: *http, server, location*
+
+    TODO: Description.
+
+  ajp_index
+    syntax: *ajp_index file*
+
+    default: *none*
+
+    context: *http, server, location*
+
+    The name of the file which will be appended to the URI and stored in the
+    variable $ajp_script_name if URI concludes with a slash.
+
+  ajp_hide_header
+    syntax: *ajp_hide_header name*
+
+    context: *http, server, location*
+
+    By default, Nginx does not pass headers "Status" and "X-Accel-..." from
+    the AJP process back to the client. This directive can be used to hide
+    other headers as well.
+
+    If the headers "Status" and "X-Accel-..." must be provided, then it is
+    necessary to use directive ajp_pass_header to force them to be returned
+    to the client.
+
+  ajp_ignore_client_abort
+    syntax: *ajp_ignore_client_abort on|off*
+
+    default: *ajp_ignore_client_abort off*
+
+    context: *http, server, location*
+
+    This directive determines if current request to the AJP-server must be
+    aborted in case the client aborts the request to the server.
+
+  ajp_intercept_errors
+    syntax: *ajp_intercept_errors on|off*
+
+    default: *ajp_intercept_errors off*
+
+    context: *http, server, location*
+
+    This directive determines whether or not to transfer 4xx and 5xx errors
+    back to the client or to allow Nginx to answer with directive
+    error_page.
+
+    Note: You need to explicitly define the error_page handler for this for
+    it to be useful. As Igor says, "nginx does not intercept an error if
+    there is no custom handler for it it does not show its default pages.
+    This allows to intercept some errors, while passing others as are."
+
+  ajp_max_temp_file_size
+    syntax: *ajp_max_temp_file_size 0*
+
+    default: *?*
+
+    context: *?*
+
+    This directive turns off ajp buffering according to the source code.
+
+  ajp_pass_header
+    syntax: *ajp_pass_header name*
+
+    context: *http, server, location*
+
+  ajp_read_timeout
+    syntax: *ajp_read_timeout time*
+
+    default: *60*
+
+    context: *http, server, location*
+
+    Directive sets the amount of time for upstream to wait for a ajp process
+    to send data. Change this directive if you have long running ajp
+    processes that do not produce output until they have finished
+    processing. If you are seeing an upstream timed out error in the error
+    log, then increase this parameter to something more appropriate.
+
+  ajp_store
+    syntax: *ajp_store [on | off | path] *
+
+    default: *ajp_store off*
+
+    context: *http, server, location*
+
+    This directive sets the path in which upstream files are stored. The
+    parameter "on" preserves files in accordance with path specified in
+    directives *alias* or *root*. The parameter "off" forbids storing.
+    Furthermore, the name of the path can be clearly assigned with the aid
+    of the line with the variables:
+
+    ajp_store /data/www$original_uri;
+
+    The time of modification for the file will be set to the date of
+    "Last-Modified" header in the response. To be able to safe files in this
+    directory it is necessary that the path is under the directory with
+    temporary files, given by directive ajp_temp_path for the data location.
+
+    This directive can be used for creating the local copies for dynamic
+    output of the backend which is not very often changed, for example:
+
+    location /images/ { root /data/www; error_page 404 = /fetch$uri; }
+
+    location /fetch { internal;
+
+        ajp_pass           backend;
+        ajp_store          on;
+        ajp_store_access   user:rw  group:rw  all:r;
+        ajp_temp_path      /data/temp;
+
+        alias             /data/www;
+    }
+
+    To be clear ajp_store is not a cache, it's rather mirror on demand.
+
+  ajp_store_access
+    syntax: *ajp_store_access users:permissions [users:permission ...] *
+
+    default: *ajp_store_access user:rw*
+
+    context: *http, server, location*
+
+    This directive assigns the permissions for the created files and
+    directories, for example:
+
+    ajp_store_access user:rw group:rw all:r;
+
+    If any rights for groups or all are assigned, then it is not necessary
+    to assign rights for user:
+
+    ajp_store_access group:rw all:r;
+
+Installation
+    Download the latest version of the release tarball of this module from
+    github (<http://github.com/yaoweibin/nginx_ajp_module>)
+
+    Grab the nginx source code from nginx.org (<http://nginx.org/>), for
+    example, the version 0.7.65 (see nginx compatibility), and then build
+    the source with this module:
+
+        $ wget 'http://nginx.org/download/nginx-0.7.65.tar.gz'
+        $ tar -xzvf nginx-0.7.65.tar.gz
+        $ cd nginx-0.7.65/
+        $ patch -p1 < /path/to/nginx_ajp_module/ajp.patch
+
+        $ ./configure --add-module=/path/to/nginx_ajp_module
+
+        $ make
+        $ make install
+
+Compatibility
+    *   My test bed is 0.7.65 and 0.8.34.
+
+TODO
+    *   Keepalive
+
+Known Issues
+    *   Developing
+
+Changelogs
+  v0.1
+    *   first release
+
+Authors
+    Weibin Yao(姚伟斌) *yaoweibin at gmail dot com*
+
+Copyright & License
+    This README template copy from agentzh (<http://github.com/agentzh>).
+
+    I borrowed a lot of codes from Fastcgi module of Nginx. This part of
+    code is copyrighted by Igor Sysoev. And the AJP library code from
+    apache's mod_ajp_proxy
+    (<http://httpd.apache.org/docs/trunk/mod/mod_proxy_ajp.html>). Thanks
+    for their hard work.
+
+    This module is licensed under the BSD license.
+
+    Copyright (C) 2010 by Weibin Yao <yaoweibin@gmail.com>.
+
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are
+    met:
+
+    *   Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer.
+
+    *   Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer in the
+        documentation and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+    IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+    TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+    PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+    TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+    PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+    LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
