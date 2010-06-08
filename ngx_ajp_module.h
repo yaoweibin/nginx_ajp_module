@@ -14,13 +14,6 @@ typedef struct {
 
     size_t                         ajp_header_packet_buffer_size_conf;
     size_t                         max_ajp_data_packet_size_conf;
-    ngx_str_t                      index;
-
-    ngx_array_t                   *flushes;
-    ngx_array_t                   *params_len;
-    ngx_array_t                   *params;
-    ngx_array_t                   *params_source;
-    ngx_array_t                   *catch_stderr;
 
     ngx_array_t                   *ajp_lengths;
     ngx_array_t                   *ajp_values;

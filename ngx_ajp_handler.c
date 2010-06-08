@@ -159,7 +159,7 @@ static ngx_int_t
 ngx_http_ajp_create_key(ngx_http_request_t *r)
 {
     ngx_str_t                    *key;
-    ngx_http_ajp_loc_conf_t  *alcf;
+    ngx_http_ajp_loc_conf_t      *alcf;
 
     key = ngx_array_push(&r->cache->keys);
     if (key == NULL) {
@@ -180,20 +180,10 @@ ngx_http_ajp_create_key(ngx_http_request_t *r)
 static ngx_int_t
 ngx_http_ajp_create_request(ngx_http_request_t *r)
 {
-    /*off_t                         file_pos;*/
-    /*u_char                        ch, *pos;*/
-    /*size_t                        size, len, key_len, val_len, padding;*/
     ajp_msg_t                    *msg;
-    /*ngx_uint_t                    i, n, next;*/
-    /*ngx_buf_t                    *b;*/
     ngx_chain_t                  *cl;
-    /*ngx_http_script_code_pt       code;*/
-    /*ngx_http_script_engine_t      e, le;*/
     ngx_http_ajp_ctx_t           *a;
-    ngx_http_ajp_loc_conf_t  *alcf;
-    /*ngx_http_script_len_code_pt   lcode;*/
-
-    /*len = 0;*/
+    ngx_http_ajp_loc_conf_t      *alcf;
 
     a = ngx_http_get_module_ctx(r, ngx_http_ajp_module);
     alcf = ngx_http_get_module_loc_conf(r, ngx_http_ajp_module);
@@ -201,30 +191,6 @@ ngx_http_ajp_create_request(ngx_http_request_t *r)
     if (a == NULL || alcf == NULL) {
         return NGX_ERROR;
     }
-    /*
-    if (alcf->params_len) {
-        ngx_memzero(&le, sizeof(ngx_http_script_engine_t));
-
-        ngx_http_script_flush_no_cacheable_variables(r, alcf->flushes);
-        le.flushed = 1;
-
-        le.ip = alcf->params_len->elts;
-        le.request = r;
-
-        while (*(uintptr_t *) le.ip) {
-
-            lcode = *(ngx_http_script_len_code_pt *) le.ip;
-            key_len = lcode(&le);
-
-            for (val_len = 0; *(uintptr_t *) le.ip; val_len += lcode(&le)) {
-                lcode = *(ngx_http_script_len_code_pt *) le.ip;
-            }
-            le.ip += sizeof(uintptr_t);
-
-            len += 1 + key_len + ((val_len > 127) ? 4 : 1) + val_len;
-        }
-    }
-    */
 
     if (NGX_OK != ajp_msg_create(r->pool, alcf->ajp_header_packet_buffer_size_conf, &msg)) {
         return NGX_ERROR;
@@ -245,55 +211,6 @@ ngx_http_ajp_create_request(ngx_http_request_t *r)
     cl->buf->flush = 1;
 
     a->state = ngx_http_ajp_st_forward_request_sent;
-
-    /*
-    if (alcf->params_len) {
-        ngx_memzero(&e, sizeof(ngx_http_script_engine_t));
-
-        e.ip = alcf->params->elts;
-        e.pos = b->last;
-        e.request = r;
-        e.flushed = 1;
-
-        le.ip = alcf->params_len->elts;
-
-        while (*(uintptr_t *) le.ip) {
-
-            lcode = *(ngx_http_script_len_code_pt *) le.ip;
-            key_len = (u_char) lcode(&le);
-
-            for (val_len = 0; *(uintptr_t *) le.ip; val_len += lcode(&le)) {
-                lcode = *(ngx_http_script_len_code_pt *) le.ip;
-            }
-            le.ip += sizeof(uintptr_t);
-
-            *e.pos++ = (u_char) key_len;
-
-            if (val_len > 127) {
-                *e.pos++ = (u_char) (((val_len >> 24) & 0x7f) | 0x80);
-                *e.pos++ = (u_char) ((val_len >> 16) & 0xff);
-                *e.pos++ = (u_char) ((val_len >> 8) & 0xff);
-                *e.pos++ = (u_char) (val_len & 0xff);
-
-            } else {
-                *e.pos++ = (u_char) val_len;
-            }
-
-            while (*(uintptr_t *) e.ip) {
-                code = *(ngx_http_script_code_pt *) e.ip;
-                code((ngx_http_script_engine_t *) &e);
-            }
-            e.ip += sizeof(uintptr_t);
-
-            ngx_log_debug4(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                           "ajp param: \"%*s: %*s\"",
-                           key_len, e.pos - (key_len + val_len),
-                           val_len, e.pos - val_len);
-        }
-
-        b->last = e.pos;
-    }
-    */
 
     if (alcf->upstream.pass_request_body) {
         a->body = r->upstream->request_bufs;

@@ -96,13 +96,6 @@ static ngx_command_t  ngx_http_ajp_commands[] = {
       0,
       NULL },
 
-    { ngx_string("ajp_index"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_str_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_ajp_loc_conf_t, index),
-      NULL },
-
     { ngx_string("ajp_header_packet_buffer_size"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_size_slot,
@@ -110,7 +103,7 @@ static ngx_command_t  ngx_http_ajp_commands[] = {
       offsetof(ngx_http_ajp_loc_conf_t, ajp_header_packet_buffer_size_conf),
       NULL },
 
-    { ngx_string("max_ajp_data_packet_size"),
+    { ngx_string("ajp_max_data_packet_size"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_str_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
@@ -303,12 +296,12 @@ static ngx_command_t  ngx_http_ajp_commands[] = {
       0,
       NULL },
 
-    { ngx_string("ajp_param"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE2,
-      ngx_conf_set_keyval_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_ajp_loc_conf_t, params_source),
-      NULL },
+    /*{ ngx_string("ajp_param"),*/
+    /*NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE2,*/
+    /*ngx_conf_set_keyval_slot,*/
+    /*NGX_HTTP_LOC_CONF_OFFSET,*/
+    /*offsetof(ngx_http_ajp_loc_conf_t, params_source),*/
+    /*NULL },*/
 
     { ngx_string("ajp_pass_header"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
@@ -331,13 +324,6 @@ static ngx_command_t  ngx_http_ajp_commands[] = {
       offsetof(ngx_http_ajp_loc_conf_t, upstream.ignore_headers),
       &ngx_http_ajp_ignore_headers_masks },
 
-    { ngx_string("ajp_catch_stderr"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_str_array_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_ajp_loc_conf_t, catch_stderr),
-      NULL },
-
       ngx_null_command
 };
 
@@ -351,14 +337,14 @@ static ngx_http_module_t  ngx_http_ajp_module_ctx = {
     NULL,                                  /* create server configuration */
     NULL,                                  /* merge server configuration */
 
-    ngx_http_ajp_create_loc_conf,      /* create location configuration */
-    ngx_http_ajp_merge_loc_conf        /* merge location configuration */
+    ngx_http_ajp_create_loc_conf,          /* create location configuration */
+    ngx_http_ajp_merge_loc_conf            /* merge location configuration */
 };
 
 ngx_module_t  ngx_http_ajp_module = {
     NGX_MODULE_V1,
-    &ngx_http_ajp_module_ctx,          /* module context */
-    ngx_http_ajp_commands,             /* module directives */
+    &ngx_http_ajp_module_ctx,              /* module context */
+    ngx_http_ajp_commands,                 /* module directives */
     NGX_HTTP_MODULE,                       /* module type */
     NULL,                                  /* init master */
     NULL,                                  /* init module */
@@ -373,7 +359,7 @@ ngx_module_t  ngx_http_ajp_module = {
 static char *
 ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
-    ngx_http_ajp_loc_conf_t *alcf = conf;
+    ngx_http_ajp_loc_conf_t    *alcf = conf;
 
     ngx_url_t                   u;
     ngx_str_t                  *value, *url;
@@ -434,9 +420,8 @@ ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 static char *
 ngx_http_ajp_store(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
-    ngx_http_ajp_loc_conf_t *alcf = conf;
-
     ngx_str_t                  *value;
+    ngx_http_ajp_loc_conf_t    *alcf = conf;
     ngx_http_script_compile_t   sc;
 
     if (alcf->upstream.store != NGX_CONF_UNSET
@@ -630,8 +615,6 @@ ngx_http_ajp_create_loc_conf(ngx_conf_t *cf)
      *     conf->upstream.store_lengths = NULL;
      *     conf->upstream.store_values = NULL;
      *
-     *     conf->index.len = 0;
-     *     conf->index.data = NULL;
      */
     conf->ajp_header_packet_buffer_size_conf = NGX_CONF_UNSET_SIZE;
     conf->max_ajp_data_packet_size_conf = NGX_CONF_UNSET_SIZE;
@@ -669,8 +652,6 @@ ngx_http_ajp_create_loc_conf(ngx_conf_t *cf)
     /* "ajp_cyclic_temp_file" is disabled */
     conf->upstream.cyclic_temp_file = 0;
 
-    conf->catch_stderr = NGX_CONF_UNSET_PTR;
-
     return conf;
 }
 
@@ -680,15 +661,9 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_http_ajp_loc_conf_t *prev = parent;
     ngx_http_ajp_loc_conf_t *conf = child;
 
-    u_char                       *p;
     size_t                        size;
-    uintptr_t                    *code;
     ngx_str_t                    *h;
-    ngx_uint_t                    i;
-    ngx_keyval_t                 *src;
     ngx_hash_init_t               hash;
-    ngx_http_script_compile_t     sc;
-    ngx_http_script_copy_code_t  *copy;
 
     if (conf->upstream.store != 0) {
         ngx_conf_merge_value(conf->upstream.store,
@@ -748,7 +723,7 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
         conf->ajp_header_packet_buffer_size_conf = AJP_MAX_BUFFER_SZ;
     }
 
-    if(conf->max_ajp_data_packet_size_conf < AJP_MAX_BUFFER_SZ) {
+    if(conf->max_ajp_data_packet_size_conf < AJP_MSG_BUFFER_SZ) {
         conf->max_ajp_data_packet_size_conf = AJP_MSG_BUFFER_SZ;
     }
     else if(conf->max_ajp_data_packet_size_conf > AJP_MAX_BUFFER_SZ ) {
@@ -914,11 +889,6 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_conf_merge_value(conf->upstream.intercept_errors,
                               prev->upstream.intercept_errors, 0);
 
-    ngx_conf_merge_ptr_value(conf->catch_stderr, prev->catch_stderr, NULL);
-
-
-    ngx_conf_merge_str_value(conf->index, prev->index, "");
-
     hash.max_size = 512;
     hash.bucket_size = ngx_align(64, ngx_cacheline_size);
     hash.name = "ajp_hide_headers_hash";
@@ -948,135 +918,6 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
         conf->ajp_lengths = prev->ajp_lengths;
         conf->ajp_values = prev->ajp_values;
     }
-
-    if (conf->params_source == NULL) {
-        conf->flushes = prev->flushes;
-        conf->params_len = prev->params_len;
-        conf->params = prev->params;
-        conf->params_source = prev->params_source;
-
-        if (conf->params_source == NULL) {
-            return NGX_CONF_OK;
-        }
-    }
-
-    conf->params_len = ngx_array_create(cf->pool, 64, 1);
-    if (conf->params_len == NULL) {
-        return NGX_CONF_ERROR;
-    }
-
-    conf->params = ngx_array_create(cf->pool, 512, 1);
-    if (conf->params == NULL) {
-        return NGX_CONF_ERROR;
-    }
-
-    src = conf->params_source->elts;
-    for (i = 0; i < conf->params_source->nelts; i++) {
-
-        if (ngx_http_script_variables_count(&src[i].value) == 0) {
-            copy = ngx_array_push_n(conf->params_len,
-                                    sizeof(ngx_http_script_copy_code_t));
-            if (copy == NULL) {
-                return NGX_CONF_ERROR;
-            }
-
-            copy->code = (ngx_http_script_code_pt)
-                                                  ngx_http_script_copy_len_code;
-            copy->len = src[i].key.len;
-
-
-            copy = ngx_array_push_n(conf->params_len,
-                                    sizeof(ngx_http_script_copy_code_t));
-            if (copy == NULL) {
-                return NGX_CONF_ERROR;
-            }
-
-            copy->code = (ngx_http_script_code_pt)
-                                                 ngx_http_script_copy_len_code;
-            copy->len = src[i].value.len;
-
-
-            size = (sizeof(ngx_http_script_copy_code_t)
-                       + src[i].key.len + src[i].value.len
-                       + sizeof(uintptr_t) - 1)
-                    & ~(sizeof(uintptr_t) - 1);
-
-            copy = ngx_array_push_n(conf->params, size);
-            if (copy == NULL) {
-                return NGX_CONF_ERROR;
-            }
-
-            copy->code = ngx_http_script_copy_code;
-            copy->len = src[i].key.len + src[i].value.len;
-
-            p = (u_char *) copy + sizeof(ngx_http_script_copy_code_t);
-
-            p = ngx_cpymem(p, src[i].key.data, src[i].key.len);
-            ngx_memcpy(p, src[i].value.data, src[i].value.len);
-
-        } else {
-            copy = ngx_array_push_n(conf->params_len,
-                                    sizeof(ngx_http_script_copy_code_t));
-            if (copy == NULL) {
-                return NGX_CONF_ERROR;
-            }
-
-            copy->code = (ngx_http_script_code_pt)
-                                                 ngx_http_script_copy_len_code;
-            copy->len = src[i].key.len;
-
-
-            size = (sizeof(ngx_http_script_copy_code_t)
-                    + src[i].key.len + sizeof(uintptr_t) - 1)
-                    & ~(sizeof(uintptr_t) - 1);
-
-            copy = ngx_array_push_n(conf->params, size);
-            if (copy == NULL) {
-                return NGX_CONF_ERROR;
-            }
-
-            copy->code = ngx_http_script_copy_code;
-            copy->len = src[i].key.len;
-
-            p = (u_char *) copy + sizeof(ngx_http_script_copy_code_t);
-            ngx_memcpy(p, src[i].key.data, src[i].key.len);
-
-
-            ngx_memzero(&sc, sizeof(ngx_http_script_compile_t));
-
-            sc.cf = cf;
-            sc.source = &src[i].value;
-            sc.flushes = &conf->flushes;
-            sc.lengths = &conf->params_len;
-            sc.values = &conf->params;
-
-            if (ngx_http_script_compile(&sc) != NGX_OK) {
-                return NGX_CONF_ERROR;
-            }
-        }
-
-        code = ngx_array_push_n(conf->params_len, sizeof(uintptr_t));
-        if (code == NULL) {
-            return NGX_CONF_ERROR;
-        }
-
-        *code = (uintptr_t) NULL;
-
-
-        code = ngx_array_push_n(conf->params, sizeof(uintptr_t));
-        if (code == NULL) {
-            return NGX_CONF_ERROR;
-        }
-
-        *code = (uintptr_t) NULL;
-    }
-
-    code = ngx_array_push_n(conf->params_len, sizeof(uintptr_t));
-    if (code == NULL) {
-        return NGX_CONF_ERROR;
-    }
-
-    *code = (uintptr_t) NULL;
 
     return NGX_CONF_OK;
 }
