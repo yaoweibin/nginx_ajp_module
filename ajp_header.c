@@ -653,10 +653,10 @@ static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
     uint16_t  num_headers;
     int i;
     u_char line[1024], *last;
-    ngx_table_elt_t              *h;
+    ngx_table_elt_t                *h;
     ngx_http_upstream_header_t     *hh;
-    ngx_http_upstream_t          *u;
-    ngx_http_ajp_ctx_t           *a;
+    ngx_http_upstream_t            *u;
+    ngx_http_ajp_ctx_t             *a;
     ngx_http_upstream_main_conf_t  *umcf;
 
     umcf = ngx_http_get_module_main_conf(r, ngx_http_upstream_module);

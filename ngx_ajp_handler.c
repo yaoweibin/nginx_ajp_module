@@ -31,8 +31,8 @@ static ngx_int_t ngx_http_upstream_send_request_body(ngx_http_request_t *r,
 ngx_int_t
 ngx_http_ajp_handler(ngx_http_request_t *r)
 {
-    ngx_int_t                     rc;
-    ngx_http_upstream_t          *u;
+    ngx_int_t                 rc;
+    ngx_http_upstream_t      *u;
     ngx_http_ajp_ctx_t       *a;
     ngx_http_ajp_loc_conf_t  *alcf;
 
@@ -244,9 +244,7 @@ ngx_http_ajp_create_request(ngx_http_request_t *r)
 static ngx_int_t
 ngx_http_ajp_reinit_request(ngx_http_request_t *r)
 {
-
     /*some stuff with the state ?*/
-
     return NGX_OK;
 }
 
@@ -268,6 +266,9 @@ static void
 ngx_http_upstream_dummy_handler(ngx_http_request_t *r,
     ngx_http_upstream_t *u)
 {
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                   "ajp upstream dummy handler");
+    return;
 }
 
 static ngx_int_t
@@ -372,7 +373,7 @@ ngx_http_upstream_send_request_body(ngx_http_request_t *r, ngx_http_upstream_t *
 static ngx_int_t
 ngx_http_ajp_process_header(ngx_http_request_t *r)
 {
-    uint16_t length;
+    uint16_t                      length;
     u_char                       *pos, type;
     ngx_int_t                     rc;
     ngx_buf_t                    *buf;
