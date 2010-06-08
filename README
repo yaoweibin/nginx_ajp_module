@@ -15,7 +15,7 @@ Synopsis
         upstream tomcats {
 
             server 127.0.0.1:8009;
-
+            keepalive 10;
         }
 
         server {
@@ -268,6 +268,24 @@ Directives
 
     ajp_store_access group:rw all:r;
 
+  keepalive
+    syntax: *keepalive <num> [single]*
+
+    default: *none*
+
+    context: *upstream*
+
+    Switches on keepalive module for the upstream in question. This
+    directive comes from ngx_http_upstream_keepalive_module
+    (<http://mdounin.ru/hg/ngx_http_upstream_keepalive/>). Parameters:
+
+    *   num: Maximum number of connections to cache. If there isn't enough
+        room to cache new connections - last recently used connections will
+        be kicked off the cache.
+
+    *   single: Treat everything as single host. With this flag connections
+        to different backends are treated as equal.
+
 Installation
     Download the latest version of the release tarball of this module from
     github (<http://github.com/yaoweibin/nginx_ajp_module>)
@@ -291,6 +309,10 @@ Compatibility
 
 TODO
     *   Keepalive
+
+    *   Port ngx_jvm_route_module
+
+    *   Add AJP health check
 
 Known Issues
     *   Developing

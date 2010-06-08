@@ -33,6 +33,7 @@ __DATA__
 --- http_config
     upstream tomcats{      
         server 127.0.0.1:8009;
+        keepalive 10;
     }
 --- config
     location / {      

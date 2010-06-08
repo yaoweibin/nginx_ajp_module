@@ -41,6 +41,7 @@
 		<li><a href="#ajp_read_timeout">ajp_read_timeout</a></li>
 		<li><a href="#ajp_store">ajp_store</a></li>
 		<li><a href="#ajp_store_access">ajp_store_access</a></li>
+		<li><a href="#keepalive">keepalive</a></li>
 	</ul>
 
 	<li><a href="#installation">Installation</a></li>
@@ -80,8 +81,8 @@
 <pre>
     upstream tomcats {</pre>
 <pre>
-        server 127.0.0.1:8009;</pre>
-<pre>
+        server 127.0.0.1:8009;
+        keepalive 10;
     }</pre>
 <pre>
     server {</pre>
@@ -259,6 +260,22 @@ This directive can be used to hide other headers as well.</p>
 <p>ajp_store_access  group:rw  all:r;</p>
 <p>
 </p>
+<h2><a name="keepalive">keepalive</a></h2>
+<p><strong>syntax:</strong> <em>keepalive &lt;num</em> [single] &gt;&gt;</p>
+<p><strong>default:</strong> <em>none</em></p>
+<p><strong>context:</strong> <em>upstream</em></p>
+<p>Switches on keepalive module for the upstream in question. This directive comes from ngx_http_upstream_keepalive_module (<a href="http://mdounin.ru/hg/ngx_http_upstream_keepalive/">http://mdounin.ru/hg/ngx_http_upstream_keepalive/</a>).
+Parameters:</p>
+<ul>
+<li>
+<p>num: Maximum number of connections to cache.  If there isn't enough room to cache new connections - last recently used connections will be kicked off the cache.</p>
+</li>
+<li>
+<p>single: Treat everything as single host.  With this flag connections to different backends are treated as equal.</p>
+</li>
+</ul>
+<p>
+</p>
 <hr />
 <h1><a name="installation">Installation</a></h1>
 <p>Download the latest version of the release tarball of this module from github (<a href="http://github.com/yaoweibin/nginx_ajp_module">http://github.com/yaoweibin/nginx_ajp_module</a>)</p>
@@ -289,6 +306,12 @@ This directive can be used to hide other headers as well.</p>
 <ul>
 <li>
 <p>Keepalive</p>
+</li>
+<li>
+<p>Port ngx_jvm_route_module</p>
+</li>
+<li>
+<p>Add AJP health check</p>
 </li>
 </ul>
 <p>
