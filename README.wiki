@@ -11,19 +11,26 @@ We need your help! If you find this module useful and/or interesting, please con
 = Synopsis =
 
 <geshi lang="nginx">
+
 http {
+
     upstream tomcats {
+
         server 127.0.0.1:8009;
+
     }
 
     server {
+
         listen 80;
 
         location / {
             ajp_pass tomcats;
         }
     }
+
 }
+
 </geshi>
 
 = Description =
@@ -222,12 +229,16 @@ The time of modification for the file will be set to the date of "Last-Modified"
 This directive can be used for creating the local copies for dynamic output of the backend which is not very often changed, for example:
 
 <geshi lang="nginx">
+
 location /images/ {
+
     root                 /data/www;
     error_page           404 = /fetch$uri;
+
 }
 
 location /fetch {
+
     internal;
 
     ajp_pass           backend;
@@ -236,7 +247,9 @@ location /fetch {
     ajp_temp_path      /data/temp;
 
     alias             /data/www;
+
 }
+
 </geshi>
 
 To be clear ajp_store is not a cache, it's rather mirror on demand.

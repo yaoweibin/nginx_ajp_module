@@ -76,19 +76,23 @@
 </p>
 <hr />
 <h1><a name="synopsis">Synopsis</a></h1>
-<p>http {
-    upstream tomcats {
-        server 127.0.0.1:8009;
-    }</p>
+<p>http {</p>
 <pre>
-    server {
+    upstream tomcats {</pre>
+<pre>
+        server 127.0.0.1:8009;</pre>
+<pre>
+    }</pre>
+<pre>
+    server {</pre>
+<pre>
         listen 80;</pre>
 <pre>
         location / {
             ajp_pass tomcats;
         }
-    }
-}</pre>
+    }</pre>
+<p>}</p>
 <p>
 </p>
 <hr />
@@ -226,20 +230,22 @@ This directive can be used to hide other headers as well.</p>
 <p>ajp_store   /data/www$original_uri;</p>
 <p>The time of modification for the file will be set to the date of &quot;Last-Modified&quot; header in the response. To be able to safe files in this directory it is necessary that the path is under the directory with temporary files, given by directive ajp_temp_path for the data location.</p>
 <p>This directive can be used for creating the local copies for dynamic output of the backend which is not very often changed, for example:</p>
-<p>location /images/ {
+<p>location /images/ {</p>
+<pre>
     root                 /data/www;
-    error_page           404 = /fetch$uri;
-}</p>
-<p>location /fetch {
-    internal;</p>
+    error_page           404 = /fetch$uri;</pre>
+<p>}</p>
+<p>location /fetch {</p>
+<pre>
+    internal;</pre>
 <pre>
     ajp_pass           backend;
     ajp_store          on;
     ajp_store_access   user:rw  group:rw  all:r;
     ajp_temp_path      /data/temp;</pre>
 <pre>
-    alias             /data/www;
-}</pre>
+    alias             /data/www;</pre>
+<p>}</p>
 <p>To be clear ajp_store is not a cache, it's rather mirror on demand.</p>
 <p>
 </p>

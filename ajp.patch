@@ -1,8 +1,8 @@
 diff --git a/src/event/ngx_event_pipe.c b/src/event/ngx_event_pipe.c
-index 5d5035c..39c347e 100644
+index 5d5035c..27e9e50 100644
 --- a/src/event/ngx_event_pipe.c
 +++ b/src/event/ngx_event_pipe.c
-@@ -305,24 +305,24 @@ ngx_event_pipe_read_upstream(ngx_event_pipe_t *p)
+@@ -305,24 +305,28 @@ ngx_event_pipe_read_upstream(ngx_event_pipe_t *p)
  
              if (n >= size) {
                  cl->buf->last = cl->buf->end;
@@ -21,13 +21,17 @@ index 5d5035c..39c347e 100644
              } else {
                  cl->buf->last += n;
                  n = 0;
-             }
++
++                if(!p->keepalive) {
++                    continue;
++                }
++            }
 +
 +            /* STUB */ cl->buf->num = p->num++;
 +
 +            if (p->input_filter(p, cl->buf) == NGX_ERROR) {
 +                return NGX_ABORT;
-+            }
+             }
 +
 +            ln = cl;
 +            cl = cl->next;
@@ -38,3 +42,16 @@ index 5d5035c..39c347e 100644
          if (cl) {
              for (ln = cl; ln->next; ln = ln->next) { /* void */ }
  
+diff --git a/src/event/ngx_event_pipe.h b/src/event/ngx_event_pipe.h
+index 00b8acf..016ab4c 100644
+--- a/src/event/ngx_event_pipe.h
++++ b/src/event/ngx_event_pipe.h
+@@ -58,6 +58,8 @@ struct ngx_event_pipe_s {
+     unsigned           downstream_error:1;
+     unsigned           cyclic_temp_file:1;
+ 
++    unsigned           keepalive:1;
++
+     ngx_int_t          allocated;
+     ngx_bufs_t         bufs;
+     ngx_buf_tag_t      tag;

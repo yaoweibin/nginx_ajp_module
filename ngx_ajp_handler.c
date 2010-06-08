@@ -90,6 +90,7 @@ ngx_http_ajp_handler(ngx_http_request_t *r)
 
     u->pipe->input_filter = ngx_http_ajp_input_filter;
     u->pipe->input_ctx = r;
+    u->pipe->keepalive = 1;
 
     rc = ngx_http_read_client_request_body(r, ngx_http_upstream_init);
 
