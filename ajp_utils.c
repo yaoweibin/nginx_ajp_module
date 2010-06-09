@@ -25,6 +25,7 @@
 
 /*
  * Handle the CPING/CPONG
+ * TODO: health check
  */
 #if 0
 apr_status_t ajp_handle_cping_cpong(apr_socket_t *sock,

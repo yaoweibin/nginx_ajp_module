@@ -891,14 +891,14 @@ ngx_chain_t *ajp_data_msg_send_body(ngx_http_request_t *r, size_t max_size,
         ngx_memcpy(b_out, b_in, sizeof(ngx_buf_t));
 
         if (b_in->in_file) {
-            if (b_in->file_last - b_in->file_pos <= (max_size - size)){
+            if ((size_t)(b_in->file_last - b_in->file_pos) <= (max_size - size)){
 
                 b_out->file_pos = b_in->file_pos;
                 b_out->file_last = b_in->file_pos = b_in->file_last;
 
                 size += b_out->file_last - b_out->file_pos;
             }
-            else if (b_in->file_last - b_in->file_pos > (max_size - size))
+            else if ((size_t)(b_in->file_last - b_in->file_pos) > (max_size - size))
             {
                 b_out->file_pos = b_in->file_pos;
                 b_in->file_pos += max_size - size;
