@@ -25,10 +25,8 @@
 
 extern volatile ngx_cycle_t  *ngx_cycle;
 
-/*static char *hex_table = "0123456789ABCDEF";*/
-
 /**
- * Dump up to the first 1024 bytes on an AJP Message
+ * Dump up to the first 16 bytes on an AJP Message
  *
  * @param pool      pool to allocate from
  * @param msg       AJP Message to dump
@@ -45,7 +43,7 @@ u_char * ajp_msg_dump(ngx_pool_t *pool, ajp_msg_t *msg, u_char *err)
     buf = msg->buf;
 
     len = buf->last - buf->start;
-    /* Display only first 1024 bytes */
+    /* Display only first 16 bytes */
     if (len > 16) {
         len = 16;
     }

@@ -16,7 +16,9 @@ http {
 
     upstream tomcats {
 
-        server 127.0.0.1:8009;
+        server 127.0.0.1:8009 srun_id=jvm1;
+
+        jvm_route $cookie_JSESSIONID reverse;
         keepalive 10;
     }
 
@@ -34,7 +36,7 @@ http {
 </geshi>
 
 = Description =
-With this module, Nginx can connect to Tomcat's AJP port directly. The backend connections are keepalive, [TODO: sesstion sticky].
+With this module, Nginx can connect to Tomcat's AJP port directly. The backend connections are keepalive, sesstion sticky.
 The motivation of writing these modules is Nginx's high performance and robustness.
 
 = Directives =
@@ -51,9 +53,9 @@ This directive sets the number and the size of buffers, into which will be read 
 
 == ajp_buffer_size ==
 
-'''syntax:''' ''ajp_buffer_size the_size''
+'''syntax:''' ''ajp_buffer_size the_size;''
 
-'''default:''' ''ajp_buffer_size 4k/8k''
+'''default:''' ''ajp_buffer_size 4k/8k;''
 
 '''context:''' ''http, server, location''
 
@@ -82,6 +84,7 @@ The directive specifies the area  which actually is the share memory's name for 
 '''context:''' ''http, server, location''
 
 The directive sets the key for caching, for example:
+
 <geshi lang="nginx">
 ajp_cache_key localhost:9000$request_uri; 
 </geshi>
@@ -95,15 +98,16 @@ ajp_cache_key localhost:9000$request_uri;
 '''context:''' ''main,http,location''
 
 GET/HEAD is syntax sugar, i.e. you can not disable GET/HEAD even if you set just
+
 <geshi lang="nginx">
 ajp_cache_methods  POST;
 </geshi>
 
 == ajp_cache_min_uses ==
 
-'''syntax:''' ''ajp_cache_min_uses n''
+'''syntax:''' ''ajp_cache_min_uses n;''
 
-'''default:''' ''ajp_cache_min_uses 1''
+'''default:''' ''ajp_cache_min_uses 1;''
 
 '''context:''' ''http, server, location''
 
@@ -111,7 +115,7 @@ TODO: Description.
 
 == ajp_cache_path ==
 
-'''syntax:''' ''ajp_cache_path /path/to/cache [levels=m:n keys_zone=name:time inactive=time clean_time=time]''
+'''syntax:''' ''ajp_cache_path /path/to/cache [levels=m:n keys_zone=name:time inactive=time clean_time=time];''
 
 '''default:''' ''none''
 
@@ -121,7 +125,7 @@ TODO: Description.
 
 == ajp_cache_use_stale ==
 
-'''syntax:''' ''ajp_cache_use_stale [updating|error|timeout|invalid_header|http_500]''
+'''syntax:''' ''ajp_cache_use_stale [updating|error|timeout|invalid_header|http_500];''
 
 '''default:''' ''ajp_cache_use_stale off;''
 
@@ -131,7 +135,7 @@ TODO: Description.
 
 == ajp_cache_valid ==
 
-'''syntax:''' ''ajp_cache_valid [http_error_code|time]''
+'''syntax:''' ''ajp_cache_valid [http_error_code|time];''
 
 '''default:''' ''none''
 
@@ -141,21 +145,21 @@ TODO: Description.
 
 == ajp_connect_timeout ==
 
-'''syntax:''' ''ajp_connect_timeout time''
+'''syntax:''' ''ajp_connect_timeout time;''
 
-'''default:''' ''ajp_connect_timeout 60s''
+'''default:''' ''ajp_connect_timeout 60s;''
 
 '''context:''' ''http, server, location''
 
 This directive assigns a timeout for the connection to the upstream server. It is necessary to keep in mind that this time out cannot be more than 75 seconds.
 
-This is not the time until the server returns the pages, this is the [[#proxy_read_timeout| proxy_read_timeout]]  statement. If your upstream server is up, but hanging (e.g. it does not have enough threads to process your request so it puts you in the pool of connections to deal with later), then this statement will not help as the connection to the server has been made.
+This is not the time until the server returns the pages, this is the [[#ajp_read_timeout| ajp_read_timeout]]  statement. If your upstream server is up, but hanging (e.g. it does not have enough threads to process your request so it puts you in the pool of connections to deal with later), then this statement will not help as the connection to the server has been made.
 
 == ajp_header_packet_buffer_size ==
 
-'''syntax:''' ''ajp_header packet_buffer_size''
+'''syntax:''' ''ajp_header packet_buffer_size;''
 
-'''default:''' ''ajp_header_packet_buffer_size 8k''
+'''default:''' ''ajp_header_packet_buffer_size 8k;''
 
 '''context:''' ''http, server, location''
 
@@ -163,7 +167,7 @@ Set the buffer size of Forward Request packet. The range is (0, 2^16).
 
 == ajp_hide_header ==
 
-'''syntax:''' ''ajp_hide_header name''
+'''syntax:''' ''ajp_hide_header name;''
 
 '''context:''' ''http, server, location''
 
@@ -173,7 +177,7 @@ If the headers "Status" and "X-Accel-..." must be provided, then it is necessary
 
 == ajp_ignore_headers ==
 
-'''syntax:''' ''ajp_ignore_headers name [name ...]''
+'''syntax:''' ''ajp_ignore_headers name [name ...];''
 
 '''default:''' ''none''
 
@@ -185,9 +189,9 @@ It can specify the string as "[[NginxXSendfile|X-Accel-Redirect]]", "X-Accel-Exp
 
 == ajp_ignore_client_abort ==
 
-'''syntax:''' ''ajp_ignore_client_abort on|off''
+'''syntax:''' ''ajp_ignore_client_abort on|off;''
 
-'''default:''' ''ajp_ignore_client_abort off''
+'''default:''' ''ajp_ignore_client_abort off;''
 
 '''context:''' ''http, server, location''
 
@@ -195,9 +199,9 @@ This directive determines if current request to the AJP-server must be aborted i
 
 == ajp_intercept_errors ==
 
-'''syntax:''' ''ajp_intercept_errors on|off''
+'''syntax:''' ''ajp_intercept_errors on|off;''
 
-'''default:''' ''ajp_intercept_errors off''
+'''default:''' ''ajp_intercept_errors off;''
 
 '''context:''' ''http, server, location''
 
@@ -207,9 +211,9 @@ Note: You need to explicitly define the error_page handler for this for it to be
 
 == ajp_next_upstream ==
 
-'''syntax:''' ''ajp_next_upstream [error|timeout|invalid_header|http_500|http_502|http_503|http_504|http_404|off] ''
+'''syntax:''' ''ajp_next_upstream [error|timeout|invalid_header|http_500|http_502|http_503|http_504|http_404|off];''
 
-'''default:''' ''ajp_next_upstream error timeout''
+'''default:''' ''ajp_next_upstream error timeout;''
 
 '''context:''' ''http, server, location''
 
@@ -227,9 +231,9 @@ Directive determines, in what cases the request will be transmitted to the next 
 
 == ajp_max_data_packet_size ==
 
-'''syntax:''' ''ajp_max_data_packet_size size''
+'''syntax:''' ''ajp_max_data_packet_size size;''
 
-'''default:''' ''ajp_max_data_packet_size 8k''
+'''default:''' ''ajp_max_data_packet_size 8k;''
 
 '''context:''' ''http, server, location''
 
@@ -237,15 +241,17 @@ Set the maximum size of AJP's Data packet. The range is [8k, 2^16];
 
 == ajp_max_temp_file_size ==
 
-'''syntax:''' ''ajp_max_temp_file_size 0''
+'''syntax:''' ''ajp_max_temp_file_size size;''
 
-'''default:''' ''?''
+'''default:''' ''ajp_max_temp_file_size 1G;''
 
-'''context:''' ''?''
+'''context:''' ''http, server, location, if''
 
-This directive turns off ajp buffering according to the source code.
+The maximum size of a temporary file when the content is larger than the proxy buffer.  If file is larger than this size, it will be served synchronously from upstream server rather than buffered to disk.
+If ajp_max_temp_file_size is equal to zero, temporary files usage will be disabled.
 
 == ajp_pass ==
+
 '''syntax:''' ''ajp_pass ajp-server''
 
 '''default:''' ''none''
@@ -253,16 +259,19 @@ This directive turns off ajp buffering according to the source code.
 '''context:''' ''location, if in location''
 
 Directive assigns the port or socket on which the AJP-server is listening. Port can be indicated by itself or as an address and port, for example:
+
 <geshi lang="nginx">
 ajp_pass   localhost:9000;
 </geshi>
 
 using a Unix domain socket:
+
 <geshi lang="nginx">
 ajp_pass   unix:/tmp/ajp.socket;
 </geshi>
 
 You may also use an upstream block.
+
 <geshi lang="nginx">
 upstream backend  {
     server   localhost:1234;
@@ -273,13 +282,15 @@ ajp_pass   backend;
 
 == ajp_pass_header ==
 
-'''syntax:''' ''ajp_pass_header name''
+'''syntax:''' ''ajp_pass_header name;''
 
 '''context:''' ''http, server, location''
 
+TODO: Description.
+
 == ajp_pass_request_headers ==
 
-'''syntax:''' ''ajp_pass_request_headers [ on | off ] ;''
+'''syntax:''' ''ajp_pass_request_headers [ on | off ];''
 
 '''default:''' ''ajp_pass_request_headers on;''
 
@@ -297,12 +308,11 @@ TODO: Description.
 
 TODO: Description.
 
-
 == ajp_read_timeout ==
 
-'''syntax:''' ''ajp_read_timeout time''
+'''syntax:''' ''ajp_read_timeout time;''
 
-'''default:''' ''60''
+'''default:''' ''ajp_read_timeout_time 60''
 
 '''context:''' ''http, server, location''
 
@@ -310,7 +320,7 @@ Directive sets the amount of time for upstream to wait for a ajp process to send
 
 == ajp_send_lowat ==
 
-'''syntax:''' ''ajp_send_lowat [ on | off ] ''
+'''syntax:''' ''ajp_send_lowat [ on | off ];''
 
 '''default:''' ''ajp_send_lowat off;''
 
@@ -320,9 +330,9 @@ This directive set SO_SNDLOWAT. This directive is only available on FreeBSD
 
 == ajp_send_timeout ==
 
-'''syntax:''' ''ajp_send_timeout time''
+'''syntax:''' ''ajp_send_timeout time;''
 
-'''default:''' ''ajp_send_timeout 60''
+'''default:''' ''ajp_send_timeout 60;''
 
 '''context:''' ''http, server, location''
 
@@ -330,9 +340,9 @@ This directive assigns timeout with the transfer of request to the upstream serv
 
 == ajp_store ==
 
-'''syntax:''' ''ajp_store [on | off | path] ''
+'''syntax:''' ''ajp_store [on | off | path] ;''
 
-'''default:''' ''ajp_store off''
+'''default:''' ''ajp_store off;''
 
 '''context:''' ''http, server, location''
 
@@ -374,9 +384,9 @@ To be clear ajp_store is not a cache, it's rather mirror on demand.
 
 == ajp_store_access ==
 
-'''syntax:''' ''ajp_store_access users:permissions [users:permission ...] ''
+'''syntax:''' ''ajp_store_access users:permissions [users:permission ...];''
 
-'''default:''' ''ajp_store_access user:rw''
+'''default:''' ''ajp_store_access user:rw;''
 
 '''context:''' ''http, server, location''
 
@@ -394,7 +404,7 @@ ajp_store_access  group:rw  all:r;
 
 == ajp_temp_path ==
 
-'''syntax:''' ''ajp_temp_path dir-path [ level1 [ level2 [ level3 ]     ;''
+'''syntax:''' ''ajp_temp_path dir-path [ level1 [ level2 [ level3 ] ] ] ;''
 
 '''default:''' ''$NGX_PREFIX/ajp_temp''
 
@@ -412,16 +422,38 @@ This directive works like [[NginxHttpCoreModule#client_body_temp_path|client_bod
 
 Sets the amount of data that will be flushed to the ajp_temp_path when writing. It may be used to prevent a worker process blocking for too long while spooling data.
 
-== ajp_max_temp_file_size ==
+== jvm_route ==
 
-'''syntax:''' ''ajp_max_temp_file_size size;''
+'''syntax:''' ''jvm_route $cookie_SESSION_COOKIE[|session_url] [reverse]''
 
-'''default:''' ''ajp_max_temp_file_size 1G;''
+'''default:''' ''none''
 
-'''context:''' ''http, server, location, if''
+'''context:''' ''upstream''
 
-The maximum size of a temporary file when the content is larger than the proxy buffer.  If file is larger than this size, it will be served synchronously from upstream server rather than buffered to disk.
-If proxy_max_temp_file_size is equal to zero, temporary files usage will be disabled.
+This directive comes from [http://code.google.com/p/nginx-upstream-jvm-route/ ngx_http_upstream_jvm_route_module].
+
+'$cookie_SESSION_COOKIE' specifies the session cookie name(0.7.24+). 'session_url' specifies a different session name in the URL when the client does not accept a cookie. The session name is case-insensitive. In this module, if it does not find the session_url, it will use the session cookie name instead. So if the session name in cookie is the name with its in URL, you don't need give the session_url name.
+
+With scanning this cookie, the module will send the request to right backend server. As far as I know, the resin's srun_id name is in the head of cookie. For example, requests with cookie value 'a***' are always sent to the server with the srun_id of 'a'. But tomcat's JSESSIONID is opposite, which is like '***.a'. The parameter of 'reverse' specifies the cookie scanned from tail to head.
+
+If the request fails to be sent to the chosen backend server, It will try another server with the Round-Robin mode until all the upstream servers tried. The directive ajp_next_upstream can specify in what cases the request will be transmitted to the next server. If you want to force the session sticky, you can set 'ajp_next_upstream off'.
+
+== jvm_route_status ==
+
+'''syntax:''' ''jvm_route_status upstream_name''
+
+'''default:''' ''none''
+
+'''context:'' ''location''
+
+This directive comes from [http://code.google.com/p/nginx-upstream-jvm-route/ ngx_http_upstream_jvm_route_module].
+
+Set the location of pages return the status of the jvm_route peers. Example:
+<geshi lang="nginx">
+location status {
+    jvm_route_status backend;
+}
+</geshi>
 
 == keepalive ==
 
@@ -432,9 +464,20 @@ If proxy_max_temp_file_size is equal to zero, temporary files usage will be disa
 '''context:''' ''upstream''
 
 Switches on keepalive module for the upstream in question. This directive comes from [http://mdounin.ru/hg/ngx_http_upstream_keepalive/ ngx_http_upstream_keepalive_module].
+
 Parameters:
 * num: Maximum number of connections to cache.  If there isn't enough room to cache new connections - last recently used connections will be kicked off the cache.
 * single: Treat everything as single host.  With this flag connections to different backends are treated as equal.
+
+== server(in upstream) ==
+
+This directive comes from [http://code.google.com/p/nginx-upstream-jvm-route/ ngx_http_upstream_jvm_route_module].
+
+Main syntax is the same as the official directive. This module add these parameters:
+* 'srun_id': identifies the backend JVM's name by cookie. The default srun_id's value is 'a'. The name can be more than one letter.
+* 'max_busy': the maximum of active connections with the backend server. The default value is 0 which means unlimited. If the server's active connections is higher than this parameter, it will not be chosen until the server is less busier. If all the servers are busy, Nginx will return 502.
+
+NOTE: This module does not support the parameter of 'backup' yet.
 
 = Installation =
 

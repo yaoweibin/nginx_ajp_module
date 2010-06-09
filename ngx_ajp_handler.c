@@ -435,12 +435,7 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
 
             case CMD_AJP13_SEND_HEADERS:
 
-                /*xxx: have not think about the uncomplete headline*/
                 rc = ajp_parse_header(r, alcf, msg);
-
-                /*ctx->response_length =*/
-                /*ngx_atoof(r->headers_in.content_length->value.data,*/
-                /*r->headers_in.content_length->value.len);*/
 
                 if (rc == NGX_OK) {
                     a->state = ngx_http_ajp_st_response_parse_headers_done;

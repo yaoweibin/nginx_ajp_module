@@ -55,3 +55,116 @@ index 00b8acf..016ab4c 100644
      ngx_int_t          allocated;
      ngx_bufs_t         bufs;
      ngx_buf_tag_t      tag;
+diff --git a/src/http/ngx_http_upstream.c b/src/http/ngx_http_upstream.c
+index 2deec48..2452fcd 100644
+--- a/src/http/ngx_http_upstream.c
++++ b/src/http/ngx_http_upstream.c
+@@ -3849,6 +3849,8 @@ ngx_http_upstream(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
+                                          |NGX_HTTP_UPSTREAM_WEIGHT
+                                          |NGX_HTTP_UPSTREAM_MAX_FAILS
+                                          |NGX_HTTP_UPSTREAM_FAIL_TIMEOUT
++                                         |NGX_HTTP_UPSTREAM_SRUN_ID
++                                         |NGX_HTTP_UPSTREAM_MAX_BUSY
+                                          |NGX_HTTP_UPSTREAM_DOWN
+                                          |NGX_HTTP_UPSTREAM_BACKUP);
+     if (uscf == NULL) {
+@@ -3940,9 +3942,9 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+     ngx_http_upstream_srv_conf_t  *uscf = conf;
+ 
+     time_t                       fail_timeout;
+-    ngx_str_t                   *value, s;
++    ngx_str_t                   *value, s, id;
+     ngx_url_t                    u;
+-    ngx_int_t                    weight, max_fails;
++    ngx_int_t                    weight, max_fails, max_busy;
+     ngx_uint_t                   i;
+     ngx_http_upstream_server_t  *us;
+ 
+@@ -3979,7 +3981,10 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+ 
+     weight = 1;
+     max_fails = 1;
++    max_busy = 0;
+     fail_timeout = 10;
++    id.data = (u_char *) "a";
++    id.len = sizeof("a") - 1;
+ 
+     for (i = 2; i < cf->args->nelts; i++) {
+ 
+@@ -4013,6 +4018,21 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+             continue;
+         }
+ 
++        if (ngx_strncmp(value[i].data, "max_busy=", 9) == 0) {
++
++            if (!(uscf->flags & NGX_HTTP_UPSTREAM_MAX_BUSY)) {
++                goto invalid;
++            }
++
++            max_busy = ngx_atoi(&value[i].data[9], value[i].len - 9);
++
++            if (max_busy == NGX_ERROR) {
++                goto invalid;
++            }
++
++            continue;
++        }
++
+         if (ngx_strncmp(value[i].data, "fail_timeout=", 13) == 0) {
+ 
+             if (!(uscf->flags & NGX_HTTP_UPSTREAM_FAIL_TIMEOUT)) {
+@@ -4031,6 +4051,22 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+             continue;
+         }
+ 
++        if (ngx_strncmp(value[i].data, "srun_id=", 8) == 0) {
++
++            if (!(uscf->flags & NGX_HTTP_UPSTREAM_SRUN_ID)) {
++                goto invalid;
++            }
++
++            id.len = value[i].len - 8;
++            id.data = &value[i].data[8];
++
++            if (id.len == 0) {
++                goto invalid;
++            }
++
++            continue;
++        }
++
+         if (ngx_strncmp(value[i].data, "backup", 6) == 0) {
+ 
+             if (!(uscf->flags & NGX_HTTP_UPSTREAM_BACKUP)) {
+@@ -4060,7 +4096,9 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+     us->naddrs = u.naddrs;
+     us->weight = weight;
+     us->max_fails = max_fails;
++    us->max_busy = max_busy;
+     us->fail_timeout = fail_timeout;
++    us->srun_id = id;
+ 
+     return NGX_CONF_OK;
+ 
+diff --git a/src/http/ngx_http_upstream.h b/src/http/ngx_http_upstream.h
+index ac2682d..f81d9b4 100644
+--- a/src/http/ngx_http_upstream.h
++++ b/src/http/ngx_http_upstream.h
+@@ -85,6 +85,8 @@ typedef struct {
+     ngx_uint_t                       weight;
+     ngx_uint_t                       max_fails;
+     time_t                           fail_timeout;
++    ngx_uint_t                       max_busy;
++    ngx_str_t                        srun_id;
+ 
+     unsigned                         down:1;
+     unsigned                         backup:1;
+@@ -97,6 +99,8 @@ typedef struct {
+ #define NGX_HTTP_UPSTREAM_FAIL_TIMEOUT  0x0008
+ #define NGX_HTTP_UPSTREAM_DOWN          0x0010
+ #define NGX_HTTP_UPSTREAM_BACKUP        0x0020
++#define NGX_HTTP_UPSTREAM_SRUN_ID       0x0040
++#define NGX_HTTP_UPSTREAM_MAX_BUSY      0x0080
+ 
+ 
+ struct ngx_http_upstream_srv_conf_s {
