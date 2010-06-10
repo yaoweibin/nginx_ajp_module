@@ -296,13 +296,6 @@ static ngx_command_t  ngx_http_ajp_commands[] = {
       0,
       NULL },
 
-    /*{ ngx_string("ajp_param"),*/
-    /*NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE2,*/
-    /*ngx_conf_set_keyval_slot,*/
-    /*NGX_HTTP_LOC_CONF_OFFSET,*/
-    /*offsetof(ngx_http_ajp_loc_conf_t, params_source),*/
-    /*NULL },*/
-
     { ngx_string("ajp_pass_header"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
       ngx_conf_set_str_array_slot,
@@ -361,6 +354,8 @@ ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
     ngx_http_ajp_loc_conf_t    *alcf = conf;
 
+    size_t                      add;
+    u_short                     port;
     ngx_url_t                   u;
     ngx_str_t                  *value, *url;
     ngx_uint_t                  n;
@@ -404,9 +399,17 @@ ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_OK;
     }
 
+    if (ngx_strncasecmp(url->data, (u_char *) "ajp://", 6) == 0) {
+        add = 6;
+        port = 8009;
+    }
+
     ngx_memzero(&u, sizeof(ngx_url_t));
 
-    u.url = value[1];
+    u.url.len = url->len - add;
+    u.url.data = url->data + add;
+    u.default_port = port;
+    u.uri_part = 1;
     u.no_resolve = 1;
 
     alcf->upstream.upstream = ngx_http_upstream_add(cf, &u, 0);
@@ -706,7 +709,7 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_conf_merge_size_value(conf->upstream.buffer_size,
                               prev->upstream.buffer_size,
-                              (size_t) 2 * ngx_pagesize);
+                              (size_t) ngx_pagesize);
 
 
     ngx_conf_merge_bufs_value(conf->upstream.bufs, prev->upstream.bufs,
@@ -847,7 +850,8 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
         shm_zone = conf->upstream.cache;
 
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "\"ajp_cache\" zone \"%V\" is unknown",
+                           "\"ajp_cache\" zone \"%V\" is unknown, "
+                           "Maybe you haven't set the ajp_cache_path",
                            &shm_zone->shm.name);
 
         return NGX_CONF_ERROR;

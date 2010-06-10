@@ -49,7 +49,7 @@ The motivation of writing these modules is Nginx's high performance and robustne
 
 '''context:''' ''http, server, location''
 
-This directive sets the number and the size of buffers, into which will be read the response, obtained from the ajp server.  By default, the size of one buffer is equal to the size of two pages. Depending on platform this is either 4K, 8K or 16K.
+This directive sets the number and the size of buffers, into which will be read the response, obtained from the ajp server.  By default, the size of one buffer is equal to the size of pages. Depending on platform this is either 4K, 8K or 16K.
 
 == ajp_buffer_size ==
 
@@ -73,20 +73,26 @@ By default, the buffersize is equal to the size of one buffer in directive <code
 
 '''context:''' ''http, server, location''
 
-The directive specifies the area  which actually is the share memory's name for caching. The same area can be used in several places.
+The directive specifies the area  which actually is the share memory's name for caching. The same area can be used in several places. You must set the ajp_cache_path first.
 
 == ajp_cache_key ==
 
-'''syntax:''' ''ajp_cache_key line ;''
+'''syntax:''' ''ajp_cache_key line;''
 
 '''default:''' ''none''
 
 '''context:''' ''http, server, location''
 
-The directive sets the key for caching, for example:
+The directive specifies what information is included in the key for caching, for example
 
 <geshi lang="nginx">
-ajp_cache_key localhost:9000$request_uri; 
+ajp_cache_key "$host$request_uri$cookie_user";
+</geshi>
+
+Note that by default, the hostname of the server is not included in the cache key. If you are using subdomains for different locations on your website, you need to include it, e.g. by changing the cache key to something like
+
+<geshi lang="nginx">
+ajp_cache_key "$scheme$host$request_uri";
 </geshi>
 
 == ajp_cache_methods ==
@@ -121,7 +127,14 @@ TODO: Description.
 
 '''context:''' ''http, server, location''
 
-TODO: Description.
+This directive sets the cache path and other cache parameters. Cached data stored in files. Key and filename in cache is md5 of proxied URL. '''Levels''' parameter set number of subdirectories in cache, for example for:
+
+<geshi lang="nginx">
+ajp_cache_path  /data/nginx/cache  levels=1:2   keys_zone=one:10m;
+</geshi>
+file names will be like:
+
+/data/nginx/cache/c/29/b7f54b2df7773722d382f4809d65029c
 
 == ajp_cache_use_stale ==
 
@@ -222,11 +235,11 @@ Directive determines, in what cases the request will be transmitted to the next 
 * error — an error has occurred while connecting to the server, sending a request to it, or reading its response;
 * timeout — occurred timeout during the connection with the server, transfer the request or while reading response from the server;
 * invalid_header — server returned a empty or incorrect answer;
-* http_500 — server returned answer with code 500
-* http_502 — server returned answer with code 502
-* http_503 — server returned answer with code 503
-* http_504 — server returned answer with code 504
-* http_404 — server returned answer with code 404
+* http_500 — server returned answer with code 500;
+* http_502 — server returned answer with code 502;
+* http_503 — server returned answer with code 503;
+* http_504 — server returned answer with code 504;
+* http_404 — server returned answer with code 404;
 * off — it forbids the request transfer to the next server Transferring the request to the next server is only possible when nothing has been transferred to the client -- that is, if an error or timeout arises in the middle of the transfer of the request, then it is not possible to retry the current request on a different server.
 
 == ajp_max_data_packet_size ==
@@ -357,27 +370,21 @@ The time of modification for the file will be set to the date of "Last-Modified"
 This directive can be used for creating the local copies for dynamic output of the backend which is not very often changed, for example:
 
 <geshi lang="nginx">
-
 location /images/ {
-
     root                 /data/www;
-    error_page           404 = /fetch$uri;
-
+    error_page           404 = @fetch;
 }
 
-location /fetch {
-
+location @fetch {
     internal;
 
-    ajp_pass           backend;
+    ajp_pass           http://backend;
     ajp_store          on;
     ajp_store_access   user:rw  group:rw  all:r;
     ajp_temp_path      /data/temp;
 
-    alias             /data/www;
-
+    root               /data/www;
 }
-
 </geshi>
 
 To be clear ajp_store is not a cache, it's rather mirror on demand.
@@ -499,7 +506,7 @@ Grab the nginx source code from [http://nginx.org/ nginx.org], for example, the 
     
 = Compatibility =
 
-* My test bed is 0.7.65 and 0.8.34.
+* My test bed is 0.7.65 and 0.8.40.
 
 = TODO =
 

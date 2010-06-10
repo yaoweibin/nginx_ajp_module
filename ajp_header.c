@@ -346,7 +346,7 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
     ngx_table_elt_t *header;
 
     ngx_log_error(NGX_LOG_DEBUG, ngx_cycle->log, 0,
-            "Into ajp_marshal_into_msgb");
+            "Into ajp_marshal_into_msgb, uri: \"%V\"", &r->uri);
 
     if ((method = sc_for_req_method_by_id(r)) == UNKNOWN_METHOD) {
         ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
