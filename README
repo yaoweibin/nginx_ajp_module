@@ -128,8 +128,9 @@ Directives
     data stored in files. Key and filename in cache is md5 of proxied URL.
     Levels parameter set number of subdirectories in cache, for example for:
 
-    ajp_cache_path /data/nginx/cache levels=1:2 keys_zone=one:10m; file
-    names will be like:
+    ajp_cache_path /data/nginx/cache levels=1:2 keys_zone=one:10m;
+
+    file names will be like:
 
     /data/nginx/cache/c/29/b7f54b2df7773722d382f4809d65029c
 
@@ -285,9 +286,10 @@ Directives
 
     The maximum size of a temporary file when the content is larger than the
     proxy buffer. If file is larger than this size, it will be served
-    synchronously from upstream server rather than buffered to disk. If
-    ajp_max_temp_file_size is equal to zero, temporary files usage will be
-    disabled.
+    synchronously from upstream server rather than buffered to disk.
+
+    If ajp_max_temp_file_size is equal to zero, temporary files usage will
+    be disabled.
 
   ajp_pass
     syntax: *ajp_pass ajp-server*
@@ -308,7 +310,11 @@ Directives
 
     You may also use an upstream block.
 
-    upstream backend { server localhost:1234; }
+    upstream backend {
+
+        server   localhost:1234;
+
+    }
 
     ajp_pass backend;
 
@@ -396,11 +402,17 @@ Directives
     This directive can be used for creating the local copies for dynamic
     output of the backend which is not very often changed, for example:
 
-    location /images/ { root /data/www; error_page 404 = @fetch; }
+    location /images/ {
 
-    location @fetch { internal;
+        root                 /data/www;
+        error_page           404 = @fetch;
 
-        ajp_pass           http://backend;
+    }
+
+    location @fetch {
+
+        internal;
+        ajp_pass           backend;
         ajp_store          on;
         ajp_store_access   user:rw  group:rw  all:r;
         ajp_temp_path      /data/temp;
@@ -489,7 +501,10 @@ Directives
     (<http://code.google.com/p/nginx-upstream-jvm-route/>).
 
     Set the location of pages return the status of the jvm_route peers.
-    Example: location status { jvm_route_status backend; }
+    Example: location status {
+
+        jvm_route_status backend;
+    }
 
   keepalive
     syntax: *keepalive <num> [single]*

@@ -7,10 +7,12 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 #include <ngx_ajp_module.h>
+#include <ajp.h>
 
 
 typedef enum {
-    ngx_http_ajp_st_forward_request_sent = 1,
+    ngx_http_ajp_st_init_state = 0,
+    ngx_http_ajp_st_forward_request_sent,
     ngx_http_ajp_st_request_body_data_sending,
     ngx_http_ajp_st_request_send_all_done,
     ngx_http_ajp_st_response_recv_headers,
@@ -22,18 +24,14 @@ typedef enum {
 
 typedef struct {
     ngx_http_ajp_state_e           state;
-    ngx_uint_t                     type;
-    size_t                         response_length;
     size_t                         length;
-    size_t                         padding;
+    ajp_msg_t                      msg;
+
+    ngx_chain_t                   *save;
+    ngx_chain_t                   *body;
 
     ngx_uint_t                     ajp_reuse; /* unsigned :1 */
 
-    ngx_chain_t                   *save;
-
-    ngx_chain_t                   *body;
-    ngx_str_t                      script_name;
-    ngx_str_t                      path_info;
 } ngx_http_ajp_ctx_t;
 
 ngx_int_t ngx_http_ajp_handler(ngx_http_request_t *r);

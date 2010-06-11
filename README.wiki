@@ -132,6 +132,7 @@ This directive sets the cache path and other cache parameters. Cached data store
 <geshi lang="nginx">
 ajp_cache_path  /data/nginx/cache  levels=1:2   keys_zone=one:10m;
 </geshi>
+
 file names will be like:
 
 /data/nginx/cache/c/29/b7f54b2df7773722d382f4809d65029c
@@ -261,6 +262,7 @@ Set the maximum size of AJP's Data packet. The range is [8k, 2^16];
 '''context:''' ''http, server, location, if''
 
 The maximum size of a temporary file when the content is larger than the proxy buffer.  If file is larger than this size, it will be served synchronously from upstream server rather than buffered to disk.
+
 If ajp_max_temp_file_size is equal to zero, temporary files usage will be disabled.
 
 == ajp_pass ==
@@ -287,7 +289,9 @@ You may also use an upstream block.
 
 <geshi lang="nginx">
 upstream backend  {
+
     server   localhost:1234;
+
 }
 
 ajp_pass   backend;
@@ -371,14 +375,16 @@ This directive can be used for creating the local copies for dynamic output of t
 
 <geshi lang="nginx">
 location /images/ {
+
     root                 /data/www;
     error_page           404 = @fetch;
+
 }
 
 location @fetch {
-    internal;
 
-    ajp_pass           http://backend;
+    internal;
+    ajp_pass           backend;
     ajp_store          on;
     ajp_store_access   user:rw  group:rw  all:r;
     ajp_temp_path      /data/temp;
@@ -458,6 +464,7 @@ This directive comes from [http://code.google.com/p/nginx-upstream-jvm-route/ ng
 Set the location of pages return the status of the jvm_route peers. Example:
 <geshi lang="nginx">
 location status {
+
     jvm_route_status backend;
 }
 </geshi>

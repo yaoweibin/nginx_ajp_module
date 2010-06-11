@@ -488,11 +488,7 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
         }
     }
 
-    /* XXX: Is the subprocess_env a right place?
-     * <Location /examples>
-     *   ProxyPass ajp://remote:8009/servlets-examples
-     *   SetEnv SSL_SESSION_ID CUSTOM_SSL_SESSION_ID
-     * </Location>
+    /* XXX: Do we really need SSL?
      */
     /*
      * Only lookup SSL variables if we are currently running HTTPS.
@@ -646,12 +642,12 @@ body    length*(var binary)
 static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
         ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *alcf)
 {
+    int i;
     uint16_t status;
     ngx_int_t rc;
     ngx_str_t str;
     uint16_t name;
     uint16_t  num_headers;
-    int i;
     u_char line[1024], *last;
     ngx_table_elt_t                *h;
     ngx_http_upstream_header_t     *hh;
@@ -820,7 +816,6 @@ ngx_int_t  ajp_parse_data(ngx_http_request_t  *r, ajp_msg_t *msg,
         return rc;
     }
 
-
     return NGX_OK;
 }
 
@@ -840,118 +835,19 @@ int ajp_parse_type(ngx_http_request_t  *r, ajp_msg_t *msg)
 /*
  * Allocate a msg to send data
  */
-ngx_int_t  ajp_alloc_data_msg(ngx_pool_t *pool, ajp_msg_t **msg)
+ngx_int_t  ajp_alloc_data_msg(ngx_pool_t *pool, ajp_msg_t *msg)
 {
     ngx_int_t rc;
 
-    if ((rc = ajp_msg_create(pool, AJP_HEADER_SZ + 1, msg)) != NGX_OK) {
+    if ((rc = ajp_msg_create_buffer(pool, AJP_HEADER_SZ + 1, msg)) != NGX_OK) {
         return rc;
     }
 
-    ajp_msg_reset(*msg);
+    ajp_msg_reset(msg);
 
     return NGX_OK;
 }
 
-ngx_chain_t *ajp_data_msg_send_body(ngx_http_request_t *r, size_t max_size,
-        ngx_chain_t **body)
-{
-    size_t size;
-    ngx_buf_t *b_in, *b_out;
-    ngx_chain_t *out, *cl, *in;
-    ajp_msg_t *msg;
-
-    if (*body == NULL) {
-        return NULL;
-    }
-
-    if (ajp_alloc_data_msg(r->pool, &msg) != NGX_OK) {
-        return NULL;
-    }
-
-    out = cl = ngx_alloc_chain_link(r->pool);
-    if (cl == NULL) {
-        return NULL;
-    }
-
-    cl->buf = msg->buf;
-
-    max_size -= AJP_HEADER_SZ;
-    size = 0;
-    in = *body;
-
-    b_out = NULL;
-    while (in) {
-        b_in = in->buf;
-
-        b_out = ngx_alloc_buf(r->pool);
-        if (b_out == NULL) {
-            return NULL;
-        }
-        ngx_memcpy(b_out, b_in, sizeof(ngx_buf_t));
-
-        if (b_in->in_file) {
-            if ((size_t)(b_in->file_last - b_in->file_pos) <= (max_size - size)){
-
-                b_out->file_pos = b_in->file_pos;
-                b_out->file_last = b_in->file_pos = b_in->file_last;
-
-                size += b_out->file_last - b_out->file_pos;
-            }
-            else if ((size_t)(b_in->file_last - b_in->file_pos) > (max_size - size))
-            {
-                b_out->file_pos = b_in->file_pos;
-                b_in->file_pos += max_size - size;
-                b_out->file_last = b_in->file_pos;
-
-                size += b_out->file_last - b_out->file_pos;
-            }
-        }
-        else {
-            if ((size_t)(b_in->last - b_in->pos) <= (max_size - size)){
-
-                b_out->pos = b_in->pos;
-                b_out->last = b_in->pos = b_in->last;
-
-                size += b_out->last - b_out->pos;
-            }
-            else if ((size_t)(b_in->last - b_in->pos) > (max_size - size))
-            {
-                b_out->pos = b_in->pos;
-                b_in->pos += max_size - size;
-                b_out->last = b_in->pos;
-
-                size += b_out->last - b_out->pos;
-            }
-        }
-
-        cl->next = ngx_alloc_chain_link(r->pool);
-        if (cl->next == NULL) {
-            return NULL;
-        }
-
-        cl = cl->next;
-        cl->buf = b_out;
-
-        if (size >= max_size) {
-            break;
-        }
-        else {
-            in = in->next;
-        }
-    }
-
-    if (b_out != NULL && b_out->last) {
-        /*the last buffer ?*/
-    }
-
-    *body = in;
-    cl->next = NULL;
-    
-    ajp_data_msg_end(msg, size);
-
-    return out;
-}
 
 ngx_int_t  ajp_data_msg_end(ajp_msg_t *msg, size_t len)
 {

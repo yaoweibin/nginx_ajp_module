@@ -132,14 +132,9 @@ ngx_int_t ajp_msg_reset(ajp_msg_t *msg)
  */
 ngx_int_t ajp_msg_reuse(ajp_msg_t *msg)
 {
-    ngx_buf_t *buf;
-
-    buf = msg->buf;
-    buf->pos = buf->last = buf->start;
     memset(msg, 0, sizeof(ajp_msg_t));
-    msg->buf = buf;
     msg->header_len = AJP_HEADER_LEN;
-    ajp_msg_reset(msg);
+
     return NGX_OK;
 }
 
@@ -541,6 +536,23 @@ ngx_int_t ajp_msg_create(ngx_pool_t *pool, size_t size, ajp_msg_t **rmsg)
     return NGX_OK;
 }
 
+ngx_int_t ajp_msg_create_buffer(ngx_pool_t *pool, size_t size, ajp_msg_t *msg)
+{
+    msg->server_side = 0;
+
+    msg->buf = ngx_create_temp_buf(pool, size);
+
+    if (msg->buf == NULL) {
+        ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
+                      "ajp_msg_create_buffer(): can't allocate AJP message buffer");
+        return NGX_ERROR;
+    }
+
+    msg->header_len = AJP_HEADER_LEN;
+
+    return NGX_OK;
+}
+
 /**
  * Create an AJP Message from pool without buffer
  *
@@ -554,7 +566,7 @@ ngx_int_t ajp_msg_create_without_buffer(ngx_pool_t *pool, ajp_msg_t **rmsg)
 
     if (!msg) {
         ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                "ajp_msg_create(): can't allocate AJP message memory");
+                "ajp_msg_create_without_buffer(): can't allocate AJP message memory");
         return NGX_ERROR;
     }
 

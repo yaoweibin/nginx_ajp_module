@@ -37,7 +37,7 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 #include "ajp_header.h"
-#include "ngx_ajp_handler.h"
+//#include "ngx_ajp_handler.h"
 #include "ngx_ajp_module.h"
 
 #define AJP13_DEF_HOST "127.0.0.1"
@@ -306,6 +306,8 @@ ngx_int_t ajp_msg_get_bytes(ajp_msg_t *msg, u_char **rvalue,
  */
 ngx_int_t ajp_msg_create(ngx_pool_t *pool, size_t size, ajp_msg_t **rmsg);
 
+ngx_int_t ajp_msg_create_buffer(ngx_pool_t *pool, size_t size, ajp_msg_t *msg);
+
 ngx_int_t ajp_msg_create_without_buffer(ngx_pool_t *pool, ajp_msg_t **rmsg);
 
 /**
@@ -361,13 +363,7 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
  * @param msg       returned AJP message
  * @return          NGX_OK or error
  */
-ngx_int_t  ajp_alloc_data_msg(ngx_pool_t *pool, ajp_msg_t **msg);
-
-/**
- * Send the data message
- */
-ngx_chain_t *ajp_data_msg_send_body(ngx_http_request_t *r, size_t max_size,
-        ngx_chain_t **body);
+ngx_int_t  ajp_alloc_data_msg(ngx_pool_t *pool, ajp_msg_t *msg);
 
 ngx_int_t  ajp_data_msg_end(ajp_msg_t *msg, size_t len);
 
