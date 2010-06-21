@@ -700,7 +700,7 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
                 offset = AJP_HEADER_LEN + 1 - size + AJP_HEADER_SZ_LEN;
 
                 size = AJP_HEADER_SAVE_SZ - size;
-                if (ngx_buf_size(buf) >= size) {
+                if ((size_t)ngx_buf_size(buf) >= size) {
                     ngx_memcpy(sb->last, buf->pos, size);
                 }
                 else {
