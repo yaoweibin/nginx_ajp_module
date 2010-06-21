@@ -3,7 +3,7 @@
  * Copyright (C) Weibin Yao(yaoweibin@gmail.com)
  */
 
-/*Main source copy from Apache's mod_ajp_proxy*/
+/*Main source is from Apache's mod_ajp_proxy*/
 
 /* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -37,7 +37,6 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 #include "ajp_header.h"
-//#include "ngx_ajp_handler.h"
 #include "ngx_ajp_module.h"
 
 #define AJP13_DEF_HOST "127.0.0.1"
@@ -47,7 +46,6 @@
 #define AJP13_DEF_PORT 8009
 #endif
 
-/* The following environment variables match mod_ssl! */
 #define AJP13_HTTPS_INDICATOR           "HTTPS"
 #define AJP13_SSL_CLIENT_CERT_INDICATOR "SSL_CLIENT_CERT"
 #define AJP13_SSL_CIPHER_INDICATOR      "SSL_CIPHER"
@@ -104,7 +102,7 @@ struct ajp_msg
 #define AJP_HEADER_LEN              4
 #define AJP_HEADER_SZ_LEN           2
 #define AJP_HEADER_SZ               6
-#define AJP_HEADER_SAVE_SZ          16
+#define AJP_HEADER_SAVE_SZ          7
 #define AJP_MSG_BUFFER_SZ           8192
 #define AJP_MAX_BUFFER_SZ           65536
 #define AJP13_MAX_SEND_BODY_SZ      (AJP_MAX_BUFFER_SZ - AJP_HEADER_SZ)
@@ -143,6 +141,14 @@ struct ajp_msg
  * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_check_header(ajp_msg_t *msg, size_t *len);
+
+/**
+ * Begin to parse an AJP Message, move the buffer header to the type's position.
+ *
+ * @param msg       AJP Message to parse
+ * @return          NGX_OK or error
+ */
+ngx_int_t ajp_parse_begin(ajp_msg_t *msg);
 
 /**
  * Reset an AJP Message
@@ -306,8 +312,23 @@ ngx_int_t ajp_msg_get_bytes(ajp_msg_t *msg, u_char **rvalue,
  */
 ngx_int_t ajp_msg_create(ngx_pool_t *pool, size_t size, ajp_msg_t **rmsg);
 
+/**
+ * Create an AJP Message's buffer from pool
+ *
+ * @param pool      memory pool to allocate AJP message from
+ * @param size      size of the buffer to create
+ * @param rmsg      Pointer to newly created AJP message
+ * @return          NGX_OK or error
+ */
 ngx_int_t ajp_msg_create_buffer(ngx_pool_t *pool, size_t size, ajp_msg_t *msg);
 
+/**
+ * Create an AJP Message from pool without buffer
+ *
+ * @param pool      memory pool to allocate AJP message from
+ * @param rmsg      Pointer to newly created AJP message
+ * @return          NGX_OK or error
+ */
 ngx_int_t ajp_msg_create_without_buffer(ngx_pool_t *pool, ajp_msg_t **rmsg);
 
 /**
@@ -353,7 +374,13 @@ ngx_int_t ajp_msg_serialize_cping(ajp_msg_t *msg);
  */
 u_char * ajp_msg_dump(ngx_pool_t *pool, ajp_msg_t *msg, u_char *err);
 
-
+/**
+ * Fill the request packet into AJP message
+ * @param msg       AJP message
+ * @param r         current request
+ * @param alcf      AJP configration structure
+ * @return          NGX_OK or error
+ */
 ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
         ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *alcf);
 
@@ -365,6 +392,12 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
  */
 ngx_int_t  ajp_alloc_data_msg(ngx_pool_t *pool, ajp_msg_t *msg);
 
+/**
+ * ending a msg to send data
+ * @param msg       returned AJP message
+ * @param size      size of the data to send
+ * @return          NGX_OK or error
+ */
 ngx_int_t  ajp_data_msg_end(ajp_msg_t *msg, size_t len);
 
 /**
@@ -373,12 +406,13 @@ ngx_int_t  ajp_data_msg_end(ajp_msg_t *msg, size_t len);
  * @param msg       AJP message
  * @return          AJP message type.
  */
-int ajp_parse_type(ngx_http_request_t *r, ajp_msg_t *msg);
+int ajp_parse_type(ajp_msg_t *msg);
 
 /**
  * Parse the header message from container 
  * @param r         current request
  * @param msg       AJP message
+ * @param alcf      AJP configration structure
  * @return          NGX_OK or error
  */
 ngx_int_t ajp_parse_header(ngx_http_request_t  *r, ngx_http_ajp_loc_conf_t *alcf, ajp_msg_t *msg);
@@ -395,15 +429,8 @@ ngx_int_t  ajp_parse_data(ngx_http_request_t  *r, ajp_msg_t *msg, uint16_t *len)
 
 /** 
  * Handle the CPING/CPONG messages
- * @param sock      backend socket
- * @param r         current request
- * @param timeout   time window for receiving cpong reply
- * @return          NGX_OK or error
+ * TODO
  */
-/*ngx_int_t ajp_handle_cping_cpong(apr_socket_t *sock,*/
-/*request_rec *r,*/
-/*apr_interval_time_t timeout);*/
-/** @} */
 
 #endif /* AJP_H */
 

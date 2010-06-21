@@ -24,10 +24,17 @@ typedef enum {
 
 typedef struct {
     ngx_http_ajp_state_e           state;
+
+    /* record the response body chunk packet's length */
     size_t                         length;
+
+    /* reuse in sending request and receiving response */
     ajp_msg_t                      msg;
 
+    /* save tiny buffer for packet parsing */
     ngx_chain_t                   *save;
+
+    /* save the left request body buffers */
     ngx_chain_t                   *body;
 
     ngx_uint_t                     ajp_reuse; /* unsigned :1 */

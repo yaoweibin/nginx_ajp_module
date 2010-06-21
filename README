@@ -583,7 +583,7 @@ Authors
     Weibin Yao(姚伟斌) *yaoweibin at gmail dot com*
 
 Copyright & License
-    This README template copy from agentzh (<http://github.com/agentzh>).
+    This README template is from agentzh (<http://github.com/agentzh>).
 
     I borrowed a lot of codes from Fastcgi module of Nginx. This part of
     code is copyrighted by Igor Sysoev. And the AJP library code from

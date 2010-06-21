@@ -399,7 +399,7 @@ ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_OK;
     }
 
-    add = 0;
+    add = port = 0;
     if (ngx_strncasecmp(url->data, (u_char *) "ajp://", 6) == 0) {
         add = 6;
         port = 8009;

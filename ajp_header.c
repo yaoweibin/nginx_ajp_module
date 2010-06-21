@@ -3,7 +3,7 @@
  * Copyright (C) Weibin Yao(yaoweibin@gmail.com)
  */
 
-/*Main source copy from Apache's mod_ajp_proxy*/
+/*Main source is from Apache's mod_ajp_proxy*/
 
 /* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -355,7 +355,7 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
         return AJP_EBAD_METHOD;
     }
 
-    /*is_ssl = (u_char) ap_proxy_conn_is_https(r->connection);*/
+    /* TODO: is_ssl = ?*/
 
     part = &r->headers_in.headers.part;
 
@@ -371,7 +371,7 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
 
     ajp_msg_reset(msg);
 
-    if (ajp_msg_append_uint8(msg, CMD_AJP13_FORWARD_REQUEST)     ||
+    if (ajp_msg_append_uint8(msg, CMD_AJP13_FORWARD_REQUEST)         ||
             ajp_msg_append_uint8(msg, method)                        ||
             ajp_msg_append_string(msg, &r->http_protocol)            ||
             ajp_msg_append_string(msg, &r->uri)                      ||
@@ -432,15 +432,7 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
     }
 
     /* XXXX need to figure out how to do this
-       if (s->secret) {
-       if (ajp_msg_append_uint8(msg, SC_A_SECRET) ||
-       ajp_msg_append_string(msg, s->secret)) {
-       ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-       "Error ajp_marshal_into_msgb - "
-       "Error appending secret");
-       return APR_EGENERAL;
-       }
-       }
+       ajp_msg_append_uint8(msg, SC_A_SECRET);
      */
 
     if (r->headers_in.user.len != 0) {
@@ -451,13 +443,13 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
                     "Error appending the remote user");
             return AJP_EOVERFLOW;
         }
-
     }
 
     sc_for_req_auth_type(r, &temp_str);
     if (temp_str.len > 0) {
         if (ajp_msg_append_uint8(msg, SC_A_AUTH_TYPE) ||
-                ajp_msg_append_string(msg, &temp_str)) {
+                ajp_msg_append_string(msg, &temp_str)) 
+        {
             ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                     "ajp_marshal_into_msgb: "
                     "Error appending the auth type");
@@ -497,56 +489,6 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
      */
     /*TODO SSL*/
     /*
-    if (is_ssl) {
-        if ((envvar = ap_proxy_ssl_val(r->pool, r->server, r->connection, r,
-                        AJP13_SSL_CLIENT_CERT_INDICATOR))
-                && envvar[0]) {
-            if (ajp_msg_append_uint8(msg, SC_A_SSL_CERT)
-                    || ajp_msg_append_string(msg, envvar)) {
-                ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                        "ajp_marshal_into_msgb: "
-                        "Error appending the SSL certificates");
-                return AJP_EOVERFLOW;
-            }
-        }
-
-        if ((envvar = ap_proxy_ssl_val(r->pool, r->server, r->connection, r,
-                        AJP13_SSL_CIPHER_INDICATOR))
-                && envvar[0]) {
-            if (ajp_msg_append_uint8(msg, SC_A_SSL_CIPHER)
-                    || ajp_msg_append_string(msg, envvar)) {
-                ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                        "ajp_marshal_into_msgb: "
-                        "Error appending the SSL ciphers");
-                return AJP_EOVERFLOW;
-            }
-        }
-
-        if ((envvar = ap_proxy_ssl_val(r->pool, r->server, r->connection, r,
-                        AJP13_SSL_SESSION_INDICATOR))
-                && envvar[0]) {
-            if (ajp_msg_append_uint8(msg, SC_A_SSL_SESSION)
-                    || ajp_msg_append_string(msg, envvar)) {
-                ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                        "ajp_marshal_into_msgb: "
-                        "Error appending the SSL session");
-                return AJP_EOVERFLOW;
-            }
-        }
-
-        if ((envvar = ap_proxy_ssl_val(r->pool, r->server, r->connection, r,
-                        AJP13_SSL_KEY_SIZE_INDICATOR))
-                && envvar[0]) {
-
-            if (ajp_msg_append_uint8(msg, SC_A_SSL_KEY_SIZE)
-                    || ajp_msg_append_uint16(msg, (unsigned short) atoi(envvar))) {
-                ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                        "Error ajp_marshal_into_msgb - "
-                        "Error appending the SSL key size");
-                return APR_EGENERAL;
-            }
-        }
-    }
      */
 
     /* Forward the remote port information, which was forgotten
@@ -586,19 +528,6 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
      * and pass it to the header striping that prefix.
      */
     /* TODO
-    for (i = 0; i < (uint32_t)arr->nelts; i++) {
-        if (!strncmp(elts[i].key, "AJP_", 4)) {
-            if (ajp_msg_append_uint8(msg, SC_A_REQ_ATTRIBUTE) ||
-                    ajp_msg_append_string(msg, elts[i].key + 4)   ||
-                    ajp_msg_append_string(msg, elts[i].val)) {
-                ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                        "ajp_marshal_into_msgb: "
-                        "Error appending attribute %s=%s",
-                        elts[i].key, elts[i].val);
-                return AJP_EOVERFLOW;
-            }
-        }
-    }
     */
 
     if (ajp_msg_append_uint8(msg, SC_A_ARE_DONE)) {
@@ -691,10 +620,10 @@ static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
     ngx_log_error(NGX_LOG_DEBUG, ngx_cycle->log, 0,
             "ajp_unmarshal_response: status = %d", status);
 
+    num_headers = 0;
     rc = ajp_msg_get_uint16(msg, &num_headers);
-
     if (rc != NGX_OK) {
-        num_headers = 0;
+        return rc;
     }
 
     ngx_log_error(NGX_LOG_DEBUG, ngx_cycle->log, 0,
@@ -722,20 +651,16 @@ static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
 
             if (rc != NGX_OK) {
                 ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                        "ajp_unmarshal_response: "
-                        "No such sc (%08Xd)",
-                        name);
+                        "ajp_unmarshal_response: No such sc (%08Xd)", name);
                 return AJP_EBAD_HEADER;
             }
-
         } else {
             name = 0;
             rc = ajp_msg_get_string(msg, &str);
 
             if (rc != NGX_OK) {
                 ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                        "ajp_unmarshal_response: "
-                        "Null header name");
+                        "ajp_unmarshal_response: Null header name");
                 return rc;
             }
 
@@ -748,8 +673,7 @@ static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
         rc = ajp_msg_get_string(msg, &h->value);
         if (rc != NGX_OK) {
             ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                    "ajp_unmarshal_response: "
-                    "Null header value");
+                    "ajp_unmarshal_response: Null header value");
             return rc;
         }
 
@@ -763,7 +687,6 @@ static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
         ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
                 "http ajp header: \"%V: %V\"",
                 &h->key, &h->value);
-
     }
 
     return NGX_OK;
@@ -820,7 +743,7 @@ ngx_int_t  ajp_parse_data(ngx_http_request_t  *r, ajp_msg_t *msg,
 }
 
 /* parse the msg to read the type */
-int ajp_parse_type(ngx_http_request_t  *r, ajp_msg_t *msg)
+int ajp_parse_type(ajp_msg_t *msg)
 {
     u_char result;
 

@@ -107,6 +107,20 @@ ngx_int_t ajp_msg_check_header(ajp_msg_t *msg, size_t *len)
     return NGX_OK;
 }
 
+ngx_int_t ajp_parse_begin(ajp_msg_t *msg)
+{
+    ngx_buf_t *buf = msg->buf;
+
+    if (buf->end > buf->pos + AJP_HEADER_LEN) {
+        buf->pos += AJP_HEADER_LEN;
+    }
+    else {
+        return NGX_ERROR;
+    }
+
+    return NGX_OK;
+}
+
 /**
  * Reset an AJP Message
  *
@@ -593,17 +607,7 @@ ngx_int_t ajp_msg_copy(ajp_msg_t *smsg, ajp_msg_t *dmsg)
         return AJP_EINVAL;
     }
 
-    /*if (smsg->len > smsg->max_size) {*/
-    /*ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,*/
-    /*"ajp_msg_copy(): destination buffer too "*/
-    /*"small %" APR_SIZE_T_FMT ", max size is %" APR_SIZE_T_FMT,*/
-    /*smsg->len, smsg->max_size);*/
-    /*return  AJP_ETOSMALL;*/
-    /*}*/
-
-    /*memcpy(dmsg->buf, smsg->buf, smsg->len);*/
-    /*dmsg->len = smsg->len;*/
-    /*dmsg->pos = smsg->pos;*/
+    /*TODO*/
 
     return NGX_OK;
 }

@@ -186,6 +186,7 @@
 #define SC_RESP_SERVLET_ENGINE      (unsigned short)0xA009
 #define SC_RESP_STATUS              (unsigned short)0xA00A
 #define SC_RESP_WWW_AUTHENTICATE    (unsigned short)0xA00B
+
 #define SC_RES_HEADERS_NUM          11
 
 #endif /* AJP_HEADER_H */

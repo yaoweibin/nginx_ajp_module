@@ -536,7 +536,7 @@ Weibin Yao(姚伟斌) ''yaoweibin at gmail dot com''
 
 = Copyright & License =
 
-This README template copy from [http://github.com/agentzh agentzh].
+This README template is from [http://github.com/agentzh agentzh].
 
 I borrowed a lot of codes from Fastcgi module of Nginx. This part of code is copyrighted by Igor Sysoev. And the AJP library code from apache's [http://httpd.apache.org/docs/trunk/mod/mod_proxy_ajp.html mod_ajp_proxy]. Thanks for their hard work.
 
