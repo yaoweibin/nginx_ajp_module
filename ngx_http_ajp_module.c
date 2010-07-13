@@ -7,10 +7,12 @@
 #include <ngx_http_ajp_module.h>
 #include <ngx_http_ajp_handler.h>
 
+
 static char *ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 static char *ngx_http_ajp_store(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
+
 #if (NGX_HTTP_CACHE)
 static char *ngx_http_ajp_cache(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
@@ -31,8 +33,9 @@ static void *ngx_http_ajp_create_loc_conf(ngx_conf_t *cf);
 static char *ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf,
     void *parent, void *child);
 
-static ngx_conf_post_t  ngx_http_ajp_lowat_post =
-    { ngx_http_ajp_lowat_check };
+
+static ngx_conf_post_t  ngx_http_ajp_lowat_post = { ngx_http_ajp_lowat_check };
+
 
 static ngx_conf_bitmask_t  ngx_http_ajp_next_upstream_masks[] = {
     { ngx_string("error"), NGX_HTTP_UPSTREAM_FT_ERROR },
@@ -46,6 +49,7 @@ static ngx_conf_bitmask_t  ngx_http_ajp_next_upstream_masks[] = {
     { ngx_null_string, 0 }
 };
 
+
 static ngx_conf_bitmask_t  ngx_http_ajp_ignore_headers_masks[] = {
     { ngx_string("X-Accel-Redirect"), NGX_HTTP_UPSTREAM_IGN_XA_REDIRECT },
     { ngx_string("X-Accel-Expires"), NGX_HTTP_UPSTREAM_IGN_XA_EXPIRES },
@@ -53,6 +57,7 @@ static ngx_conf_bitmask_t  ngx_http_ajp_ignore_headers_masks[] = {
     { ngx_string("Cache-Control"), NGX_HTTP_UPSTREAM_IGN_CACHE_CONTROL },
     { ngx_null_string, 0 }
 };
+
 
 static ngx_path_init_t  ngx_http_ajp_temp_path = {
     ngx_string(NGX_HTTP_AJP_TEMP_PATH), { 1, 2, 0 }
@@ -320,6 +325,7 @@ static ngx_command_t  ngx_http_ajp_commands[] = {
       ngx_null_command
 };
 
+
 static ngx_http_module_t  ngx_http_ajp_module_ctx = {
     NULL,                                  /* preconfiguration */
     NULL,                                  /* postconfiguration */
@@ -333,6 +339,7 @@ static ngx_http_module_t  ngx_http_ajp_module_ctx = {
     ngx_http_ajp_create_loc_conf,          /* create location configuration */
     ngx_http_ajp_merge_loc_conf            /* merge location configuration */
 };
+
 
 ngx_module_t  ngx_http_ajp_module = {
     NGX_MODULE_V1,
@@ -348,6 +355,7 @@ ngx_module_t  ngx_http_ajp_module = {
     NULL,                                  /* exit master */
     NGX_MODULE_V1_PADDING
 };
+
 
 static char *
 ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
@@ -421,6 +429,7 @@ ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
+
 static char *
 ngx_http_ajp_store(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -476,6 +485,7 @@ ngx_http_ajp_store(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
+
 static char *
 ngx_http_ajp_lowat_check(ngx_conf_t *cf, void *post, void *data)
 {
@@ -503,6 +513,7 @@ ngx_http_ajp_lowat_check(ngx_conf_t *cf, void *post, void *data)
 
     return NGX_CONF_OK;
 }
+
 
 #if (NGX_HTTP_CACHE)
 
@@ -567,6 +578,7 @@ ngx_http_ajp_cache_key(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 #endif
 
+
 static char *
 ngx_http_ajp_upstream_max_fails_unsupported(ngx_conf_t *cf,
     ngx_command_t *cmd, void *conf)
@@ -591,7 +603,6 @@ ngx_http_ajp_upstream_fail_timeout_unsupported(ngx_conf_t *cf,
 
     return NGX_CONF_ERROR;
 }
-
 
 
 static void *
@@ -658,6 +669,7 @@ ngx_http_ajp_create_loc_conf(ngx_conf_t *cf)
 
     return conf;
 }
+
 
 static char *
 ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
