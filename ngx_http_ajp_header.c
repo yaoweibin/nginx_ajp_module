@@ -3,7 +3,7 @@
  * Copyright (C) Weibin Yao(yaoweibin@gmail.com)
  */
 
-/*Main source is from Apache's mod_ajp_proxy*/
+/* Main source copied from Apache's mod_ajp_proxy */
 
 /* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -29,7 +29,9 @@
 #include "ngx_http_ajp_handler.h"
 #include "ngx_http_ajp_module.h"
 
+
 extern volatile ngx_cycle_t  *ngx_cycle;
+
 
 typedef struct{
     ngx_str_t name;
