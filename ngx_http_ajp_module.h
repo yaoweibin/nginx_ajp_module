@@ -7,7 +7,6 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
-extern ngx_module_t  ngx_http_ajp_module;
 
 typedef struct {
     ngx_http_upstream_conf_t       upstream;
@@ -23,5 +22,9 @@ typedef struct {
 #endif
 
 } ngx_http_ajp_loc_conf_t;
+
+
+extern ngx_module_t  ngx_http_ajp_module;
+
 
 #endif /* _NGX_AJP_MODULE_H_INCLUDED_ */
