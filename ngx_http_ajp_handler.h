@@ -22,6 +22,7 @@ typedef enum {
     ngx_http_ajp_st_response_end
 } ngx_http_ajp_state_e;
 
+
 typedef struct {
     ngx_http_ajp_state_e           state;
 
@@ -40,6 +41,7 @@ typedef struct {
     ngx_uint_t                     ajp_reuse; /* unsigned :1 */
 
 } ngx_http_ajp_ctx_t;
+
 
 ngx_int_t ngx_http_ajp_handler(ngx_http_request_t *r);
 

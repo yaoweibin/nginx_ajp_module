@@ -11,6 +11,7 @@
 #include <ngx_http_ajp_header.h>
 #include <ngx_http_ajp_handler.h>
 
+
 static ngx_int_t ngx_http_ajp_eval(ngx_http_request_t *r,
     ngx_http_ajp_loc_conf_t *alcf);
 #if (NGX_HTTP_CACHE)
@@ -105,6 +106,7 @@ ngx_http_ajp_handler(ngx_http_request_t *r)
     return NGX_DONE;
 }
 
+
 static ngx_int_t
 ngx_http_ajp_eval(ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *alcf)
 {
@@ -181,6 +183,7 @@ ngx_http_ajp_create_key(ngx_http_request_t *r)
 
 #endif
 
+
 static ngx_int_t
 ngx_http_ajp_create_request(ngx_http_request_t *r)
 {
@@ -243,6 +246,7 @@ ngx_http_ajp_create_request(ngx_http_request_t *r)
     return NGX_OK;
 }
 
+
 static ngx_int_t
 ngx_http_ajp_reinit_request(ngx_http_request_t *r)
 {
@@ -267,6 +271,7 @@ ngx_http_ajp_reinit_request(ngx_http_request_t *r)
     return NGX_OK;
 }
 
+
 static void
 ngx_http_upstream_send_request_body_handler(ngx_http_request_t *r,
     ngx_http_upstream_t *u)
@@ -281,6 +286,7 @@ ngx_http_upstream_send_request_body_handler(ngx_http_request_t *r,
     }
 }
 
+
 static void
 ngx_http_upstream_dummy_handler(ngx_http_request_t *r,
     ngx_http_upstream_t *u)
@@ -289,6 +295,7 @@ ngx_http_upstream_dummy_handler(ngx_http_request_t *r,
                    "ajp upstream dummy handler");
     return;
 }
+
 
 static ngx_int_t
 ngx_http_upstream_send_request_body(ngx_http_request_t *r, ngx_http_upstream_t *u)
@@ -391,8 +398,9 @@ ngx_http_upstream_send_request_body(ngx_http_request_t *r, ngx_http_upstream_t *
     return NGX_OK;
 }
 
-ngx_chain_t *ajp_data_msg_send_body(ngx_http_request_t *r, size_t max_size,
-        ngx_chain_t **body)
+
+ngx_chain_t *
+ajp_data_msg_send_body(ngx_http_request_t *r, size_t max_size, ngx_chain_t **body)
 {
     size_t                    size;
     ngx_buf_t                *b_in, *b_out;
@@ -490,6 +498,7 @@ ngx_chain_t *ajp_data_msg_send_body(ngx_http_request_t *r, size_t max_size,
 
     return out;
 }
+
 
 static ngx_int_t
 ngx_http_ajp_process_header(ngx_http_request_t *r)
@@ -616,10 +625,14 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
     return NGX_AGAIN;
 }
 
-/* Save too tiny buffer which even does not contain the packet's
-   length. Concatenate it with next buffer. */
-static ngx_int_t ngx_http_ajp_input_filter_save_tiny_buffer(ngx_http_request_t *r,
-        ngx_buf_t *buf)
+
+/* 
+ * Save too tiny buffer which even does not contain the packet's
+ * length. Concatenate it with next buffer. 
+ */
+static ngx_int_t
+ngx_http_ajp_input_filter_save_tiny_buffer(ngx_http_request_t *r,
+    ngx_buf_t *buf)
 {
     size_t                   size;
     ngx_buf_t               *sb;
@@ -655,6 +668,7 @@ static ngx_int_t ngx_http_ajp_input_filter_save_tiny_buffer(ngx_http_request_t *
 
     return NGX_OK;
 }
+
 
 static ngx_int_t
 ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
@@ -850,6 +864,7 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
 
     return NGX_OK;
 }
+
 
 static void
 ngx_http_ajp_abort_request(ngx_http_request_t *r)
