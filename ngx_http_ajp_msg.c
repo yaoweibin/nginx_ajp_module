@@ -21,7 +21,7 @@
  * limitations under the License.
  */
 
-#include "ajp.h"
+#include "ngx_http_ajp.h"
 
 extern volatile ngx_cycle_t  *ngx_cycle;
 

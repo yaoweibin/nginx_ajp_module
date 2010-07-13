@@ -2,10 +2,10 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
-#include <ajp.h>
-#include <ajp_header.h>
-#include <ngx_ajp_module.h>
-#include <ngx_ajp_handler.h>
+#include <ngx_http_ajp.h>
+#include <ngx_http_ajp_header.h>
+#include <ngx_http_ajp_module.h>
+#include <ngx_http_ajp_handler.h>
 
 static char *ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
