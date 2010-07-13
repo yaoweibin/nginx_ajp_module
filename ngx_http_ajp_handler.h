@@ -45,4 +45,5 @@ typedef struct {
 
 ngx_int_t ngx_http_ajp_handler(ngx_http_request_t *r);
 
+
 #endif /* _NGX_AJP_HANDLER_H_INCLUDED_ */

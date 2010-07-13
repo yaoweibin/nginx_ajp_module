@@ -1,8 +1,8 @@
 
-
 /*
  * Copyright (C) Weibin Yao(yaoweibin@gmail.com)
  */
+
 
 #include <ngx_config.h>
 #include <ngx_core.h>
@@ -27,9 +27,9 @@ static void ngx_http_ajp_finalize_request(ngx_http_request_t *r,
     ngx_int_t rc);
 
 static ngx_int_t ngx_http_upstream_send_request_body(ngx_http_request_t *r, 
-        ngx_http_upstream_t *u);
+    ngx_http_upstream_t *u);
 static ngx_chain_t *ajp_data_msg_send_body(ngx_http_request_t *r, size_t max_size,
-        ngx_chain_t **body);
+    ngx_chain_t **body);
 
 
 ngx_int_t

@@ -1,5 +1,4 @@
 
-
 /*
  * Copyright (C) Weibin Yao
  * Email: yaoweibin@gmail.com
@@ -15,7 +14,9 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
+
 #define SHM_NAME_LEN 256
+
 
 typedef struct {
     ngx_array_t                     *values;
@@ -27,11 +28,14 @@ typedef struct {
     unsigned                         reverse:1; 
 } ngx_http_upstream_jvm_route_srv_conf_t;
 
+
 typedef struct {
     ngx_str_t shm_name;
 } ngx_http_upstream_jvm_route_loc_conf_t;
 
+
 typedef struct ngx_http_upstream_jvm_route_peers_s ngx_http_upstream_jvm_route_peers_t;
+
 
 typedef struct {
     ngx_uint_t                          nreq; /* active requests to the peer */
@@ -53,8 +57,10 @@ typedef struct {
     ngx_http_upstream_jvm_route_shared_t stats[1];
 } ngx_http_upstream_jvm_route_shm_block_t;
 
+
 /* ngx_spinlock is defined without a matching unlock primitive */
 #define ngx_spinlock_unlock(lock)       (void) ngx_atomic_cmp_set(lock, ngx_pid, 0)
+
 
 typedef struct {
     ngx_http_upstream_jvm_route_shared_t *shared;
@@ -74,6 +80,7 @@ typedef struct {
 #endif
 } ngx_http_upstream_jvm_route_peer_t;
 
+
 struct ngx_http_upstream_jvm_route_peers_s {
     /* data should be shared between processes */
     ngx_http_upstream_jvm_route_shm_block_t *shared;
@@ -89,7 +96,9 @@ struct ngx_http_upstream_jvm_route_peers_s {
     ngx_http_upstream_jvm_route_peer_t       peer[1];
 };
 
+
 #define NGX_PEER_INVALID (~0UL)
+
 
 typedef struct {
     ngx_http_upstream_jvm_route_srv_conf_t *conf;
@@ -104,6 +113,7 @@ typedef struct {
     ngx_uint_t                              index;
 } ngx_http_upstream_jvm_route_peer_data_t;
 
+
 static void * ngx_http_upstream_jvm_route_create_conf(ngx_conf_t *cf);
 static void * ngx_http_upstream_jvm_route_create_loc_conf(ngx_conf_t *cf);
 static ngx_int_t ngx_http_upstream_init_jvm_route_peer(ngx_http_request_t *r,
@@ -113,7 +123,7 @@ static ngx_int_t ngx_http_upstream_get_jvm_route_peer(ngx_peer_connection_t *pc,
 static char *ngx_http_upstream_jvm_route(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 static char *ngx_http_upstream_jvm_route_set_status(ngx_conf_t *cf, 
-        ngx_command_t *cmd, void *conf);
+    ngx_command_t *cmd, void *conf);
  
 static ngx_int_t
 ngx_http_upstream_get_jvm_route_peer(ngx_peer_connection_t *pc, void *data);
@@ -128,6 +138,7 @@ ngx_http_upstream_jvm_route_save_session(ngx_peer_connection_t *pc, void *data);
 #endif
 
 static ngx_int_t ngx_http_upstream_jvm_route_init_module(ngx_cycle_t *cycle);
+
 
 static ngx_command_t  ngx_http_upstream_jvm_route_commands[] = {
 
@@ -150,32 +161,32 @@ static ngx_command_t  ngx_http_upstream_jvm_route_commands[] = {
 
 
 static ngx_http_module_t  ngx_http_upstream_jvm_route_module_ctx = {
-    NULL,                                  /* preconfiguration */
-    NULL,                                  /* postconfiguration */
+    NULL,                                        /* preconfiguration */
+    NULL,                                        /* postconfiguration */
 
-    NULL,                                  /* create main configuration */
-    NULL,                                  /* init main configuration */
+    NULL,                                        /* create main configuration */
+    NULL,                                        /* init main configuration */
 
-    ngx_http_upstream_jvm_route_create_conf,/* create server configuration */
-    NULL,                                  /* merge server configuration */
+    ngx_http_upstream_jvm_route_create_conf,     /* create server configuration */
+    NULL,                                        /* merge server configuration */
 
-    ngx_http_upstream_jvm_route_create_loc_conf,  /* create location configuration */
-    NULL                                   /* merge location configuration */
+    ngx_http_upstream_jvm_route_create_loc_conf, /* create location configuration */
+    NULL                                         /* merge location configuration */
 };
 
 
 ngx_module_t  ngx_http_upstream_jvm_route_module = {
     NGX_MODULE_V1,
-    &ngx_http_upstream_jvm_route_module_ctx, /* module context */
-    ngx_http_upstream_jvm_route_commands,    /* module directives */
-    NGX_HTTP_MODULE,                         /* module type */
-    NULL,                                    /* init master */
-    ngx_http_upstream_jvm_route_init_module, /* init module */
-    NULL,                                    /* init process */
-    NULL,                                    /* init thread */
-    NULL,                                    /* exit thread */
-    NULL,                                    /* exit process */
-    NULL,                                    /* exit master */
+    &ngx_http_upstream_jvm_route_module_ctx,     /* module context */
+    ngx_http_upstream_jvm_route_commands,        /* module directives */
+    NGX_HTTP_MODULE,                             /* module type */
+    NULL,                                        /* init master */
+    ngx_http_upstream_jvm_route_init_module,     /* init module */
+    NULL,                                        /* init process */
+    NULL,                                        /* init thread */
+    NULL,                                        /* exit thread */
+    NULL,                                        /* exit process */
+    NULL,                                        /* exit master */
     NGX_MODULE_V1_PADDING
 };
 
@@ -183,12 +194,14 @@ static ngx_uint_t ngx_http_upstream_jvm_route_generation = 0;
 
 #define NGX_BITVECTOR_ELT_SIZE (sizeof(uintptr_t) * 8)
 
+
 static ngx_int_t
 ngx_http_upstream_jvm_route_init_module(ngx_cycle_t *cycle)
 {
     ngx_http_upstream_jvm_route_generation++;
     return NGX_OK;
 }
+
 
 static uintptr_t *
 ngx_bitvector_alloc(ngx_pool_t *pool, ngx_uint_t size, uintptr_t *small)
@@ -203,6 +216,7 @@ ngx_bitvector_alloc(ngx_pool_t *pool, ngx_uint_t size, uintptr_t *small)
     return ngx_pcalloc(pool, nelts * NGX_BITVECTOR_ELT_SIZE);
 }
 
+
 static ngx_int_t
 ngx_bitvector_test(uintptr_t *bv, ngx_uint_t bit)
 {
@@ -213,6 +227,7 @@ ngx_bitvector_test(uintptr_t *bv, ngx_uint_t bit)
 
     return bv[n] & m;
 }
+
 
 static void
 ngx_bitvector_set(uintptr_t *bv, ngx_uint_t bit)
@@ -225,7 +240,10 @@ ngx_bitvector_set(uintptr_t *bv, ngx_uint_t bit)
     bv[n] |= m;
 }
 
-/* string1 compares with the string2 in reverse order.*/
+
+/*
+ * string1 compares with the string2 in reverse order.
+ */
 static ngx_int_t
 ngx_strncmp_r(u_char *s1, u_char *s2, size_t len1, size_t len2)
 {
@@ -242,6 +260,7 @@ ngx_strncmp_r(u_char *s1, u_char *s2, size_t len1, size_t len2)
     return s1[len1] - s2[len2];
 }
 
+
 static ngx_int_t 
 ngx_strntok(u_char *s, const char *delim, size_t len, size_t count)
 {
@@ -256,6 +275,7 @@ ngx_strntok(u_char *s, const char *delim, size_t len, size_t count)
 
     return -1;
 }
+
 
 static u_char *
 ngx_strncasestrn(u_char *s1, u_char *s2, size_t len1, size_t len2)
@@ -297,6 +317,7 @@ ngx_strncasestrn(u_char *s1, u_char *s2, size_t len1, size_t len2)
     return --s1;
 }
 
+
 static ngx_int_t
 ngx_http_upstream_cmp_servers(const void *one, const void *two)
 {
@@ -308,7 +329,10 @@ ngx_http_upstream_cmp_servers(const void *one, const void *two)
     return (first->weight < second->weight);
 }
 
-/* Have not support the backup server yet. */
+
+/*
+ * Have not support the backup server yet.
+ */
 static ngx_int_t
 ngx_http_upstream_init_jvm_route_rr(ngx_conf_t *cf,
     ngx_http_upstream_srv_conf_t *us)
@@ -476,6 +500,7 @@ ngx_http_upstream_init_jvm_route_rr(ngx_conf_t *cf,
     return NGX_OK;
 }
 
+
 static ngx_int_t 
 ngx_http_upstream_jvm_route_init_shm_zone(ngx_shm_zone_t *shm_zone, void *data)
 {
@@ -546,6 +571,7 @@ ngx_http_upstream_jvm_route_init_shm_zone(ngx_shm_zone_t *shm_zone, void *data)
     return NGX_ERROR;
 }
 
+
 static ngx_int_t
 ngx_http_upstream_init_jvm_route(ngx_conf_t *cf, ngx_http_upstream_srv_conf_t *us)
 {
@@ -601,6 +627,7 @@ ngx_http_upstream_init_jvm_route(ngx_conf_t *cf, ngx_http_upstream_srv_conf_t *u
 
     return NGX_OK;
 }
+
 
 static ngx_int_t
 ngx_http_upstream_jvm_route_get_session_value(ngx_http_request_t *r,
@@ -669,6 +696,7 @@ ngx_http_upstream_jvm_route_get_session_value(ngx_http_request_t *r,
     return NGX_OK;
 }
 
+
 static ngx_int_t
 ngx_http_upstream_init_jvm_route_peer(ngx_http_request_t *r,
     ngx_http_upstream_srv_conf_t *us)
@@ -733,6 +761,7 @@ ngx_http_upstream_init_jvm_route_peer(ngx_http_request_t *r,
     return NGX_OK;
 }
 
+
 static ngx_int_t
 ngx_http_upstream_jvm_route_try_peer( ngx_http_upstream_jvm_route_peer_data_t *jrp,
     ngx_uint_t peer_id)
@@ -762,6 +791,7 @@ ngx_http_upstream_jvm_route_try_peer( ngx_http_upstream_jvm_route_peer_data_t *j
 
     return NGX_BUSY;
 }
+
 
 static ngx_int_t
 ngx_http_upstream_choose_by_jvm_route(ngx_http_upstream_jvm_route_peer_data_t *jrp)
@@ -795,6 +825,7 @@ ngx_http_upstream_choose_by_jvm_route(ngx_http_upstream_jvm_route_peer_data_t *j
     return NGX_PEER_INVALID;
 }
 
+
 static ngx_int_t
 ngx_http_upstream_choose_by_rr(ngx_http_upstream_jvm_route_peer_data_t *jrp)
 {
@@ -827,6 +858,7 @@ ngx_http_upstream_choose_by_rr(ngx_http_upstream_jvm_route_peer_data_t *jrp)
 
     return NGX_PEER_INVALID;
 }
+
 
 static ngx_int_t
 ngx_http_upstream_jvm_route_choose_peer(ngx_peer_connection_t *pc, 
@@ -872,6 +904,7 @@ chosen:
     return NGX_OK;
 }
 
+
 static void
 ngx_http_upstream_jvm_route_update_nreq(ngx_http_upstream_jvm_route_peer_data_t *jrp, 
         int delta, ngx_log_t *log)
@@ -891,6 +924,7 @@ ngx_http_upstream_jvm_route_update_nreq(ngx_http_upstream_jvm_route_peer_data_t 
                 total_nreq, delta);
     }
 }
+
 
 static ngx_int_t
 ngx_http_upstream_get_jvm_route_peer(ngx_peer_connection_t *pc, void *data)
@@ -957,6 +991,7 @@ ngx_http_upstream_get_jvm_route_peer(ngx_peer_connection_t *pc, void *data)
     return NGX_OK;
 }
 
+
 static void
 ngx_http_upstream_free_jvm_route_peer(ngx_peer_connection_t *pc, void *data,
     ngx_uint_t state)
@@ -1007,6 +1042,7 @@ ngx_http_upstream_free_jvm_route_peer(ngx_peer_connection_t *pc, void *data,
     ngx_spinlock_unlock(lock);
 }
 
+
 #if (NGX_HTTP_SSL)
 static ngx_int_t
 ngx_http_upstream_jvm_route_set_session(ngx_peer_connection_t *pc, void *data)
@@ -1036,6 +1072,7 @@ ngx_http_upstream_jvm_route_set_session(ngx_peer_connection_t *pc, void *data)
 
     return rc;
 }
+
 
 static void
 ngx_http_upstream_jvm_route_save_session(ngx_peer_connection_t *pc, void *data)
@@ -1079,6 +1116,7 @@ ngx_http_upstream_jvm_route_save_session(ngx_peer_connection_t *pc, void *data)
 }
 #endif
 
+
 static void *
 ngx_http_upstream_jvm_route_create_conf(ngx_conf_t *cf)
 {
@@ -1092,6 +1130,7 @@ ngx_http_upstream_jvm_route_create_conf(ngx_conf_t *cf)
 
     return conf;
 }
+
 
 static char *
 ngx_http_upstream_jvm_route(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
@@ -1182,7 +1221,9 @@ ngx_http_upstream_jvm_route(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
+
 extern volatile  ngx_cycle_t  *ngx_cycle;
+
 
 static ngx_shm_zone_t *
 ngx_shared_memory_find(ngx_str_t *name, void *tag)
@@ -1224,6 +1265,7 @@ ngx_shared_memory_find(ngx_str_t *name, void *tag)
 
     return NULL;
 }
+
 
 static ngx_int_t 
 ngx_http_upstream_jvm_route_status_handler(ngx_http_request_t *r)
@@ -1343,6 +1385,7 @@ ngx_http_upstream_jvm_route_status_handler(ngx_http_request_t *r)
     return ngx_http_output_filter(r, &out);
 }
 
+
 static void * 
 ngx_http_upstream_jvm_route_create_loc_conf(ngx_conf_t *cf)
 {
@@ -1355,6 +1398,7 @@ ngx_http_upstream_jvm_route_create_loc_conf(ngx_conf_t *cf)
     
     return conf;
 }
+
 
 static char *
 ngx_http_upstream_jvm_route_set_status(ngx_conf_t *cf, 
