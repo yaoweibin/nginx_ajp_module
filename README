@@ -580,9 +580,17 @@ Changelogs
     *   first release
 
 Authors
-    Weibin Yao(姚伟斌) *yaoweibin at gmail dot com*
+    *   Jinti Shen(路奇) *jinti.shen AT gmail DOT com*
 
-Copyright & License
+    *   Joshua Zhu(叔度) *zhuzhaoyuan AT gmail DOT com*
+
+    *   Simon Liu(雕梁) *simohayha.bobo AT gmail DOT com*
+
+    *   Matthew Ma(东坡) *mj19821214 AT gmail DOT com*
+
+    *   Weibin Yao(姚伟斌) *yaoweibin AT gmail DOT com*
+
+License
     This README template is from agentzh (<http://github.com/agentzh>).
 
     I borrowed a lot of codes from Fastcgi module of Nginx. This part of
@@ -592,10 +600,6 @@ Copyright & License
     for their hard work.
 
     This module is licensed under the BSD license.
-
-    Copyright (C) 2010 by Weibin Yao <yaoweibin@gmail.com>.
-
-    All rights reserved.
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions are
