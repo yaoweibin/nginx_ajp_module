@@ -13,7 +13,6 @@ We need your help! If you find this module useful and/or interesting, please con
 <geshi lang="nginx">
 
 http {
-
     upstream tomcats {
 
         server 127.0.0.1:8009 srun_id=jvm1;
@@ -30,7 +29,6 @@ http {
             ajp_pass tomcats;
         }
     }
-
 }
 
 </geshi>
@@ -86,7 +84,9 @@ The directive specifies the area  which actually is the share memory's name for 
 The directive specifies what information is included in the key for caching, for example
 
 <geshi lang="nginx">
+
 ajp_cache_key "$host$request_uri$cookie_user";
+
 </geshi>
 
 Note that by default, the hostname of the server is not included in the cache key. If you are using subdomains for different locations on your website, you need to include it, e.g. by changing the cache key to something like
@@ -106,7 +106,9 @@ ajp_cache_key "$scheme$host$request_uri";
 GET/HEAD is syntax sugar, i.e. you can not disable GET/HEAD even if you set just
 
 <geshi lang="nginx">
+
 ajp_cache_methods  POST;
+
 </geshi>
 
 == ajp_cache_min_uses ==
@@ -130,7 +132,9 @@ TODO: Description.
 This directive sets the cache path and other cache parameters. Cached data stored in files. Key and filename in cache is md5 of proxied URL. '''Levels''' parameter set number of subdirectories in cache, for example for:
 
 <geshi lang="nginx">
+
 ajp_cache_path  /data/nginx/cache  levels=1:2   keys_zone=one:10m;
+
 </geshi>
 
 file names will be like:
@@ -276,18 +280,23 @@ If ajp_max_temp_file_size is equal to zero, temporary files usage will be disabl
 Directive assigns the port or socket on which the AJP-server is listening. Port can be indicated by itself or as an address and port, for example:
 
 <geshi lang="nginx">
+
 ajp_pass   localhost:9000;
+
 </geshi>
 
 using a Unix domain socket:
 
 <geshi lang="nginx">
+
 ajp_pass   unix:/tmp/ajp.socket;
+
 </geshi>
 
 You may also use an upstream block.
 
 <geshi lang="nginx">
+
 upstream backend  {
 
     server   localhost:1234;

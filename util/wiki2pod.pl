@@ -90,7 +90,7 @@ while (<>) {
             print "\n=over\n\n";
         }
         $nl_counts[$level]++;
-        print "\n=item $nl_counts[$level].\n\n";
+        print "\n=item $nl_counts[$level]. ";
         print "$txt\n";
     } elsif (/^(\*+) (.*)/) {
         my ($level, $txt) = (length($1) - 1, $2);
@@ -103,7 +103,7 @@ while (<>) {
             print "\n=over\n\n";
         }
         $bl_counts[$level]++;
-        print "\n=item *\n\n";
+        print "\n=item * ";
         print "$txt\n";
     } else {
         collapse_lists();

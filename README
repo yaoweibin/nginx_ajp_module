@@ -10,9 +10,7 @@ Status
     please consider joining the development!
 
 Synopsis
-    http {
-
-        upstream tomcats {
+    http { upstream tomcats {
 
             server 127.0.0.1:8009 srun_id=jvm1;
 
@@ -28,7 +26,6 @@ Synopsis
                 ajp_pass tomcats;
             }
         }
-
     }
 
 Description

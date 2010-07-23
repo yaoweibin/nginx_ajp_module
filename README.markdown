@@ -25,7 +25,6 @@ We need your help! If you find this module useful and/or interesting, please con
 
 
 http {
-
     upstream tomcats {
 
         server 127.0.0.1:8009 srun_id=jvm1;
@@ -42,7 +41,6 @@ http {
             ajp_pass tomcats;
         }
     }
-
 }
 
 
@@ -120,7 +118,11 @@ __context:__ _http, server, location_
 
 The directive specifies what information is included in the key for caching, for example
 
+
+
 ajp_cache_key "$host$request_uri$cookie_user";
+
+
 
 Note that by default, the hostname of the server is not included in the cache key. If you are using subdomains for different locations on your website, you need to include it, e.g. by changing the cache key to something like
 
@@ -140,7 +142,11 @@ __context:__ _main,http,location_
 
 GET/HEAD is syntax sugar, i.e. you can not disable GET/HEAD even if you set just
 
+
+
 ajp_cache_methods  POST;
+
+
 
 
 
@@ -170,7 +176,11 @@ __context:__ _http, server, location_
 
 This directive sets the cache path and other cache parameters. Cached data stored in files. Key and filename in cache is md5 of proxied URL. __Levels__ parameter set number of subdirectories in cache, for example for:
 
+
+
 ajp_cache_path  /data/nginx/cache  levels=1:2   keys_zone=one:10m;
+
+
 
 file names will be like:
 
@@ -312,41 +322,23 @@ Directive determines, in what cases the request will be transmitted to the next 
 
 
 
-- *
+- * error — an error has occurred while connecting to the server, sending a request to it, or reading its response;
 
-error — an error has occurred while connecting to the server, sending a request to it, or reading its response;
+- * timeout — occurred timeout during the connection with the server, transfer the request or while reading response from the server;
 
-- *
+- * invalid_header — server returned a empty or incorrect answer;
 
-timeout — occurred timeout during the connection with the server, transfer the request or while reading response from the server;
+- * http_500 — server returned answer with code 500;
 
-- *
+- * http_502 — server returned answer with code 502;
 
-invalid_header — server returned a empty or incorrect answer;
+- * http_503 — server returned answer with code 503;
 
-- *
+- * http_504 — server returned answer with code 504;
 
-http_500 — server returned answer with code 500;
+- * http_404 — server returned answer with code 404;
 
-- *
-
-http_502 — server returned answer with code 502;
-
-- *
-
-http_503 — server returned answer with code 503;
-
-- *
-
-http_504 — server returned answer with code 504;
-
-- *
-
-http_404 — server returned answer with code 404;
-
-- *
-
-off — it forbids the request transfer to the next server Transferring the request to the next server is only possible when nothing has been transferred to the client -- that is, if an error or timeout arises in the middle of the transfer of the request, then it is not possible to retry the current request on a different server.
+- * off — it forbids the request transfer to the next server Transferring the request to the next server is only possible when nothing has been transferred to the client -- that is, if an error or timeout arises in the middle of the transfer of the request, then it is not possible to retry the current request on a different server.
 
 
 
@@ -394,13 +386,23 @@ __context:__ _location, if in location_
 
 Directive assigns the port or socket on which the AJP-server is listening. Port can be indicated by itself or as an address and port, for example:
 
+
+
 ajp_pass   localhost:9000;
+
+
 
 using a Unix domain socket:
 
+
+
 ajp_pass   unix:/tmp/ajp.socket;
 
+
+
 You may also use an upstream block.
+
+
 
 upstream backend  {
 
@@ -638,13 +640,9 @@ Parameters:
 
 
 
-- *
+- * num: Maximum number of connections to cache.  If there isn't enough room to cache new connections - last recently used connections will be kicked off the cache.
 
-num: Maximum number of connections to cache.  If there isn't enough room to cache new connections - last recently used connections will be kicked off the cache.
-
-- *
-
-single: Treat everything as single host.  With this flag connections to different backends are treated as equal.
+- * single: Treat everything as single host.  With this flag connections to different backends are treated as equal.
 
 
 
@@ -660,13 +658,9 @@ Main syntax is the same as the official directive. This module add these paramet
 
 
 
-- *
+- * 'srun_id': identifies the backend JVM's name by cookie. The default srun_id's value is 'a'. The name can be more than one letter.
 
-'srun_id': identifies the backend JVM's name by cookie. The default srun_id's value is 'a'. The name can be more than one letter.
-
-- *
-
-'max_busy': the maximum of active connections with the backend server. The default value is 0 which means unlimited. If the server's active connections is higher than this parameter, it will not be chosen until the server is less busier. If all the servers are busy, Nginx will return 502.
+- * 'max_busy': the maximum of active connections with the backend server. The default value is 0 which means unlimited. If the server's active connections is higher than this parameter, it will not be chosen until the server is less busier. If all the servers are busy, Nginx will return 502.
 
 
 
@@ -702,9 +696,7 @@ Grab the nginx source code from nginx.org (<http://nginx.org/>), for example, th
 
 
 
-- *
-
-My test bed is 0.7.65 and 0.8.40.
+- * My test bed is 0.7.65 and 0.8.40.
 
 
 
@@ -718,17 +710,11 @@ My test bed is 0.7.65 and 0.8.40.
 
 
 
-- *
+- * SSL
 
-SSL
+- * Add AJP health check
 
-- *
-
-Add AJP health check
-
-- *
-
-Backend connection pool?
+- * Backend connection pool?
 
 
 
@@ -742,9 +728,7 @@ Backend connection pool?
 
 
 
-- *
-
-Developing  
+- * Developing  
 
 
 
@@ -762,9 +746,7 @@ Developing
 
 
 
-- *
-
-first release
+- * first release
 
 
 
@@ -778,25 +760,15 @@ first release
 
 
 
-- *
+- * Jinti Shen(路奇) _jinti.shen AT gmail DOT com_
 
-Jinti Shen(路奇) _jinti.shen AT gmail DOT com_
+- * Joshua Zhu(叔度) _zhuzhaoyuan AT gmail DOT com_
 
-- *
+- * Simon Liu(雕梁) _simohayha.bobo AT gmail DOT com_
 
-Joshua Zhu(叔度) _zhuzhaoyuan AT gmail DOT com_
+- * Matthew Ma(东坡) _mj19821214 AT gmail DOT com_
 
-- *
-
-Simon Liu(雕梁) _simohayha.bobo AT gmail DOT com_
-
-- *
-
-Matthew Ma(东坡) _mj19821214 AT gmail DOT com_
-
-- *
-
-Weibin Yao(姚伟斌) _yaoweibin AT gmail DOT com_
+- * Weibin Yao(姚伟斌) _yaoweibin AT gmail DOT com_
 
 
 
@@ -818,13 +790,9 @@ Redistribution and use in source and binary forms, with or without modification,
 
 
 
-- *
+- * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 
-Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-
-- *
-
-Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+- * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
 
 
 
