@@ -103,7 +103,7 @@ while (<>) {
             print "\n=over\n\n";
         }
         $bl_counts[$level]++;
-        print "\n=item * ";
+        print "\n=item ";
         print "$txt\n";
     } else {
         collapse_lists();

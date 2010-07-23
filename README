@@ -10,7 +10,9 @@ Status
     please consider joining the development!
 
 Synopsis
-    http { upstream tomcats {
+    http {
+
+        upstream tomcats {
 
             server 127.0.0.1:8009 srun_id=jvm1;
 
@@ -240,30 +242,21 @@ Directives
     Directive determines, in what cases the request will be transmitted to
     the next server:
 
-    *   error — an error has occurred while connecting to the server,
-        sending a request to it, or reading its response;
-
-    *   timeout — occurred timeout during the connection with the server,
-        transfer the request or while reading response from the server;
-
-    *   invalid_header — server returned a empty or incorrect answer;
-
-    *   http_500 — server returned answer with code 500;
-
-    *   http_502 — server returned answer with code 502;
-
-    *   http_503 — server returned answer with code 503;
-
-    *   http_504 — server returned answer with code 504;
-
-    *   http_404 — server returned answer with code 404;
-
-    *   off — it forbids the request transfer to the next server
-        Transferring the request to the next server is only possible when
-        nothing has been transferred to the client -- that is, if an error
-        or timeout arises in the middle of the transfer of the request, then
-        it is not possible to retry the current request on a different
-        server.
+    error — an error has occurred while connecting to the server, sending a
+    request to it, or reading its response;
+    timeout — occurred timeout during the connection with the server,
+    transfer the request or while reading response from the server;
+    invalid_header — server returned a empty or incorrect answer;
+    http_500 — server returned answer with code 500;
+    http_502 — server returned answer with code 502;
+    http_503 — server returned answer with code 503;
+    http_504 — server returned answer with code 504;
+    http_404 — server returned answer with code 404;
+    off — it forbids the request transfer to the next server Transferring
+    the request to the next server is only possible when nothing has been
+    transferred to the client -- that is, if an error or timeout arises in
+    the middle of the transfer of the request, then it is not possible to
+    retry the current request on a different server.
 
   ajp_max_data_packet_size
     syntax: *ajp_max_data_packet_size size;*
@@ -516,12 +509,11 @@ Directives
 
     Parameters:
 
-    *   num: Maximum number of connections to cache. If there isn't enough
-        room to cache new connections - last recently used connections will
-        be kicked off the cache.
-
-    *   single: Treat everything as single host. With this flag connections
-        to different backends are treated as equal.
+    num: Maximum number of connections to cache. If there isn't enough room
+    to cache new connections - last recently used connections will be kicked
+    off the cache.
+    single: Treat everything as single host. With this flag connections to
+    different backends are treated as equal.
 
   server(in upstream)
     This directive comes from ngx_http_upstream_jvm_route_module
@@ -530,14 +522,13 @@ Directives
     Main syntax is the same as the official directive. This module add these
     parameters:
 
-    *   'srun_id': identifies the backend JVM's name by cookie. The default
-        srun_id's value is 'a'. The name can be more than one letter.
-
-    *   'max_busy': the maximum of active connections with the backend
-        server. The default value is 0 which means unlimited. If the
-        server's active connections is higher than this parameter, it will
-        not be chosen until the server is less busier. If all the servers
-        are busy, Nginx will return 502.
+    'srun_id': identifies the backend JVM's name by cookie. The default
+    srun_id's value is 'a'. The name can be more than one letter.
+    'max_busy': the maximum of active connections with the backend server.
+    The default value is 0 which means unlimited. If the server's active
+    connections is higher than this parameter, it will not be chosen until
+    the server is less busier. If all the servers are busy, Nginx will
+    return 502.
 
     NOTE: This module does not support the parameter of 'backup' yet.
 
@@ -560,32 +551,26 @@ Installation
         $ make install
 
 Compatibility
-    *   My test bed is 0.7.65 and 0.8.40.
+    My test bed is 0.7.65 and 0.8.40.
 
 TODO
-    *   SSL
-
-    *   Add AJP health check
-
-    *   Backend connection pool?
+    SSL
+    Add AJP health check
+    Backend connection pool?
 
 Known Issues
-    *   Developing
+    Developing
 
 Changelogs
   v0.1
-    *   first release
+    first release
 
 Authors
-    *   Jinti Shen(路奇) *jinti.shen AT gmail DOT com*
-
-    *   Joshua Zhu(叔度) *zhuzhaoyuan AT gmail DOT com*
-
-    *   Simon Liu(雕梁) *simohayha.bobo AT gmail DOT com*
-
-    *   Matthew Ma(东坡) *mj19821214 AT gmail DOT com*
-
-    *   Weibin Yao(姚伟斌) *yaoweibin AT gmail DOT com*
+    Jinti Shen(路奇) *jinti.shen AT gmail DOT com*
+    Joshua Zhu(叔度) *zhuzhaoyuan AT gmail DOT com*
+    Simon Liu(雕梁) *simohayha.bobo AT gmail DOT com*
+    Matthew Ma(东坡) *mj19821214 AT gmail DOT com*
+    Weibin Yao(姚伟斌) *yaoweibin AT gmail DOT com*
 
 License
     This README template is from agentzh (<http://github.com/agentzh>).
@@ -602,12 +587,11 @@ License
     modification, are permitted provided that the following conditions are
     met:
 
-    *   Redistributions of source code must retain the above copyright
-        notice, this list of conditions and the following disclaimer.
-
-    *   Redistributions in binary form must reproduce the above copyright
-        notice, this list of conditions and the following disclaimer in the
-        documentation and/or other materials provided with the distribution.
+    Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+    Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
 
     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
     IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED

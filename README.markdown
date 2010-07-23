@@ -25,6 +25,7 @@ We need your help! If you find this module useful and/or interesting, please con
 
 
 http {
+
     upstream tomcats {
 
         server 127.0.0.1:8009 srun_id=jvm1;
@@ -322,23 +323,23 @@ Directive determines, in what cases the request will be transmitted to the next 
 
 
 
-- * error — an error has occurred while connecting to the server, sending a request to it, or reading its response;
+- error — an error has occurred while connecting to the server, sending a request to it, or reading its response;
 
-- * timeout — occurred timeout during the connection with the server, transfer the request or while reading response from the server;
+- timeout — occurred timeout during the connection with the server, transfer the request or while reading response from the server;
 
-- * invalid_header — server returned a empty or incorrect answer;
+- invalid_header — server returned a empty or incorrect answer;
 
-- * http_500 — server returned answer with code 500;
+- http_500 — server returned answer with code 500;
 
-- * http_502 — server returned answer with code 502;
+- http_502 — server returned answer with code 502;
 
-- * http_503 — server returned answer with code 503;
+- http_503 — server returned answer with code 503;
 
-- * http_504 — server returned answer with code 504;
+- http_504 — server returned answer with code 504;
 
-- * http_404 — server returned answer with code 404;
+- http_404 — server returned answer with code 404;
 
-- * off — it forbids the request transfer to the next server Transferring the request to the next server is only possible when nothing has been transferred to the client -- that is, if an error or timeout arises in the middle of the transfer of the request, then it is not possible to retry the current request on a different server.
+- off — it forbids the request transfer to the next server Transferring the request to the next server is only possible when nothing has been transferred to the client -- that is, if an error or timeout arises in the middle of the transfer of the request, then it is not possible to retry the current request on a different server.
 
 
 
@@ -640,9 +641,9 @@ Parameters:
 
 
 
-- * num: Maximum number of connections to cache.  If there isn't enough room to cache new connections - last recently used connections will be kicked off the cache.
+- num: Maximum number of connections to cache.  If there isn't enough room to cache new connections - last recently used connections will be kicked off the cache.
 
-- * single: Treat everything as single host.  With this flag connections to different backends are treated as equal.
+- single: Treat everything as single host.  With this flag connections to different backends are treated as equal.
 
 
 
@@ -658,9 +659,9 @@ Main syntax is the same as the official directive. This module add these paramet
 
 
 
-- * 'srun_id': identifies the backend JVM's name by cookie. The default srun_id's value is 'a'. The name can be more than one letter.
+- 'srun_id': identifies the backend JVM's name by cookie. The default srun_id's value is 'a'. The name can be more than one letter.
 
-- * 'max_busy': the maximum of active connections with the backend server. The default value is 0 which means unlimited. If the server's active connections is higher than this parameter, it will not be chosen until the server is less busier. If all the servers are busy, Nginx will return 502.
+- 'max_busy': the maximum of active connections with the backend server. The default value is 0 which means unlimited. If the server's active connections is higher than this parameter, it will not be chosen until the server is less busier. If all the servers are busy, Nginx will return 502.
 
 
 
@@ -696,7 +697,7 @@ Grab the nginx source code from nginx.org (<http://nginx.org/>), for example, th
 
 
 
-- * My test bed is 0.7.65 and 0.8.40.
+- My test bed is 0.7.65 and 0.8.40.
 
 
 
@@ -710,11 +711,11 @@ Grab the nginx source code from nginx.org (<http://nginx.org/>), for example, th
 
 
 
-- * SSL
+- SSL
 
-- * Add AJP health check
+- Add AJP health check
 
-- * Backend connection pool?
+- Backend connection pool?
 
 
 
@@ -728,7 +729,7 @@ Grab the nginx source code from nginx.org (<http://nginx.org/>), for example, th
 
 
 
-- * Developing  
+- Developing  
 
 
 
@@ -746,7 +747,7 @@ Grab the nginx source code from nginx.org (<http://nginx.org/>), for example, th
 
 
 
-- * first release
+- first release
 
 
 
@@ -760,15 +761,15 @@ Grab the nginx source code from nginx.org (<http://nginx.org/>), for example, th
 
 
 
-- * Jinti Shen(路奇) _jinti.shen AT gmail DOT com_
+- Jinti Shen(路奇) _jinti.shen AT gmail DOT com_
 
-- * Joshua Zhu(叔度) _zhuzhaoyuan AT gmail DOT com_
+- Joshua Zhu(叔度) _zhuzhaoyuan AT gmail DOT com_
 
-- * Simon Liu(雕梁) _simohayha.bobo AT gmail DOT com_
+- Simon Liu(雕梁) _simohayha.bobo AT gmail DOT com_
 
-- * Matthew Ma(东坡) _mj19821214 AT gmail DOT com_
+- Matthew Ma(东坡) _mj19821214 AT gmail DOT com_
 
-- * Weibin Yao(姚伟斌) _yaoweibin AT gmail DOT com_
+- Weibin Yao(姚伟斌) _yaoweibin AT gmail DOT com_
 
 
 
@@ -790,9 +791,9 @@ Redistribution and use in source and binary forms, with or without modification,
 
 
 
-- * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+- Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 
-- * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+- Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
 
 
 
