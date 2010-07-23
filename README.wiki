@@ -457,7 +457,7 @@ This directive comes from [http://code.google.com/p/nginx-upstream-jvm-route/ ng
 
 '$cookie_SESSION_COOKIE' specifies the session cookie name(0.7.24+). 'session_url' specifies a different session name in the URL when the client does not accept a cookie. The session name is case-insensitive. In this module, if it does not find the session_url, it will use the session cookie name instead. So if the session name in cookie is the name with its in URL, you don't need give the session_url name.
 
-With scanning this cookie, the module will send the request to right backend server. As far as I know, the resin's srun_id name is in the head of cookie. For example, requests with cookie value 'a***' are always sent to the server with the srun_id of 'a'. But tomcat's JSESSIONID is opposite, which is like '***.a'. The parameter of 'reverse' specifies the cookie scanned from tail to head.
+With scanning this cookie, the module will send the request to right backend server. As far as I know, the resin's srun_id name is in the head of cookie. For example, requests with cookie value 'a$$$' are always sent to the server with the srun_id of 'a'. But tomcat's JSESSIONID is opposite, which is like '$$$.a'. The parameter of 'reverse' specifies the cookie scanned from tail to head.
 
 If the request fails to be sent to the chosen backend server, It will try another server with the Round-Robin mode until all the upstream servers tried. The directive ajp_next_upstream can specify in what cases the request will be transmitted to the next server. If you want to force the session sticky, you can set 'ajp_next_upstream off'.
 

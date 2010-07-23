@@ -1,7 +1,6 @@
 
 /*
  * Copyright (C) Maxim Dounin
- * Copyright (C) Weibin Yao(yaoweibin@gmail.com)
  */
 
 

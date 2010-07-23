@@ -1,7 +1,6 @@
 
 /*
- * Copyright (C) Weibin Yao
- * Email: yaoweibin@gmail.com
+ * Author: yaoweibin@gmail.com
  * Version: $Id: ngx_http_upstream_jvm_route_module.c 31 2009-12-07 06:14:51Z yaoweibin $
  *
  * Based on the upstream_round_robin and upstream_fair momdule.
