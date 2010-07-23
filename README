@@ -469,9 +469,9 @@ Directives
 
     With scanning this cookie, the module will send the request to right
     backend server. As far as I know, the resin's srun_id name is in the
-    head of cookie. For example, requests with cookie value 'a***' are
+    head of cookie. For example, requests with cookie value 'a$$$' are
     always sent to the server with the srun_id of 'a'. But tomcat's
-    JSESSIONID is opposite, which is like '***.a'. The parameter of
+    JSESSIONID is opposite, which is like '$$$.a'. The parameter of
     'reverse' specifies the cookie scanned from tail to head.
 
     If the request fails to be sent to the chosen backend server, It will
