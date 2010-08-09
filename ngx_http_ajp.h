@@ -158,9 +158,9 @@ ngx_int_t ajp_msg_reset(ajp_msg_t *msg);
  * Reuse an AJP Message
  *
  * @param msg       AJP Message to reuse
- * @return          NGX_OK or error
+ * @return          The cleared message
  */
-ngx_int_t ajp_msg_reuse(ajp_msg_t *msg);
+ajp_msg_t * ajp_msg_reuse(ajp_msg_t *msg);
 
 /**
  * Mark the end of an AJP Message

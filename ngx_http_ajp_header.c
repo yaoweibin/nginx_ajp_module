@@ -776,7 +776,6 @@ ngx_int_t  ajp_data_msg_end(ajp_msg_t *msg, size_t len)
 
     buf = msg->buf;
 
-    buf->pos = buf->start;
     buf->last = buf->start + AJP_HEADER_SZ;
 
     ajp_msg_end(msg);

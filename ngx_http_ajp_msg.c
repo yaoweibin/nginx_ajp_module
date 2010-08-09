@@ -140,12 +140,12 @@ ngx_int_t ajp_msg_reset(ajp_msg_t *msg)
  * @param msg       AJP Message to reuse
  * @return          NGX_OK or error
  */
-ngx_int_t ajp_msg_reuse(ajp_msg_t *msg)
+ajp_msg_t * ajp_msg_reuse(ajp_msg_t *msg)
 {
     memset(msg, 0, sizeof(ajp_msg_t));
     msg->header_len = AJP_HEADER_LEN;
 
-    return NGX_OK;
+    return msg;
 }
 
 /**
