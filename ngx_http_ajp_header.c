@@ -41,6 +41,9 @@ typedef struct{
     ngx_uint_t hash;
 } response_known_headers_t;
 
+static void request_known_headers_calc_hash(void);
+static void response_known_headers_calc_hash(void);
+
 static request_known_headers_t request_known_headers[] = {
     {ngx_string("accept"), 0, SC_REQ_ACCEPT},
     {ngx_string("accept-charset"), 0, SC_REQ_ACCEPT_CHARSET},
@@ -74,7 +77,14 @@ static response_known_headers_t response_known_headers[] = {
     {ngx_null_string, ngx_null_string, 0}
 };
 
-static void response_known_headers_calc_hash (void)
+void 
+ajp_header_init(void) 
+{
+    request_known_headers_calc_hash();
+    response_known_headers_calc_hash();
+}
+
+static void response_known_headers_calc_hash(void)
 {
     static ngx_int_t is_calc_response_hash = 0;
     response_known_headers_t *header;
@@ -100,8 +110,6 @@ static ngx_int_t get_res_header_for_sc(int sc, ngx_table_elt_t *h)
     response_known_headers_t *header;
 
     sc = sc & 0X00FF;
-
-    response_known_headers_calc_hash();
 
     if(sc <= SC_RES_HEADERS_NUM && sc > 0) {
         header = &response_known_headers[sc - 1];
@@ -196,8 +204,6 @@ static int sc_for_req_header(ngx_table_elt_t *header)
         return UNKNOWN_METHOD;
     }
 
-    request_known_headers_calc_hash();
-    
     return (int)request_known_headers_find_hash(header->hash);
 }
 
@@ -569,7 +575,7 @@ body    length*(var binary)
 
  */
 
-static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
+ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
         ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *alcf)
 {
     int i;
@@ -696,56 +702,6 @@ static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
     return NGX_OK;
 }
 
-/* parse the header */
-ngx_int_t ajp_parse_header(ngx_http_request_t  *r, ngx_http_ajp_loc_conf_t *alcf, ajp_msg_t *msg)
-{
-    u_char result;
-    ngx_int_t rc;
-
-    rc = ajp_msg_get_uint8(msg, &result);
-    if (rc != NGX_OK) {
-        ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                "ajp_parse_headers: ajp_msg_get_byte failed");
-        return rc;
-    }
-
-    if (result != CMD_AJP13_SEND_HEADERS) {
-        ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                "ajp_parse_headers: wrong type %02Xd expecting 0x04", result);
-        return AJP_EBAD_HEADER;
-    }
-
-    return ajp_unmarshal_response(msg, r, alcf);
-}
-
-/* parse the body and return data address and length */
-ngx_int_t  ajp_parse_data(ngx_http_request_t  *r, ajp_msg_t *msg,
-        uint16_t *len)
-{
-    u_char result;
-    ngx_int_t rc;
-
-    rc = ajp_msg_get_uint8(msg, &result);
-    if (rc != NGX_OK) {
-        ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                "ajp_parse_data: ajp_msg_get_byte failed");
-        return rc;
-    }
-
-    if (result != CMD_AJP13_SEND_BODY_CHUNK) {
-        ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                "ajp_parse_data: wrong type %02Xd expecting 0x03", result);
-        return AJP_EBAD_HEADER;
-    }
-
-    rc = ajp_msg_get_uint16(msg, len);
-    if (rc != NGX_OK) {
-        return rc;
-    }
-
-    return NGX_OK;
-}
-
 /* parse the msg to read the type */
 int ajp_parse_type(ajp_msg_t *msg)
 {
@@ -759,40 +715,3 @@ int ajp_parse_type(ajp_msg_t *msg)
     return (int) result;
 }
 
-/*
- * Allocate a msg to send data
- */
-ngx_int_t  ajp_alloc_data_msg(ngx_pool_t *pool, ajp_msg_t *msg)
-{
-    ngx_int_t rc;
-
-    if ((rc = ajp_msg_create_buffer(pool, AJP_HEADER_SZ + 1, msg)) != NGX_OK) {
-        return rc;
-    }
-
-    ajp_msg_reset(msg);
-
-    return NGX_OK;
-}
-
-
-ngx_int_t  ajp_data_msg_end(ajp_msg_t *msg, size_t len)
-{
-    ngx_buf_t *buf;
-
-    buf = msg->buf;
-
-    buf->last = buf->start + AJP_HEADER_SZ;
-
-    ajp_msg_end(msg);
-
-    buf->start[AJP_HEADER_SZ - 2] = (u_char)((len >> 8) & 0xFF);
-    buf->start[AJP_HEADER_SZ - 1] = (u_char)(len & 0xFF);
-
-    /*len include AJP_HEADER_SIZE_LEN*/
-    len += AJP_HEADER_SZ_LEN;
-    buf->start[AJP_HEADER_LEN - 2] = (u_char)((len >> 8) & 0xFF);
-    buf->start[AJP_HEADER_LEN - 1] = (u_char)(len & 0xFF);
-
-    return NGX_OK;
-}

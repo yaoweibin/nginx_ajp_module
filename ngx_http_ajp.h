@@ -370,6 +370,8 @@ ngx_int_t ajp_msg_serialize_cping(ajp_msg_t *msg);
  */
 u_char * ajp_msg_dump(ngx_pool_t *pool, ajp_msg_t *msg, u_char *err);
 
+void ajp_header_init(void);
+
 /**
  * Fill the request packet into AJP message
  * @param msg       AJP message
@@ -379,6 +381,11 @@ u_char * ajp_msg_dump(ngx_pool_t *pool, ajp_msg_t *msg, u_char *err);
  */
 ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
         ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *alcf);
+
+int ajp_parse_type(ajp_msg_t *msg);
+
+ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg, ngx_http_request_t *r,
+        ngx_http_ajp_loc_conf_t *alcf);
 
 /**
  * Allocate a msg to send data
@@ -402,26 +409,6 @@ ngx_int_t  ajp_data_msg_end(ajp_msg_t *msg, size_t len);
  * @param msg       AJP message
  * @return          AJP message type.
  */
-int ajp_parse_type(ajp_msg_t *msg);
-
-/**
- * Parse the header message from container 
- * @param r         current request
- * @param msg       AJP message
- * @param alcf      AJP configration structure
- * @return          NGX_OK or error
- */
-ngx_int_t ajp_parse_header(ngx_http_request_t  *r, ngx_http_ajp_loc_conf_t *alcf, ajp_msg_t *msg);
-
-/** 
- * Parse the message body and return data address and length 
- * @param r         current request
- * @param msg       AJP message
- * @param len       returned AJP message length 
- * @return          NGX_OK or error
- */
-ngx_int_t  ajp_parse_data(ngx_http_request_t  *r, ajp_msg_t *msg, uint16_t *len);
-
 
 /** 
  * Handle the CPING/CPONG messages

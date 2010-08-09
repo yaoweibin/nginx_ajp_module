@@ -333,7 +333,6 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
 
                 /* just move the buffer's postion */
                 ajp_msg_get_uint8(msg, (u_char *)&type);
-
                 rc = ajp_msg_get_uint16(msg, &length);
                 if (rc == AJP_EOVERFLOW) {
                     buf->pos = pos;
@@ -349,7 +348,8 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
 
             case CMD_AJP13_SEND_HEADERS:
 
-                rc = ajp_parse_header(r, alcf, msg);
+                ajp_msg_get_uint8(msg, (u_char *)&type);
+                rc = ajp_unmarshal_response(msg, r, alcf);
 
                 if (rc == NGX_OK) {
                     a->state = ngx_http_ajp_st_response_parse_headers_done;
@@ -631,6 +631,7 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
 {
     size_t                   size, offset;
     u_char                   reuse, type, save_used;
+    ngx_int_t                rc;
     ngx_buf_t               *b, **prev, *sb;
     ajp_msg_t               *msg;
     ngx_chain_t             *cl;
@@ -691,7 +692,9 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
                 case CMD_AJP13_SEND_BODY_CHUNK:
                     a->state = ngx_http_ajp_st_response_body_data_sending;
 
-                    if (NGX_OK != ajp_parse_data(r, msg, (uint16_t *)&a->length)) {
+                    ajp_msg_get_uint8(msg, &type);
+                    rc = ajp_msg_get_uint16(msg, (uint16_t *)&a->length);
+                    if (rc != NGX_OK) {
                         return NGX_ERROR;
                     }
 

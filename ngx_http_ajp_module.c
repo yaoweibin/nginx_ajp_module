@@ -33,6 +33,7 @@ static void *ngx_http_ajp_create_loc_conf(ngx_conf_t *cf);
 static char *ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf,
     void *parent, void *child);
 
+static ngx_int_t ngx_http_ajp_module_init_process(ngx_cycle_t *cycle);
 
 static ngx_conf_post_t  ngx_http_ajp_lowat_post = { ngx_http_ajp_lowat_check };
 
@@ -348,7 +349,7 @@ ngx_module_t  ngx_http_ajp_module = {
     NGX_HTTP_MODULE,                       /* module type */
     NULL,                                  /* init master */
     NULL,                                  /* init module */
-    NULL,                                  /* init process */
+    ngx_http_ajp_module_init_process,      /* init process */
     NULL,                                  /* init thread */
     NULL,                                  /* exit thread */
     NULL,                                  /* exit process */
@@ -935,6 +936,13 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
         conf->ajp_lengths = prev->ajp_lengths;
         conf->ajp_values = prev->ajp_values;
     }
-
+    
     return NGX_CONF_OK;
+}
+
+static ngx_int_t ngx_http_ajp_module_init_process(ngx_cycle_t *cycle)
+{
+    ajp_header_init(); 
+
+    return NGX_OK;
 }

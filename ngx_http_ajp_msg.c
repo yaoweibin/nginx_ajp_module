@@ -608,6 +608,43 @@ ngx_int_t ajp_msg_copy(ajp_msg_t *smsg, ajp_msg_t *dmsg)
     return NGX_OK;
 }
 
+/*
+ * Allocate a msg to send data
+ */
+ngx_int_t  ajp_alloc_data_msg(ngx_pool_t *pool, ajp_msg_t *msg)
+{
+    ngx_int_t rc;
+
+    if ((rc = ajp_msg_create_buffer(pool, AJP_HEADER_SZ + 1, msg)) != NGX_OK) {
+        return rc;
+    }
+
+    ajp_msg_reset(msg);
+
+    return NGX_OK;
+}
+
+
+ngx_int_t  ajp_data_msg_end(ajp_msg_t *msg, size_t len)
+{
+    ngx_buf_t *buf;
+
+    buf = msg->buf;
+
+    buf->last = buf->start + AJP_HEADER_SZ;
+
+    ajp_msg_end(msg);
+
+    buf->start[AJP_HEADER_SZ - 2] = (u_char)((len >> 8) & 0xFF);
+    buf->start[AJP_HEADER_SZ - 1] = (u_char)(len & 0xFF);
+
+    /*len include AJP_HEADER_SIZE_LEN*/
+    len += AJP_HEADER_SZ_LEN;
+    buf->start[AJP_HEADER_LEN - 2] = (u_char)((len >> 8) & 0xFF);
+    buf->start[AJP_HEADER_LEN - 1] = (u_char)(len & 0xFF);
+
+    return NGX_OK;
+}
 
 /**
  * Serialize in an AJP Message a PING command
