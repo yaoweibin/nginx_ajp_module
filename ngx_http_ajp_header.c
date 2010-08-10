@@ -638,6 +638,8 @@ static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
 
         rc  = ajp_msg_peek_uint16(msg, &name);
         if (rc != NGX_OK) {
+            ngx_log_error(NGX_LOG_ERR, log, 0,
+                    "ajp_unmarshal_response: Not enough memory.");
             return rc;
         }
 
@@ -650,6 +652,9 @@ static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
 
         if ((name & 0XFF00) == 0XA000) {
             ajp_msg_get_uint16(msg, &name);
+
+            ngx_log_debug1(NGX_LOG_DEBUG_HTTP, log, 0,
+                    "http ajp known header: %08Xd", name);
 
             rc = get_res_header_for_sc(name, h);
 
@@ -667,6 +672,9 @@ static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
                         "ajp_unmarshal_response: Null header name");
                 return rc;
             }
+
+            ngx_log_debug1(NGX_LOG_DEBUG_HTTP, log, 0,
+                    "http ajp unknown header: %V", &str);
 
             rc = get_res_unknown_header_by_str(&str, h, r->pool);
             if (rc != NGX_OK) {
@@ -689,8 +697,7 @@ static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
         }
 
         ngx_log_debug2(NGX_LOG_DEBUG_HTTP, log, 0,
-                "http ajp header: \"%V: %V\"",
-                &h->key, &h->value);
+                "http ajp header: \"%V: %V\"", &h->key, &h->value);
     }
 
     return NGX_OK;
