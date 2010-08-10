@@ -1,43 +1,25 @@
 
-/* Main source copied from Apache's mod_ajp_proxy */
-
-/* Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
 #include "ngx_http_ajp.h"
-#include "ngx_http_ajp_header.h"
 #include "ngx_http_ajp_handler.h"
 #include "ngx_http_ajp_module.h"
 
 
+#define UNKNOWN_METHOD (-1)
+
 extern volatile ngx_cycle_t  *ngx_cycle;
 
-
 typedef struct{
-    ngx_str_t name;
+    ngx_str_t  name;
     ngx_uint_t hash;
     ngx_uint_t code;
 } request_known_headers_t;
 
 typedef struct{
-    ngx_str_t name;
-    ngx_str_t lowcase_name;
+    ngx_str_t  name;
+    ngx_str_t  lowcase_name;
     ngx_uint_t hash;
 } response_known_headers_t;
 
@@ -45,38 +27,40 @@ static void request_known_headers_calc_hash(void);
 static void response_known_headers_calc_hash(void);
 
 static request_known_headers_t request_known_headers[] = {
-    {ngx_string("accept"), 0, SC_REQ_ACCEPT},
-    {ngx_string("accept-charset"), 0, SC_REQ_ACCEPT_CHARSET},
+    {ngx_string("accept"),          0, SC_REQ_ACCEPT},
+    {ngx_string("accept-charset"),  0, SC_REQ_ACCEPT_CHARSET},
     {ngx_string("accept-encoding"), 0, SC_REQ_ACCEPT_ENCODING},
     {ngx_string("accept-language"), 0, SC_REQ_ACCEPT_LANGUAGE},
-    {ngx_string("authorization"), 0, SC_REQ_AUTHORIZATION},
-    {ngx_string("connection"), 0, SC_REQ_CONNECTION},
-    {ngx_string("content-type"), 0, SC_REQ_CONTENT_TYPE},
-    {ngx_string("content-length"), 0, SC_REQ_CONTENT_LENGTH},
-    {ngx_string("cookie"), 0, SC_REQ_COOKIE},
-    {ngx_string("cookie2"), 0, SC_REQ_COOKIE2},
-    {ngx_string("host"), 0, SC_REQ_HOST},
-    {ngx_string("pragma"), 0, SC_REQ_PRAGMA},
-    {ngx_string("referer"), 0,  SC_REQ_REFERER},
-    {ngx_string("user-agent"), 0, SC_REQ_USER_AGENT},
+    {ngx_string("authorization"),   0, SC_REQ_AUTHORIZATION},
+    {ngx_string("connection"),      0, SC_REQ_CONNECTION},
+    {ngx_string("content-type"),    0, SC_REQ_CONTENT_TYPE},
+    {ngx_string("content-length"),  0, SC_REQ_CONTENT_LENGTH},
+    {ngx_string("cookie"),          0, SC_REQ_COOKIE},
+    {ngx_string("cookie2"),         0, SC_REQ_COOKIE2},
+    {ngx_string("host"),            0, SC_REQ_HOST},
+    {ngx_string("pragma"),          0, SC_REQ_PRAGMA},
+    {ngx_string("referer"),         0, SC_REQ_REFERER},
+    {ngx_string("user-agent"),      0, SC_REQ_USER_AGENT},
     {ngx_null_string, 0, 0}
 };
 
 static response_known_headers_t response_known_headers[] = {
-    {ngx_string("Content-Type"), ngx_string("content-type"), 0},
+    {ngx_string("Content-Type"),     ngx_string("content-type"), 0},
     {ngx_string("Content-Language"), ngx_string("content-language"), 0},
-    {ngx_string("Content-Length"), ngx_string("content-length"), 0}, 
-    {ngx_string("Date"), ngx_string("date"), 0},
-    {ngx_string("Last-Modified"), ngx_string("last-modified"), 0},
-    {ngx_string("Location"), ngx_string("location"), 0},
-    {ngx_string("Set-Cookie"), ngx_string("set-cookie"), 0},
-    {ngx_string("Set-Cookie2"), ngx_string("set-cookie2"), 0},
-    {ngx_string("Servlet-Engine"), ngx_string("servlet-engine"), 0},
-    {ngx_string("Status"), ngx_string("status"), 0},
+    {ngx_string("Content-Length"),   ngx_string("content-length"), 0}, 
+    {ngx_string("Date"),             ngx_string("date"), 0},
+    {ngx_string("Last-Modified"),    ngx_string("last-modified"), 0},
+    {ngx_string("Location"),         ngx_string("location"), 0},
+    {ngx_string("Set-Cookie"),       ngx_string("set-cookie"), 0},
+    {ngx_string("Set-Cookie2"),      ngx_string("set-cookie2"), 0},
+    {ngx_string("Servlet-Engine"),   ngx_string("servlet-engine"), 0},
+    {ngx_string("Status"),           ngx_string("status"), 0},
     {ngx_string("WWW-Authenticate"), ngx_string("www-authenticate"), 0},
     {ngx_null_string, ngx_null_string, 0}
 };
 
+
+/* This will be called in the ajp_module's init_process function. */
 void 
 ajp_header_init(void) 
 {
@@ -84,9 +68,33 @@ ajp_header_init(void)
     response_known_headers_calc_hash();
 }
 
-static void response_known_headers_calc_hash(void)
+
+static void 
+request_known_headers_calc_hash (void)
 {
-    static ngx_int_t is_calc_response_hash = 0;
+    static ngx_int_t         is_calc_request_hash = 0;
+    request_known_headers_t *header;
+
+    if (is_calc_request_hash) {
+        return;
+    }
+
+    is_calc_request_hash = 1;
+
+    header = request_known_headers;
+
+    while (header->name.len != 0) {
+        header->hash = ngx_hash_key(header->name.data, header->name.len);
+
+        header++;
+    }
+}
+
+
+static void 
+response_known_headers_calc_hash(void)
+{
+    static ngx_int_t          is_calc_response_hash = 0;
     response_known_headers_t *header;
 
     if (is_calc_response_hash) {
@@ -105,42 +113,9 @@ static void response_known_headers_calc_hash(void)
     }
 }
 
-static ngx_int_t get_res_header_for_sc(int sc, ngx_table_elt_t *h)
-{
-    response_known_headers_t *header;
 
-    sc = sc & 0X00FF;
-
-    if(sc <= SC_RES_HEADERS_NUM && sc > 0) {
-        header = &response_known_headers[sc - 1];
-        h->key = header->name;
-        h->lowcase_key = header->lowcase_name.data;
-        h->hash = header->hash;
-    }
-    else {
-        return NGX_ERROR;
-    }
-
-    return NGX_OK;
-}
-
-static ngx_int_t get_res_unknown_header_by_str(ngx_str_t *name,
-        ngx_table_elt_t *h, ngx_pool_t *pool) 
-{
-    h->key = *name;
-
-    h->lowcase_key = ngx_pnalloc(pool, h->key.len);
-    if (h->lowcase_key == NULL) {
-        return NGX_ERROR;
-    }
-
-    h->hash = ngx_hash_strlow(h->lowcase_key, h->key.data, h->key.len); 
-    return NGX_OK;
-}
-
-#define UNKNOWN_METHOD (-1)
-
-static ngx_uint_t sc_for_req_get_headers_num(ngx_list_part_t *part)
+static ngx_uint_t 
+sc_for_req_get_headers_num(ngx_list_part_t *part)
 {
     ngx_uint_t num = 0;
 
@@ -152,27 +127,9 @@ static ngx_uint_t sc_for_req_get_headers_num(ngx_list_part_t *part)
     return num;
 }
 
-static void request_known_headers_calc_hash (void)
-{
-    static ngx_int_t is_calc_request_hash = 0;
-    request_known_headers_t *header;
 
-    if (is_calc_request_hash) {
-        return;
-    }
-
-    is_calc_request_hash = 1;
-
-    header = request_known_headers;
-
-    while (header->name.len != 0) {
-        header->hash = ngx_hash_key(header->name.data, header->name.len);
-
-        header++;
-    }
-}
-
-static ngx_uint_t request_known_headers_find_hash (ngx_uint_t hash)
+static ngx_uint_t 
+request_known_headers_find_hash (ngx_uint_t hash)
 {
     request_known_headers_t *header;
 
@@ -189,7 +146,9 @@ static ngx_uint_t request_known_headers_find_hash (ngx_uint_t hash)
     return UNKNOWN_METHOD;
 }
 
-static int sc_for_req_header(ngx_table_elt_t *header)
+
+static int 
+sc_for_req_header(ngx_table_elt_t *header)
 {
     size_t len = header->key.len;
 
@@ -203,8 +162,10 @@ static int sc_for_req_header(ngx_table_elt_t *header)
     return (int)request_known_headers_find_hash(header->hash);
 }
 
-static ngx_str_t *sc_for_req_get_header_vaule_by_hash(
-        ngx_list_part_t *part, u_char *lowcase_key, size_t len)
+
+static ngx_str_t *
+sc_for_req_get_header_vaule_by_hash(ngx_list_part_t *part,
+        u_char *lowcase_key, size_t len)
 {
     ngx_uint_t       i, hash;
     ngx_table_elt_t *header;
@@ -233,7 +194,9 @@ static ngx_str_t *sc_for_req_get_header_vaule_by_hash(
     return NULL;
 }
 
-static int sc_for_req_method_by_id(ngx_http_request_t *r)
+
+static int 
+sc_for_req_method_by_id(ngx_http_request_t *r)
 {
     int method_id = r->method;
 
@@ -275,7 +238,9 @@ static int sc_for_req_method_by_id(ngx_http_request_t *r)
     }
 }
 
-static void sc_for_req_auth_type(ngx_http_request_t *r, ngx_str_t *auth_type)
+
+static void 
+sc_for_req_auth_type(ngx_http_request_t *r, ngx_str_t *auth_type)
 {
     size_t     i;
     ngx_str_t *auth;
@@ -299,6 +264,44 @@ static void sc_for_req_auth_type(ngx_http_request_t *r, ngx_str_t *auth_type)
         auth_type->len = i - 1;
     }
 }
+
+
+static ngx_int_t
+get_res_header_for_sc(int sc, ngx_table_elt_t *h)
+{
+    response_known_headers_t *header;
+
+    sc = sc & 0X00FF;
+
+    if(sc <= SC_RES_HEADERS_NUM && sc > 0) {
+        header = &response_known_headers[sc - 1];
+        h->key = header->name;
+        h->lowcase_key = header->lowcase_name.data;
+        h->hash = header->hash;
+    }
+    else {
+        return NGX_ERROR;
+    }
+
+    return NGX_OK;
+}
+
+
+static ngx_int_t 
+get_res_unknown_header_by_str(ngx_str_t *name,
+        ngx_table_elt_t *h, ngx_pool_t *pool) 
+{
+    h->key = *name;
+
+    h->lowcase_key = ngx_pnalloc(pool, h->key.len);
+    if (h->lowcase_key == NULL) {
+        return NGX_ERROR;
+    }
+
+    h->hash = ngx_hash_strlow(h->lowcase_key, h->key.data, h->key.len); 
+    return NGX_OK;
+}
+
 
 /*
  * Message structure
@@ -332,19 +335,21 @@ static void sc_for_req_auth_type(ngx_http_request_t *r, ngx_str_t *auth_type)
 
  */
 
-ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
+ngx_int_t 
+ajp_marshal_into_msgb(ajp_msg_t *msg, 
         ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *alcf)
 {
-    int sc;
-    int method;
-    uint16_t port;
-    ngx_uint_t i, num_headers = 0;
-    u_char is_ssl = 0;
-    ngx_str_t *remote_host, *remote_addr, temp_str, *jvm_route, port_str;
-    struct sockaddr_in *addr;
-    ngx_log_t *log;
-    ngx_list_part_t *part;
-    ngx_table_elt_t *header;
+    int                  sc;
+    int                  method;
+    u_char               is_ssl = 0;
+    uint16_t             port;
+    ngx_uint_t           i, num_headers = 0;
+    ngx_str_t           *remote_host, *remote_addr;
+    ngx_str_t            temp_str, *jvm_route, port_str;
+    ngx_log_t           *log;
+    ngx_list_part_t     *part;
+    ngx_table_elt_t     *header;
+    struct sockaddr_in  *addr;
 
     log = r->connection->log;
 
@@ -353,9 +358,8 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
 
     if ((method = sc_for_req_method_by_id(r)) == UNKNOWN_METHOD) {
         ngx_log_error(NGX_LOG_ERR, log, 0,
-                "ajp_marshal_into_msgb - No such method %s",
-                r->method);
-        return AJP_EBAD_METHOD;
+                "ajp_marshal_into_msgb - No such method %s", r->method);
+        return NGX_ERROR;
     }
 
     /* TODO: is_ssl = ?*/
@@ -527,6 +531,7 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
         ngx_log_error(NGX_LOG_DEBUG, log, 0,
                 "ajp_marshal_into_msgb: attribute %V %V", &temp_str, &port_str);
     }
+
     /* Use the environment vars prefixed with AJP_
      * and pass it to the header striping that prefix.
      */
@@ -571,21 +576,22 @@ body    length*(var binary)
 
  */
 
-ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
+ngx_int_t 
+ajp_unmarshal_response(ajp_msg_t *msg,
         ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *alcf)
 {
-    int i;
-    uint16_t status;
-    ngx_int_t rc;
-    ngx_str_t str;
-    uint16_t name;
-    uint16_t  num_headers;
-    u_char line[1024], *last;
+    int                             i;
+    u_char                          line[1024], *last;
+    uint16_t                        status;
+    uint16_t                        name;
+    uint16_t                        num_headers;
+    ngx_int_t                       rc;
+    ngx_str_t                       str;
     ngx_log_t                      *log;
     ngx_table_elt_t                *h;
-    ngx_http_upstream_header_t     *hh;
-    ngx_http_upstream_t            *u;
     ngx_http_ajp_ctx_t             *a;
+    ngx_http_upstream_t            *u;
+    ngx_http_upstream_header_t     *hh;
     ngx_http_upstream_main_conf_t  *umcf;
 
     log = r->connection->log; 
@@ -663,7 +669,7 @@ ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
             if (rc != NGX_OK) {
                 ngx_log_error(NGX_LOG_ERR, log, 0,
                         "ajp_unmarshal_response: No such sc (%08Xd)", name);
-                return AJP_EBAD_HEADER;
+                return NGX_ERROR;
             }
         } else {
             name = 0;
@@ -707,18 +713,5 @@ ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
     }
 
     return NGX_OK;
-}
-
-/* parse the msg to read the type */
-int ajp_parse_type(ajp_msg_t *msg)
-{
-    u_char result;
-
-    ajp_msg_peek_uint8(msg, &result);
-
-    ngx_log_error(NGX_LOG_DEBUG, ngx_cycle->log, 0,
-            "ajp_parse_type: got 0x%02Xd", result);
-
-    return (int) result;
 }
 

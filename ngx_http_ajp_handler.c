@@ -3,7 +3,6 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 #include <ngx_http_ajp.h>
-#include <ngx_http_ajp_header.h>
 #include <ngx_http_ajp_handler.h>
 
 
@@ -224,11 +223,11 @@ ngx_http_ajp_create_request(ngx_http_request_t *r)
 
     a->state = ngx_http_ajp_st_forward_request_sent;
 
-    r->upstream->request_bufs = cl;
-
     if (alcf->upstream.pass_request_body) {
         a->body = r->upstream->request_bufs;
-        cl->next = ajp_data_msg_send_body(r,
+        r->upstream->request_bufs = cl;
+
+        cl->next = ajp_data_msg_send_body(r, 
                 alcf->max_ajp_data_packet_size_conf, &a->body);
 
         if (a->body) {
@@ -240,6 +239,7 @@ ngx_http_ajp_create_request(ngx_http_request_t *r)
 
     } else {
         a->state = ngx_http_ajp_st_request_send_all_done;
+        r->upstream->request_bufs = cl;
         cl->next = NULL;
     }
 
@@ -325,14 +325,15 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
             return NGX_AGAIN;
         }
 
-        ajp_parse_begin(msg);
-        type = ajp_parse_type(msg);
+        ajp_msg_parse_begin(msg);
+        rc = ajp_msg_get_uint8(msg, (u_char *)&type);
+        if (rc != NGX_OK) {
+            return NGX_ERROR;
+        }
 
         switch (type) {
             case CMD_AJP13_GET_BODY_CHUNK:
 
-                /* just move the buffer's postion */
-                ajp_msg_get_uint8(msg, (u_char *)&type);
                 rc = ajp_msg_get_uint16(msg, &length);
                 if (rc == AJP_EOVERFLOW) {
                     buf->pos = pos;
@@ -348,7 +349,6 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
 
             case CMD_AJP13_SEND_HEADERS:
 
-                ajp_msg_get_uint8(msg, (u_char *)&type);
                 rc = ajp_unmarshal_response(msg, r, alcf);
 
                 if (rc == NGX_OK) {
@@ -370,6 +370,7 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
                 break;
 
             case CMD_AJP13_SEND_BODY_CHUNK:
+
                 buf->pos = pos;
                 a->state = ngx_http_ajp_st_response_body_data_sending;
 
@@ -379,7 +380,7 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
                 break;
 
             case CMD_AJP13_END_RESPONSE:
-                ajp_msg_get_uint8(msg, &type);
+
                 rc = ajp_msg_get_uint8(msg, &reuse);
                 if (rc == AJP_EOVERFLOW) {
                     buf->pos = pos;
@@ -517,6 +518,9 @@ ajp_data_msg_send_body(ngx_http_request_t *r, size_t max_size, ngx_chain_t **bod
     if (*body == NULL || a == NULL) {
         return NULL;
     }
+
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, 
+            r->connection->log, 0, "ajp_data_msg_send_body");
 
     msg = ajp_msg_reuse(&a->msg);
 
@@ -685,27 +689,28 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
                 offset = 0;
             }
 
-            ajp_parse_begin(msg);
-            type = ajp_parse_type(msg);
+            ajp_msg_parse_begin(msg);
+            rc = ajp_msg_get_uint8(msg, &type);
+            if (rc != NGX_OK) {
+                return NGX_ERROR;
+            }
 
             switch (type) {
                 case CMD_AJP13_SEND_BODY_CHUNK:
-                    a->state = ngx_http_ajp_st_response_body_data_sending;
 
-                    ajp_msg_get_uint8(msg, &type);
                     rc = ajp_msg_get_uint16(msg, (uint16_t *)&a->length);
                     if (rc != NGX_OK) {
                         return NGX_ERROR;
                     }
 
                     buf->pos += offset;
+                    a->state = ngx_http_ajp_st_response_body_data_sending;
 
                     break;
 
                 case CMD_AJP13_END_RESPONSE:
-                    ajp_msg_get_uint8(msg, &type);
-                    ajp_msg_get_uint8(msg, &reuse);
 
+                    ajp_msg_get_uint8(msg, &reuse);
                     ngx_http_ajp_end_response(a, p, reuse);
                     buf->pos = buf->last;
 
@@ -717,8 +722,7 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
                 default:
 
                     ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                            "ngx_http_ajp_input_filter: bad_packet_type(%d), %s\n",
-                            type, ajp_msg_dump(r->pool, msg, (u_char *)"bad type"));
+                            "ngx_http_ajp_input_filter: bad_packet_type(%d)\n", type);
                     return NGX_ERROR;
             }
         }

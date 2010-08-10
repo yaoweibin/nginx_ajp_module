@@ -3,7 +3,6 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 #include <ngx_http_ajp.h>
-#include <ngx_http_ajp_header.h>
 #include <ngx_http_ajp_module.h>
 #include <ngx_http_ajp_handler.h>
 
