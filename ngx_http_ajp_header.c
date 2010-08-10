@@ -105,12 +105,8 @@ static ngx_int_t get_res_header_for_sc(int sc, ngx_table_elt_t *h)
 
     if(sc <= SC_RES_HEADERS_NUM && sc > 0) {
         header = &response_known_headers[sc - 1];
-
         h->key = header->name;
-        /*h->key.data[h->key.len] = '\0';*/
-
         h->lowcase_key = header->lowcase_name.data;
-
         h->hash = header->hash;
     }
     else {
