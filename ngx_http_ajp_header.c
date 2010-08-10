@@ -693,6 +693,10 @@ static ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
                 h->lowcase_key, h->key.len);
 
         if (hh && hh->handler(r, h, hh->offset) != NGX_OK) {
+            ngx_log_error(NGX_LOG_ERR, log, 0,
+                    "ajp_unmarshal_response: hh->handler error: \"%V: %V\"", 
+                    &h->key, &h->value);
+
             return NGX_ERROR;
         }
 
