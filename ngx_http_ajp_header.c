@@ -113,12 +113,8 @@ static ngx_int_t get_res_header_for_sc(int sc, ngx_table_elt_t *h)
 
     if(sc <= SC_RES_HEADERS_NUM && sc > 0) {
         header = &response_known_headers[sc - 1];
-
         h->key = header->name;
-        h->key.data[h->key.len] = '\0';
-
         h->lowcase_key = header->lowcase_name.data;
-
         h->hash = header->hash;
     }
     else {
@@ -644,6 +640,8 @@ ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
 
         rc  = ajp_msg_peek_uint16(msg, &name);
         if (rc != NGX_OK) {
+            ngx_log_error(NGX_LOG_ERR, log, 0,
+                    "ajp_unmarshal_response: Not enough memory.");
             return rc;
         }
 
@@ -656,6 +654,9 @@ ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
 
         if ((name & 0XFF00) == 0XA000) {
             ajp_msg_get_uint16(msg, &name);
+
+            ngx_log_debug1(NGX_LOG_DEBUG_HTTP, log, 0,
+                    "http ajp known header: %08Xd", name);
 
             rc = get_res_header_for_sc(name, h);
 
@@ -674,6 +675,9 @@ ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
                 return rc;
             }
 
+            ngx_log_debug1(NGX_LOG_DEBUG_HTTP, log, 0,
+                    "http ajp unknown header: %V", &str);
+
             rc = get_res_unknown_header_by_str(&str, h, r->pool);
             if (rc != NGX_OK) {
                 return rc;
@@ -691,12 +695,15 @@ ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
                 h->lowcase_key, h->key.len);
 
         if (hh && hh->handler(r, h, hh->offset) != NGX_OK) {
+            ngx_log_error(NGX_LOG_ERR, log, 0,
+                    "ajp_unmarshal_response: hh->handler error: \"%V: %V\"", 
+                    &h->key, &h->value);
+
             return NGX_ERROR;
         }
 
         ngx_log_debug2(NGX_LOG_DEBUG_HTTP, log, 0,
-                "http ajp header: \"%V: %V\"",
-                &h->key, &h->value);
+                "http ajp header: \"%V: %V\"", &h->key, &h->value);
     }
 
     return NGX_OK;
