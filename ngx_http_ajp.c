@@ -23,8 +23,10 @@ typedef struct{
     ngx_uint_t hash;
 } response_known_headers_t;
 
+
 static void request_known_headers_calc_hash(void);
 static void response_known_headers_calc_hash(void);
+
 
 static request_known_headers_t request_known_headers[] = {
     {ngx_string("accept"),          0, SC_REQ_ACCEPT},
@@ -152,9 +154,7 @@ sc_for_req_header(ngx_table_elt_t *header)
 {
     size_t len = header->key.len;
 
-    /* ACCEPT-LANGUAGE is the longest header
-     * that is of interest.
-     */
+    /* ACCEPT-LANGUAGE is the longest header */
     if (len < 4 || len > 15) {
         return UNKNOWN_METHOD;
     }
@@ -329,12 +329,10 @@ get_res_unknown_header_by_str(ngx_str_t *name,
  ?ssl_cert      (byte)(string)
  ?ssl_cipher    (byte)(string)
  ?ssl_session   (byte)(string)
- ?ssl_key_size  (byte)(int)      via JkOptions +ForwardKeySize
+ ?ssl_key_size  (byte)(int)  
  request_terminator (byte)
  ?body          content_length*(var binary)
-
  */
-
 ngx_int_t 
 ajp_marshal_into_msgb(ajp_msg_t *msg, 
         ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *alcf)
@@ -353,7 +351,7 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
 
     log = r->connection->log;
 
-    ngx_log_error(NGX_LOG_DEBUG, log, 0,
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, log, 0,
             "Into ajp_marshal_into_msgb, uri: \"%V\"", &r->uri);
 
     if ((method = sc_for_req_method_by_id(r)) == UNKNOWN_METHOD) {
@@ -432,15 +430,12 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
                         "Error appending the header value");
                 return AJP_EOVERFLOW;
             }
-            ngx_log_error(NGX_LOG_DEBUG, log, 0,
+
+            ngx_log_debug4(NGX_LOG_DEBUG_HTTP, log, 0,
                     "ajp_marshal_into_msgb: Header[%d] [%V] = [%V], size:%z",
                     i, &header[i].key, &header[i].value, ngx_buf_size(msg->buf));
         }
     }
-
-    /* XXXX need to figure out how to do this
-       ajp_msg_append_uint8(msg, SC_A_SECRET);
-     */
 
     if (r->headers_in.user.len != 0) {
         if (ajp_msg_append_uint8(msg, SC_A_REMOTE_USER) ||
@@ -464,7 +459,6 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
         }
     }
 
-    /* XXXX  ebcdic (args converted?) */
     if (r->args.len > 0) {
         if (ajp_msg_append_uint8(msg, SC_A_QUERY_STRING) ||
                 ajp_msg_append_string(msg, &r->args)) {
@@ -487,16 +481,7 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
         }
     }
 
-    /* XXX: Do we really need SSL?
-     */
-    /*
-     * Only lookup SSL variables if we are currently running HTTPS.
-     * Furthermore ensure that only variables get set in the AJP message
-     * that are not NULL and not empty.
-     */
     /*TODO SSL*/
-    /*
-     */
 
     /* Forward the remote port information, which was forgotten
      * from the builtin data of the AJP 13 protocol.
@@ -511,8 +496,10 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
         temp_str.len = sizeof(SC_A_REQ_REMOTE_PORT) - 1;
 
         addr = (struct sockaddr_in *) r->connection->sockaddr;
+
         /*'struct sockaddr_in' and 'struct sockaddr_in6' has the same offset of port*/
         port = ntohs(addr->sin_port);
+
         /*port < 65536*/
         ngx_snprintf(buf, 6, "%d", port);
         port_str.data = buf;
@@ -528,15 +515,9 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
             return AJP_EOVERFLOW;
         }
 
-        ngx_log_error(NGX_LOG_DEBUG, log, 0,
+        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, log, 0,
                 "ajp_marshal_into_msgb: attribute %V %V", &temp_str, &port_str);
     }
-
-    /* Use the environment vars prefixed with AJP_
-     * and pass it to the header striping that prefix.
-     */
-    /* TODO
-    */
 
     if (ajp_msg_append_uint8(msg, SC_A_ARE_DONE)) {
         ngx_log_error(NGX_LOG_ERR, log, 0,
@@ -545,7 +526,7 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
         return AJP_EOVERFLOW;
     }
 
-    ngx_log_error(NGX_LOG_DEBUG, log, 0,
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, log, 0,
             "ajp_marshal_into_msgb: Done, buff_size:%z", ngx_buf_size(msg->buf));
 
     return NGX_OK;
@@ -575,7 +556,6 @@ length  (short)
 body    length*(var binary)
 
  */
-
 ngx_int_t 
 ajp_unmarshal_response(ajp_msg_t *msg,
         ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *alcf)
@@ -611,7 +591,6 @@ ajp_unmarshal_response(ajp_msg_t *msg,
     u->headers_in.status_n = status;
 
     rc = ajp_msg_get_string(msg, &str);
-
     if (rc == NGX_OK) {
         last = ngx_snprintf(line, 1024, "%d %V", status, &str);
 
@@ -629,7 +608,7 @@ ajp_unmarshal_response(ajp_msg_t *msg,
         u->state->status = u->headers_in.status_n;
     }
 
-    ngx_log_error(NGX_LOG_DEBUG, log, 0,
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, log, 0,
             "ajp_unmarshal_response: status = %d", status);
 
     num_headers = 0;
@@ -638,9 +617,8 @@ ajp_unmarshal_response(ajp_msg_t *msg,
         return rc;
     }
 
-    ngx_log_error(NGX_LOG_DEBUG, log, 0,
-            "ajp_unmarshal_response: Number of headers is = %d",
-            num_headers);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, log, 0,
+            "ajp_unmarshal_response: Number of headers is = %d", num_headers);
 
     for(i = 0 ; i < (int) num_headers ; i++) {
 

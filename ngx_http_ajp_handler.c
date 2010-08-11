@@ -325,7 +325,16 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
             return NGX_AGAIN;
         }
 
-        ajp_msg_parse_begin(msg);
+        rc = ajp_msg_parse_begin(msg);
+        if (rc != NGX_OK) {
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                    "ngx_http_ajp_input_filter: bad header\n" 
+                    "%s",
+                    ajp_msg_dump(r->pool, msg, "bad header"));
+
+            return NGX_ERROR;
+        }
+
         rc = ajp_msg_get_uint8(msg, (u_char *)&type);
         if (rc != NGX_OK) {
             return NGX_ERROR;
@@ -395,7 +404,14 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
                 break;
 
             default:
-                break;
+
+                ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                        "ngx_http_ajp_process_header: bad_packet_type(%d)\n" 
+                        "%s",
+                        type, 
+                        ajp_msg_dump(r->pool, msg, "bad type"));
+
+                return  NGX_ERROR;
         }
     }
 
@@ -625,7 +641,7 @@ ngx_http_upstream_dummy_handler(ngx_http_request_t *r,
     ngx_http_upstream_t *u)
 {
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "ajp upstream dummy handler");
+            "ajp upstream dummy handler");
     return;
 }
 
@@ -689,7 +705,16 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
                 offset = 0;
             }
 
-            ajp_msg_parse_begin(msg);
+            rc = ajp_msg_parse_begin(msg);
+            if (rc != NGX_OK) {
+                ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                        "ngx_http_ajp_input_filter: bad header\n" 
+                        "%s",
+                        ajp_msg_dump(r->pool, msg, "bad header"));
+
+                return NGX_ERROR;
+            }
+
             rc = ajp_msg_get_uint8(msg, &type);
             if (rc != NGX_OK) {
                 return NGX_ERROR;
@@ -722,13 +747,17 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
                 default:
 
                     ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                            "ngx_http_ajp_input_filter: bad_packet_type(%d)\n", type);
+                            "ngx_http_ajp_input_filter: bad_packet_type(%d)\n" 
+                            "%s",
+                            type, 
+                            ajp_msg_dump(r->pool, msg, "bad type"));
+
                     return NGX_ERROR;
             }
         }
 
         ngx_log_debug2(NGX_LOG_DEBUG_HTTP, p->log, 0,
-                       "input filter packet, length:%z, buffer_size:%z",
+                "input filter packet, length:%z, buffer_size:%z",
                        a->length, ngx_buf_size(buf));
 
         if (p->free) {
@@ -865,6 +894,7 @@ ngx_http_ajp_input_filter_save_tiny_buffer(ngx_http_request_t *r,
     return NGX_OK;
 }
 
+
 static void
 ngx_http_ajp_end_response(ngx_http_ajp_ctx_t *a, ngx_event_pipe_t *p, int reuse) 
 {
@@ -873,6 +903,7 @@ ngx_http_ajp_end_response(ngx_http_ajp_ctx_t *a, ngx_event_pipe_t *p, int reuse)
     p->upstream_done = 1;
     a->state = ngx_http_ajp_st_response_end;
 }
+
 
 static void
 ngx_http_ajp_abort_request(ngx_http_request_t *r)

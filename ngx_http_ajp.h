@@ -146,7 +146,7 @@ struct ajp_msg
 #define SC_M_LOCK               (unsigned char)13
 #define SC_M_UNLOCK             (unsigned char)14
 
-/*Not supported in Nginx*/
+/* Not supported in Nginx */
 #define SC_M_ACL                (unsigned char)15
 #define SC_M_REPORT             (unsigned char)16
 #define SC_M_VERSION_CONTROL    (unsigned char)17
@@ -227,7 +227,7 @@ struct ajp_msg
 
 #define SC_RES_HEADERS_NUM          11
 
-#define DUMP_LENGTH 16
+#define DUMP_LENGTH                 64
 
 /**
  * Begin to parse an AJP Message, move the buffer header to the type's position.
@@ -409,11 +409,11 @@ ngx_int_t  ajp_data_msg_end(ajp_msg_t *msg, size_t len);
  * @param err       error string to display
  * @return          dump message
  */
-u_char * ajp_msg_dump(ngx_pool_t *pool, ajp_msg_t *msg, u_char *err);
+u_char * ajp_msg_dump(ngx_pool_t *pool, ajp_msg_t *msg, char *err);
 
 
 /**
- * initialize the request and reponse 's headers
+ * Initialize the headers of request and reponse
  */
 void ajp_header_init(void);
 
@@ -441,7 +441,7 @@ ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
 
 /** 
  * Handle the CPING/CPONG messages
- * TODO
+ * TODO: health check
  */
 
 /**

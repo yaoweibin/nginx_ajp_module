@@ -10,7 +10,7 @@ ajp_msg_check_header(ajp_msg_t *msg)
     u_char *head = msg->buf->pos;
 
     if (!((head[0] == 0x41 && head[1] == 0x42) ||
-          (head[0] == 0x12 && head[1] == 0x34))) {
+                (head[0] == 0x12 && head[1] == 0x34))) {
 
         ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
                 "ajp_check_msg_header() got bad signature %02Xd%02Xd",
@@ -399,15 +399,20 @@ ajp_data_msg_end(ajp_msg_t *msg, size_t len)
 
 
 u_char * 
-ajp_msg_dump(ngx_pool_t *pool, ajp_msg_t *msg, u_char *err)
+ajp_msg_dump(ngx_pool_t *pool, ajp_msg_t *msg, char *err)
 {
-    size_t     i, len;
+    size_t     i, len, dump;
     u_char    *rv, *p, *last;
     ngx_buf_t *buf;
 
     buf = msg->buf;
 
-    len = DUMP_LENGTH + 256;
+    dump = DUMP_LENGTH;
+    if (dump >(size_t)(buf->last - buf->pos)) {
+        dump = buf->last - buf->pos;
+    }
+
+    len = dump + 256;
     p = rv = ngx_palloc(pool, len);
     if (rv == NULL) {
         return NULL;
@@ -417,13 +422,13 @@ ajp_msg_dump(ngx_pool_t *pool, ajp_msg_t *msg, u_char *err)
 
     p = ngx_snprintf(p, len, 
             "ajp_msg_dump(): \"%s\", start:%p, pos:%p, last:%p \n"
-            "dump line: \n",
+            "dump packet: \n",
             err, buf->start, buf->pos, buf->last);
 
-    for (i = 0; i < DUMP_LENGTH; i ++) {
-        p = ngx_snprintf(p, last - p, "%02xd ", buf->start[i]);
+    for (i = 0; i < dump; i ++) {
+        p = ngx_snprintf(p, last - p, "%02xd ", buf->pos[i]);
 
-        if (i > 0 && (i % 16 == 0)) {
+        if ((i+1) % 16 == 0) {
             p = ngx_snprintf(p, last - p, "\n");
         }
     }
