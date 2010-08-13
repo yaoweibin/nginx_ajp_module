@@ -532,6 +532,7 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
     return NGX_OK;
 }
 
+
 /*
    AJPV13_RESPONSE/AJPV14_RESPONSE:=
    response_prefix (2)

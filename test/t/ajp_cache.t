@@ -1,0 +1,76 @@
+#
+#===============================================================================
+#
+#         FILE:  sample.t
+#
+#  DESCRIPTION: test 
+#
+#        FILES:  ---
+#         BUGS:  ---
+#        NOTES:  ---
+#       AUTHOR:  Weibin Yao (http://yaoweibin.cn/), yaoweibin@gmail.com
+#      COMPANY:  
+#      VERSION:  1.0
+#      CREATED:  03/02/2010 03:18:28 PM
+#     REVISION:  ---
+#===============================================================================
+
+
+# vi:filetype=perl
+
+use lib 'lib';
+use Test::Nginx::LWP;
+
+plan tests => repeat_each() * 2 * blocks();
+
+#no_diff;
+
+run_tests();
+
+__DATA__
+
+=== TEST 1: the first time request for the cache
+--- http_config
+    upstream tomcats{      
+        server 127.0.0.1:8009;
+        keepalive 10;
+    }
+
+    ajp_cache_path /tmp/ajp_cache levels=1:2 keys_zone=ajp_cache_zone:10m inactive=24h max_size=1g;
+--- config
+    location / {      
+        ajp_cache "ajp_cache_zone";
+        ajp_cache_key "$host$request_uri$cookie_user";
+        ajp_cache_valid 200 1d;
+        ajp_cache_use_stale error timeout invalid_header updating http_500;
+        add_header X-Cache $upstream_cache_status;
+
+        ajp_pass tomcats;
+    }
+--- request
+    GET /sample/big_index.html
+--- response_headers
+    X-Cache: MISS
+
+=== TEST 2: the second time request for the cache
+--- http_config
+    upstream tomcats{      
+        server 127.0.0.1:8009;
+        keepalive 10;
+    }
+
+    ajp_cache_path /tmp/ajp_cache levels=1:2 keys_zone=ajp_cache_zone:10m inactive=24h max_size=1g;
+--- config
+    location / {      
+        ajp_cache "ajp_cache_zone";
+        ajp_cache_key "$host$request_uri$cookie_user";
+        ajp_cache_valid 200 1d;
+        ajp_cache_use_stale error timeout invalid_header updating http_500;
+        add_header X-Cache $upstream_cache_status;
+
+        ajp_pass tomcats;
+    }
+--- request
+    GET /sample/big_index.html
+--- response_headers
+    X-Cache: HIT

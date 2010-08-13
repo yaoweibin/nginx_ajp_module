@@ -781,7 +781,7 @@ Grab the nginx source code from nginx.org (<http://nginx.org/>), for example, th
 
 This README template is from agentzh (<http://github.com/agentzh>).
 
-I borrowed a lot of codes from Fastcgi module of Nginx. This part of code is copyrighted by Igor Sysoev. And the AJP library code from apache's mod_ajp_proxy (<http://httpd.apache.org/docs/trunk/mod/mod_proxy_ajp.html>). Thanks for their hard work.
+I borrowed a lot of codes from Fastcgi module of Nginx. This part of code is copyrighted by Igor Sysoev. And the design of apache's mod_ajp_proxy (<http://httpd.apache.org/docs/trunk/mod/mod_proxy_ajp.html>). Thanks for their hard work.
 
 This module is licensed under the BSD license.
 
