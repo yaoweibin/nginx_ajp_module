@@ -40,5 +40,5 @@ __DATA__
         ajp_pass tomcats;
     }
 --- request
-    HEAD /sample/big_index.html
+    HEAD /index.html
 --- error_code: 200

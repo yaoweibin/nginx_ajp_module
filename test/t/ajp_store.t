@@ -52,5 +52,5 @@ __DATA__
         root                 /tmp/ajp_store;
     }
 --- request
-    GET /sample/big_index.html
+    GET /index.html
 --- error_code: 200

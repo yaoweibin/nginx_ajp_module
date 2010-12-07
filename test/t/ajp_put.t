@@ -40,8 +40,8 @@ __DATA__
         ajp_pass tomcats;
     }
 --- request
-    POST /sample/showname.jsp
+    POST /upload.jsp
     username=yaoweibin
 --- request_headers
     Content-Type:application/x-www-form-urlencoded
---- response_body_like: ^(.*)yaoweibin(.*)$
+--- response_body_like: ^(.*)$

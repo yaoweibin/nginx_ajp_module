@@ -40,8 +40,8 @@ __DATA__
         ajp_pass tomcats;
     }
 --- request
-    GET /sample/big_index.html
---- response_body_like: ^(.*)yaoweibin(.*)$
+    GET /index.html
+--- response_body_like: ^(.*)$
 
 === TEST 2: the GET of AJP without keepalive
 --- http_config
@@ -53,5 +53,5 @@ __DATA__
         ajp_pass tomcats;
     }
 --- request
-    GET /sample/big_index.html
---- response_body_like: ^(.*)yaoweibin(.*)$
+    GET /index.html
+--- response_body_like: ^(.*)$

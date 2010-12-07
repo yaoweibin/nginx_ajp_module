@@ -48,7 +48,7 @@ __DATA__
         ajp_pass tomcats;
     }
 --- request
-    GET /sample/big_index.html
+    GET /index.html
 --- response_headers
     X-Cache: MISS
 
@@ -71,6 +71,6 @@ __DATA__
         ajp_pass tomcats;
     }
 --- request
-    GET /sample/big_index.html
+    GET /index.html
 --- response_headers
     X-Cache: HIT
