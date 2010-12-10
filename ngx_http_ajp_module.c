@@ -724,7 +724,6 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
                               prev->upstream.buffer_size,
                               (size_t) ngx_pagesize);
 
-
     ngx_conf_merge_bufs_value(conf->upstream.bufs, prev->upstream.bufs,
                               8, ngx_pagesize);
 
@@ -733,7 +732,6 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
                            "there must be at least 2 \"ajp_buffers\"");
         return NGX_CONF_ERROR;
     }
-
 
     if (conf->ajp_header_packet_buffer_size_conf > AJP_MAX_BUFFER_SZ) {
         conf->ajp_header_packet_buffer_size_conf = AJP_MAX_BUFFER_SZ;
@@ -782,7 +780,6 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
         return NGX_CONF_ERROR;
     }
 
-
     ngx_conf_merge_size_value(conf->upstream.temp_file_write_size_conf,
                               prev->upstream.temp_file_write_size_conf,
                               NGX_CONF_UNSET_SIZE);
@@ -802,7 +799,6 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 
         return NGX_CONF_ERROR;
     }
-
 
     ngx_conf_merge_size_value(conf->upstream.max_temp_file_size_conf,
                               prev->upstream.max_temp_file_size_conf,
@@ -827,11 +823,9 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
         return NGX_CONF_ERROR;
     }
 
-
     ngx_conf_merge_bitmask_value(conf->upstream.ignore_headers,
                               prev->upstream.ignore_headers,
                               NGX_CONF_BITMASK_SET);
-
 
     ngx_conf_merge_bitmask_value(conf->upstream.next_upstream,
                               prev->upstream.next_upstream,
