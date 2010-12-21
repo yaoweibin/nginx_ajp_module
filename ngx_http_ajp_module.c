@@ -631,6 +631,7 @@ ngx_http_ajp_create_loc_conf(ngx_conf_t *cf)
      *     conf->upstream.store_values = NULL;
      *
      */
+
     conf->ajp_header_packet_buffer_size_conf = NGX_CONF_UNSET_SIZE;
     conf->max_ajp_data_packet_size_conf = NGX_CONF_UNSET_SIZE;
 
@@ -748,7 +749,6 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
     if (size < conf->upstream.bufs.size) {
         size = conf->upstream.bufs.size;
     }
-
 
     ngx_conf_merge_size_value(conf->upstream.busy_buffers_size_conf,
                               prev->upstream.busy_buffers_size_conf,
@@ -932,6 +932,7 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
     
     return NGX_CONF_OK;
 }
+
 
 static ngx_int_t ngx_http_ajp_module_init_process(ngx_cycle_t *cycle)
 {

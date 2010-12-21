@@ -33,6 +33,7 @@ static ngx_int_t ngx_http_ajp_input_filter_save_tiny_buffer(ngx_http_request_t *
     ngx_buf_t *buf);
 static void ngx_http_ajp_end_response(ngx_http_ajp_ctx_t *a, ngx_event_pipe_t *p, int reuse);
 
+
 ngx_int_t
 ngx_http_ajp_handler(ngx_http_request_t *r)
 {
@@ -769,10 +770,8 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
                 "input filter packet, length:%z, buffer_size:%z",
                        a->length, ngx_buf_size(buf));
 
-        /* get a zero length packet */
+        /* Get a zero length packet */
         if (a->length == 0) {
-            /* The last byte of this message always seems to be
-               0x00 and is not part of the chunk. */
             if (buf->pos < buf->last) {
                 buf->pos++;
             }

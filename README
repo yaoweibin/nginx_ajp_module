@@ -1,14 +1,6 @@
 Name
     nginx_ajp_module - support AJP protocol proxy with Nginx
 
-Status
-    This module is at its very early phase of development and considered
-    highly experimental. But you're encouraged to test it out on your side
-    and report any quirks that you experience.
-
-    We need your help! If you find this module useful and/or interesting,
-    please consider joining the development!
-
 Synopsis
     http {
 

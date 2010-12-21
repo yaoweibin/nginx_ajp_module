@@ -8,16 +8,6 @@ __nginx_ajp_module__ - support AJP protocol proxy with Nginx
 
 
 
-# Status
-
-
-
-This module is at its very early phase of development and considered highly experimental. But you're encouraged to test it out on your side and report any quirks that you experience.
-
-We need your help! If you find this module useful and/or interesting, please consider joining the development!
-
-
-
 # Synopsis
 
 
@@ -229,7 +219,7 @@ __context:__ _http, server, location_
 
 This directive assigns a timeout for the connection to the upstream server. It is necessary to keep in mind that this time out cannot be more than 75 seconds.
 
-This is not the time until the server returns the pages, this is the L< ajp_read_timeout|/"ajp_read_timeout">  statement. If your upstream server is up, but hanging (e.g. it does not have enough threads to process your request so it puts you in the pool of connections to deal with later), then this statement will not help as the connection to the server has been made.
+This is not the time until the server returns the pages, this is the ["ajp_read_timeout"](#pod_"ajp_read_timeout")  statement. If your upstream server is up, but hanging (e.g. it does not have enough threads to process your request so it puts you in the pool of connections to deal with later), then this statement will not help as the connection to the server has been made.
 
 
 
@@ -273,7 +263,7 @@ __context:__ _http, server, location_
 
 This directive(0.7.54+) prohibits the processing of the header lines from the proxy server's response.
 
-It can specify the string as "L<X-Accel-Redirect|NginxXSendfile>", "X-Accel-Expires", "Expires" or "Cache-Control".
+It can specify the string as "[X-Accel-Redirect](http://search.cpan.org/perldoc?NginxXSendfile)", "X-Accel-Expires", "Expires" or "Cache-Control".
 
 
 
@@ -567,7 +557,7 @@ __default:__ _$NGX_PREFIX/ajp_temp_
 
 __context:__ _http, server, location_
 
-This directive works like L<client_body_temp_path|NginxHttpCoreModule/"client_body_temp_path">  to specify a location to buffer large proxied requests to the filesystem.
+This directive works like L<NginxHttpCoreModule/"client_body_temp_path">  to specify a location to buffer large proxied requests to the filesystem.
 
 
 
@@ -595,7 +585,7 @@ __default:__ _none_
 
 __context:__ _upstream_
 
-This directive comes from ngx_http_upstream_jvm_route_module (<http://code.google.com/p/nginx-upstream-jvm-route/>).
+This directive comes from ngx_http_upstream_jvm_route_module ([http://code.google.com/p/nginx-upstream-jvm-route/](http://code.google.com/p/nginx-upstream-jvm-route/)).
 
 '$cookie_SESSION_COOKIE' specifies the session cookie name(0.7.24+). 'session_url' specifies a different session name in the URL when the client does not accept a cookie. The session name is case-insensitive. In this module, if it does not find the session_url, it will use the session cookie name instead. So if the session name in cookie is the name with its in URL, you don't need give the session_url name.
 
@@ -615,7 +605,7 @@ __default:__ _none_
 
 _'context:_ _location_
 
-This directive comes from ngx_http_upstream_jvm_route_module (<http://code.google.com/p/nginx-upstream-jvm-route/>).
+This directive comes from ngx_http_upstream_jvm_route_module ([http://code.google.com/p/nginx-upstream-jvm-route/](http://code.google.com/p/nginx-upstream-jvm-route/)).
 
 Set the location of pages return the status of the jvm_route peers. Example:
 location status {
@@ -635,7 +625,7 @@ __default:__ _none_
 
 __context:__ _upstream_
 
-Switches on keepalive module for the upstream in question. This directive comes from ngx_http_upstream_keepalive_module (<http://mdounin.ru/hg/ngx_http_upstream_keepalive/>).
+Switches on keepalive module for the upstream in question. This directive comes from ngx_http_upstream_keepalive_module ([http://mdounin.ru/hg/ngx_http_upstream_keepalive/](http://mdounin.ru/hg/ngx_http_upstream_keepalive/)).
 
 Parameters:
 
@@ -653,7 +643,7 @@ Parameters:
 
 
 
-This directive comes from ngx_http_upstream_jvm_route_module (<http://code.google.com/p/nginx-upstream-jvm-route/>).
+This directive comes from ngx_http_upstream_jvm_route_module ([http://code.google.com/p/nginx-upstream-jvm-route/](http://code.google.com/p/nginx-upstream-jvm-route/)).
 
 Main syntax is the same as the official directive. This module add these parameters:
 
@@ -673,9 +663,9 @@ NOTE: This module does not support the parameter of 'backup' yet.
 
 
 
-Download the latest version of the release tarball of this module from github (<http://github.com/yaoweibin/nginx_ajp_module>)
+Download the latest version of the release tarball of this module from github ([http://github.com/yaoweibin/nginx_ajp_module](http://github.com/yaoweibin/nginx_ajp_module))
 
-Grab the nginx source code from nginx.org (<http://nginx.org/>), for example, the version 0.7.65 (see nginx compatibility), and then build the source with this module:
+Grab the nginx source code from nginx.org ([http://nginx.org/](http://nginx.org/)), for example, the version 0.7.65 (see nginx compatibility), and then build the source with this module:
 
     $ wget 'http://nginx.org/download/nginx-0.7.65.tar.gz'
     $ tar -xzvf nginx-0.7.65.tar.gz
@@ -779,9 +769,9 @@ Grab the nginx source code from nginx.org (<http://nginx.org/>), for example, th
 
 
 
-This README template is from agentzh (<http://github.com/agentzh>).
+This README template is from agentzh ([http://github.com/agentzh](http://github.com/agentzh)).
 
-I borrowed a lot of codes from Fastcgi module of Nginx. This part of code is copyrighted by Igor Sysoev. And the design of apache's mod_ajp_proxy (<http://httpd.apache.org/docs/trunk/mod/mod_proxy_ajp.html>). Thanks for their hard work.
+I borrowed a lot of codes from Fastcgi module of Nginx. This part of code is copyrighted by Igor Sysoev. And the design of apache's mod_ajp_proxy ([http://httpd.apache.org/docs/trunk/mod/mod_proxy_ajp.html](http://httpd.apache.org/docs/trunk/mod/mod_proxy_ajp.html)). Thanks for their hard work.
 
 This module is licensed under the BSD license.
 
