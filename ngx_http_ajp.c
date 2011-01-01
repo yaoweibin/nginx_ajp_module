@@ -109,7 +109,7 @@ response_known_headers_calc_hash(void)
 
     while (header->name.len != 0) {
         header->hash = 
-            ngx_hash_key(header->lowcase_name.data, header->lowcase_name.len - 1);
+            ngx_hash_key(header->lowcase_name.data, header->lowcase_name.len);
 
         header++;
     }
