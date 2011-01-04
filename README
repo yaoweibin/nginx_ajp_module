@@ -24,7 +24,7 @@ Synopsis
 
 Description
     With this module, Nginx can connect to Tomcat's AJP port directly. The
-    backend connections are keepalive, sesstion sticky. The motivation of
+    backend connections are keepalive, session sticky. The motivation of
     writing these modules is Nginx's high performance and robustness.
 
 Directives
@@ -65,7 +65,7 @@ Directives
 
     The directive specifies the area which actually is the share memory's
     name for caching. The same area can be used in several places. You must
-    set the ajp_cache_path first.
+    set the "ajp_cache_path" first.
 
   ajp_cache_key
     syntax: *ajp_cache_key line;*
@@ -547,8 +547,7 @@ Compatibility
 
 TODO
     SSL
-    Add AJP health check
-    Backend connection pool?
+    Backends connection pool?
 
 Known Issues
     Developing

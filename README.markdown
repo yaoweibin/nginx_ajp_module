@@ -40,7 +40,7 @@ http {
 
 # Description
 
-With this module, Nginx can connect to Tomcat's AJP port directly. The backend connections are keepalive, sesstion sticky.
+With this module, Nginx can connect to Tomcat's AJP port directly. The backend connections are keepalive, session sticky.
 The motivation of writing these modules is Nginx's high performance and robustness.
 
 
@@ -93,7 +93,7 @@ __default:__ _off_
 
 __context:__ _http, server, location_
 
-The directive specifies the area  which actually is the share memory's name for caching. The same area can be used in several places. You must set the ajp_cache_path first.
+The directive specifies the area  which actually is the share memory's name for caching. The same area can be used in several places. You must set the `ajp_cache_path` first.
 
 
 
@@ -703,9 +703,7 @@ Grab the nginx source code from nginx.org ([http://nginx.org/](http://nginx.org/
 
 - SSL
 
-- Add AJP health check
-
-- Backend connection pool?
+- Backends connection pool?
 
 
 
