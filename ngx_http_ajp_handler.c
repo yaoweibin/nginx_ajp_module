@@ -381,6 +381,7 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
                      * */
                     buf->pos = pos;
                     a->state = ngx_http_ajp_st_response_recv_headers;
+                    return NGX_AGAIN;
                 }
                 else {
                     return  NGX_ERROR;
