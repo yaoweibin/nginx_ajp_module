@@ -29,6 +29,8 @@ static void ngx_http_upstream_send_request_body_handler(ngx_http_request_t *r,
 static void ngx_http_upstream_dummy_handler(ngx_http_request_t *r,
     ngx_http_upstream_t *u);
 
+static ngx_int_t ngx_http_ajp_move_buffer(ngx_http_request_t *r, ngx_buf_t *buf,
+        u_char *pos, u_char *last);
 static ngx_int_t ngx_http_ajp_input_filter_save_tiny_buffer(ngx_http_request_t *r,
     ngx_buf_t *buf);
 static void ngx_http_ajp_end_response(ngx_http_ajp_ctx_t *a, ngx_event_pipe_t *p, int reuse);
@@ -313,26 +315,7 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
         last = buf->last;
 
         if (ngx_buf_size(msg->buf) < AJP_HEADER_LEN + 1) {
-
-            if (buf->last == buf->end) {
-                buf->pos = buf->start;
-                buf->last = buf->start + (last - pos);
-
-                if (buf->last > pos ) {
-                    ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                            "ngx_http_ajp_process_header: too small buffer for the ajp packet.\n");
-
-                    return NGX_ERROR;
-                }
-
-                /* Move the end part data to the head of buffer, reuse the buffer. */
-                ngx_memcpy(buf->pos, pos, last - pos);
-            }
-
-            /*
-             * The first buffer, there should have enough buffer room.
-             * */
-            return NGX_AGAIN;
+            return ngx_http_ajp_move_buffer(r, buf, pos, last);
         }
 
         rc = ajp_msg_parse_begin(msg);
@@ -355,8 +338,7 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
 
                 rc = ajp_msg_get_uint16(msg, &length);
                 if (rc == AJP_EOVERFLOW) {
-                    buf->pos = pos;
-                    return NGX_AGAIN;
+                    return ngx_http_ajp_move_buffer(r, buf, pos, last);
                 }
 
                 rc = ngx_http_upstream_send_request_body(r, u);
@@ -379,9 +361,8 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
                      * It's an uncomplete AJP packet, move back to the header of packet, 
                      * and parse the header again in next call
                      * */
-                    buf->pos = pos;
                     a->state = ngx_http_ajp_st_response_recv_headers;
-                    return NGX_AGAIN;
+                    return ngx_http_ajp_move_buffer(r, buf, pos, last);
                 }
                 else {
                     return  NGX_ERROR;
@@ -403,8 +384,7 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
 
                 rc = ajp_msg_get_uint8(msg, &reuse);
                 if (rc == AJP_EOVERFLOW) {
-                    buf->pos = pos;
-                    return NGX_AGAIN;
+                    return ngx_http_ajp_move_buffer(r, buf, pos, last);
                 }
 
                 ngx_http_ajp_end_response(a, u->pipe, reuse);
@@ -426,6 +406,34 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
         }
     }
 
+    return NGX_AGAIN;
+}
+
+
+static ngx_int_t 
+ngx_http_ajp_move_buffer(ngx_http_request_t *r, ngx_buf_t *buf, u_char *pos, u_char *last)
+{
+    if (buf->last == buf->end) {
+        buf->pos = buf->start;
+        buf->last = buf->start + (last - pos);
+
+        if (buf->last > pos ) {
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                    "ngx_http_ajp_process_header: too small buffer for the ajp packet.\n");
+
+            return NGX_ERROR;
+        }
+
+        /* Move the end part data to the head of buffer, reuse the buffer. */
+        ngx_log_error(NGX_LOG_WARN, r->connection->log, 0,
+                "ngx_http_ajp_process_header: move buffer for the ajp packet.\n");
+
+        ngx_memcpy(buf->pos, pos, last - pos);
+    }
+
+    /*
+     * The first buffer, there should have enough buffer room.
+     * */
     return NGX_AGAIN;
 }
 
