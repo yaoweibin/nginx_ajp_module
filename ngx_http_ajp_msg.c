@@ -97,7 +97,7 @@ ajp_msg_end(ajp_msg_t *msg)
 static inline int 
 ajp_log_overflow(ajp_msg_t *msg, const char *context)
 {
-    ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
+    ngx_log_error(NGX_LOG_WARN, ngx_cycle->log, 0,
             "%s(): BufferOverflowException pos:%p, last:%p, end:%p",
             context, msg->buf->pos, msg->buf->last, msg->buf->end);
 

@@ -585,8 +585,10 @@ ajp_unmarshal_response(ajp_msg_t *msg,
 
     rc = ajp_msg_get_uint16(msg, &status);
     if (rc != NGX_OK) {
-        ngx_log_error(NGX_LOG_ERR, log, 0,
-                "ajp_unmarshal_response: Null status");
+        if (rc != AJP_EOVERFLOW) {
+            ngx_log_error(NGX_LOG_ERR, log, 0,
+                    "ajp_unmarshal_response: Null status");
+        }
         return rc;
     }
     u->headers_in.status_n = status;
@@ -625,8 +627,6 @@ ajp_unmarshal_response(ajp_msg_t *msg,
 
         rc  = ajp_msg_peek_uint16(msg, &name);
         if (rc != NGX_OK) {
-            ngx_log_error(NGX_LOG_ERR, log, 0,
-                    "ajp_unmarshal_response: Not enough memory.");
             return rc;
         }
 
@@ -644,19 +644,20 @@ ajp_unmarshal_response(ajp_msg_t *msg,
                     "http ajp known header: %08Xd", name);
 
             rc = get_res_header_for_sc(name, h);
-
             if (rc != NGX_OK) {
                 ngx_log_error(NGX_LOG_ERR, log, 0,
                         "ajp_unmarshal_response: No such sc (%08Xd)", name);
                 return NGX_ERROR;
             }
+
         } else {
             name = 0;
             rc = ajp_msg_get_string(msg, &str);
-
             if (rc != NGX_OK) {
-                ngx_log_error(NGX_LOG_ERR, log, 0,
-                        "ajp_unmarshal_response: Null header name");
+                if (rc != AJP_EOVERFLOW) {
+                    ngx_log_error(NGX_LOG_ERR, log, 0,
+                            "ajp_unmarshal_response: Null header name");
+                }
                 return rc;
             }
 
@@ -671,8 +672,10 @@ ajp_unmarshal_response(ajp_msg_t *msg,
 
         rc = ajp_msg_get_string(msg, &h->value);
         if (rc != NGX_OK) {
-            ngx_log_error(NGX_LOG_ERR, log, 0,
-                    "ajp_unmarshal_response: Null header value");
+            if (rc != AJP_EOVERFLOW) {
+                ngx_log_error(NGX_LOG_ERR, log, 0,
+                        "ajp_unmarshal_response: Null header value");
+            }
             return rc;
         }
 
