@@ -29,6 +29,9 @@ typedef struct {
     /* record the response body chunk packet's length */
     size_t                         length;
 
+    /* extra zero byte in each ajp data packet */
+    ngx_uint_t                     extra_zero_byte;
+
     /* reuse in sending request and receiving response */
     ajp_msg_t                      msg;
 

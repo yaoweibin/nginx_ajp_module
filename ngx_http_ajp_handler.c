@@ -715,6 +715,11 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
                 offset = 0;
             }
 
+            if (a->extra_zero_byte) {
+                msg->buf->pos++;
+                a->extra_zero_byte = 0;
+            }
+
             rc = ajp_msg_parse_begin(msg);
             if (rc != NGX_OK) {
                 ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
@@ -739,6 +744,7 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
                     }
 
                     buf->pos += offset;
+                    a->extra_zero_byte = 1;
                     a->state = ngx_http_ajp_st_response_body_data_sending;
 
                     break;
@@ -771,9 +777,10 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
                        a->length, ngx_buf_size(buf));
 
         /* Get a zero length packet */
-        if (a->length == 0) {
+        if (a->length == 0 && a->extra_zero_byte && (buf->pos < buf->last)) {
             if (buf->pos < buf->last) {
                 buf->pos++;
+                a->extra_zero_byte = 0;
             }
 
             continue;
@@ -823,18 +830,20 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
             buf->pos += a->length;
             b->last = buf->pos;
 
-            /* The last byte of this message always seems to be
-               0x00 and is not part of the chunk. */
-            if (buf->pos < buf->last) {
-                buf->pos++;
-            }
-
             a->length = 0;
         }
         else {
             a->length -= buf->last - buf->pos;
             buf->pos = buf->last;
             b->last = buf->last;
+        }
+
+        /* Get a zero length packet */
+        if (a->length == 0 && a->extra_zero_byte && (buf->pos < buf->last)) {
+            /* The last byte of this message always seems to be
+               0x00 and is not part of the chunk. */
+            buf->pos++;
+            a->extra_zero_byte = 0;
         }
 
         ngx_log_debug3(NGX_LOG_DEBUG_EVENT, p->log, 0,
