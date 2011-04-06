@@ -786,11 +786,9 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
                        a->length, ngx_buf_size(buf));
 
         /* Get a zero length packet */
-        if (a->length == 0 && a->extra_zero_byte && (buf->pos < buf->last)) {
-            if (buf->pos < buf->last) {
-                buf->pos++;
-                a->extra_zero_byte = 0;
-            }
+        if ((a->length == 0) && a->extra_zero_byte && (buf->pos < buf->last)) {
+            buf->pos++;
+            a->extra_zero_byte = 0;
 
             continue;
         }
@@ -847,8 +845,7 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
             b->last = buf->last;
         }
 
-        /* Get a zero length packet */
-        if (a->length == 0 && a->extra_zero_byte && (buf->pos < buf->last)) {
+        if ((a->length == 0) && a->extra_zero_byte && (buf->pos < buf->last)) {
             /* The last byte of this message always seems to be
                0x00 and is not part of the chunk. */
             buf->pos++;
