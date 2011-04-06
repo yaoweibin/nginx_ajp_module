@@ -265,6 +265,7 @@ ngx_http_ajp_reinit_request(ngx_http_request_t *r)
 
     a->state = ngx_http_ajp_st_init_state;
     a->length = 0;
+    a->extra_zero_byte = 0;
 
     ajp_msg_reuse(&a->msg);
 
