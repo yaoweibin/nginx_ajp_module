@@ -356,7 +356,7 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
 
     if ((method = sc_for_req_method_by_id(r)) == UNKNOWN_METHOD) {
         ngx_log_error(NGX_LOG_ERR, log, 0,
-                "ajp_marshal_into_msgb - No such method %s", r->method);
+                "ajp_marshal_into_msgb - No such method %ui", r->method);
         return NGX_ERROR;
     }
 
