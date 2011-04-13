@@ -21,7 +21,7 @@ our $Profiling = 0;
 our $RepeatEach = 1;
 our $MAX_PROCESSES = 10;
 
-our $NoShuffle = 0;
+our $NoShuffle = 1;
 
 sub no_shuffle () {
     $NoShuffle = 1;
