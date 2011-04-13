@@ -444,7 +444,7 @@ ngx_http_upstream_send_request_body(ngx_http_request_t *r, ngx_http_upstream_t *
 {
     ngx_int_t                     rc;
     ngx_chain_t                  *cl;
-    ajp_msg_t                    *msg;
+    ajp_msg_t                    *msg, local_msg;
     ngx_connection_t             *c;
     ngx_http_ajp_ctx_t           *a;
     ngx_http_ajp_loc_conf_t      *alcf;
@@ -467,7 +467,7 @@ ngx_http_upstream_send_request_body(ngx_http_request_t *r, ngx_http_upstream_t *
               trying to read past the end of the body), the server will send back
               an "empty" packet, which is a body packet with a payload length of 0.
               (0x12,0x34,0x00,0x00) */
-            msg = ajp_msg_reuse(&a->msg);
+            msg = ajp_msg_reuse(&local_msg);
 
             if (ajp_alloc_data_msg(r->pool, msg) != NGX_OK) {
                 return NGX_ERROR;
