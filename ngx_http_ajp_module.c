@@ -50,15 +50,6 @@ static ngx_conf_bitmask_t  ngx_http_ajp_next_upstream_masks[] = {
 };
 
 
-static ngx_conf_bitmask_t  ngx_http_ajp_ignore_headers_masks[] = {
-    { ngx_string("X-Accel-Redirect"), NGX_HTTP_UPSTREAM_IGN_XA_REDIRECT },
-    { ngx_string("X-Accel-Expires"), NGX_HTTP_UPSTREAM_IGN_XA_EXPIRES },
-    { ngx_string("Expires"), NGX_HTTP_UPSTREAM_IGN_EXPIRES },
-    { ngx_string("Cache-Control"), NGX_HTTP_UPSTREAM_IGN_CACHE_CONTROL },
-    { ngx_null_string, 0 }
-};
-
-
 static ngx_path_init_t  ngx_http_ajp_temp_path = {
     ngx_string(NGX_HTTP_AJP_TEMP_PATH), { 1, 2, 0 }
 };
@@ -320,7 +311,7 @@ static ngx_command_t  ngx_http_ajp_commands[] = {
       ngx_conf_set_bitmask_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_ajp_loc_conf_t, upstream.ignore_headers),
-      &ngx_http_ajp_ignore_headers_masks },
+      &ngx_http_upstream_ignore_headers_masks },
 
       ngx_null_command
 };
