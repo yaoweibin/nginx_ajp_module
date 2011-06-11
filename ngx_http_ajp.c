@@ -130,6 +130,37 @@ sc_for_req_get_headers_num(ngx_list_part_t *part)
 }
 
 
+static ngx_int_t 
+sc_for_req_get_uri(ngx_http_request_t *r, ngx_str_t *uri)
+{
+    uintptr_t escape;
+
+    escape = 0;
+
+    if (r->quoted_uri || r->space_in_uri || r->internal) {
+        escape = 2 * ngx_escape_uri(NULL, r->uri.data, 
+                r->uri.len, NGX_ESCAPE_URI);
+    }
+
+    if (escape) {
+        uri->len = r->uri.len + escape;
+        uri->data = ngx_palloc(r->pool, uri->len);
+
+        if (uri->data == NULL) {
+            return -1;
+        }
+
+        ngx_escape_uri(uri->data, r->uri.data, r->uri.len, NGX_ESCAPE_URI);
+    }
+    else {
+        uri->len = r->uri.len;
+        uri->data = r->uri.data;
+    }
+
+    return 0;
+}
+
+
 static ngx_uint_t 
 request_known_headers_find_hash (ngx_uint_t hash)
 {
@@ -342,7 +373,7 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
     u_char               is_ssl = 0;
     uint16_t             port;
     ngx_uint_t           i, num_headers = 0;
-    ngx_str_t           *remote_host, *remote_addr;
+    ngx_str_t            uri, *remote_host, *remote_addr;
     ngx_str_t            temp_str, *jvm_route, port_str;
     ngx_log_t           *log;
     ngx_list_part_t     *part;
@@ -350,9 +381,6 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
     struct sockaddr_in  *addr;
 
     log = r->connection->log;
-
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, log, 0,
-            "Into ajp_marshal_into_msgb, uri: \"%V\"", &r->uri);
 
     if ((method = sc_for_req_method_by_id(r)) == UNKNOWN_METHOD) {
         ngx_log_error(NGX_LOG_ERR, log, 0,
@@ -374,12 +402,19 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
     /*'struct sockaddr_in' and 'struct sockaddr_in6' has the same offset of port*/
     port = ntohs(addr->sin_port);
 
+    if (sc_for_req_get_uri(r, &uri) != 0) {
+        return NGX_ERROR;
+    }
+
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, log, 0,
+            "Into ajp_marshal_into_msgb, uri: \"%V\"", &uri);
+
     ajp_msg_reset(msg);
 
     if (ajp_msg_append_uint8(msg, CMD_AJP13_FORWARD_REQUEST)         ||
             ajp_msg_append_uint8(msg, method)                        ||
             ajp_msg_append_string(msg, &r->http_protocol)            ||
-            ajp_msg_append_string(msg, &r->uri)                      ||
+            ajp_msg_append_string(msg, &uri)                         ||
             ajp_msg_append_string(msg, remote_addr)                  ||
             ajp_msg_append_string(msg, remote_host)                  ||
             ajp_msg_append_string(msg, &r->headers_in.server)        ||
@@ -460,6 +495,9 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
     }
 
     if (r->args.len > 0) {
+        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, log, 0,
+                "ajp_marshal_into_msgb: append_args=\"%V\"", &r->args);
+
         if (ajp_msg_append_uint8(msg, SC_A_QUERY_STRING) ||
                 ajp_msg_append_string(msg, &r->args)) {
             ngx_log_error(NGX_LOG_ERR, log, 0,
