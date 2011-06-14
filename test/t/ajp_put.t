@@ -40,7 +40,7 @@ __DATA__
         ajp_pass tomcats;
     }
 --- request
-    POST /upload.jsp
+    PUT /upload.jsp
     username=yaoweibin
 --- request_headers
     Content-Type:application/x-www-form-urlencoded

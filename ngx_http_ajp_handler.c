@@ -725,7 +725,8 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
                 offset = 0;
             }
 
-            if (a->extra_zero_byte) {
+            /* I know it's evil, but it seems some chunks lost the zero byte */
+            if (a->extra_zero_byte && (*(msg->buf->pos) == 0x00)) {
                 msg->buf->pos++;
                 a->extra_zero_byte = 0;
             }
@@ -787,7 +788,9 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
                        a->length, ngx_buf_size(buf));
 
         /* Get a zero length packet */
-        if ((a->length == 0) && a->extra_zero_byte && (buf->pos < buf->last)) {
+        if ((a->length == 0) && a->extra_zero_byte 
+                && (buf->pos < buf->last) && (*(buf->pos) == 0x00)) {
+
             buf->pos++;
             a->extra_zero_byte = 0;
 
@@ -846,7 +849,9 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
             b->last = buf->last;
         }
 
-        if ((a->length == 0) && a->extra_zero_byte && (buf->pos < buf->last)) {
+        if ((a->length == 0) && a->extra_zero_byte 
+                && (buf->pos < buf->last) && (*(buf->pos) == 0x00)) {
+
             /* The last byte of this message always seems to be
                0x00 and is not part of the chunk. */
             buf->pos++;
