@@ -229,6 +229,8 @@ struct ajp_msg
 
 #define DUMP_LENGTH                 64
 
+ngx_int_t ajp_msg_is_zero_length(u_char *head);
+
 /**
  * Begin to parse an AJP Message, move the buffer header to the type's position.
  *

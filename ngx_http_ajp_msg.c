@@ -24,11 +24,25 @@ ajp_msg_check_header(ajp_msg_t *msg)
 
 
 ngx_int_t 
+ajp_msg_is_zero_length(u_char *head)
+{
+
+    if (head[0] == 0x41 && head[1] == 0x42 &&
+            head[3] == 0x00 && head[4] == 0x00)
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+
+ngx_int_t 
 ajp_msg_parse_begin(ajp_msg_t *msg)
 {
     ngx_buf_t *buf = msg->buf;
 
-    if (buf->end <= buf->pos + AJP_HEADER_LEN) {
+    if (buf->last <= buf->pos + AJP_HEADER_LEN) {
         return NGX_ERROR;
     }
 
@@ -413,7 +427,7 @@ ajp_msg_dump(ngx_pool_t *pool, ajp_msg_t *msg, char *err)
     }
 
     len = dump + 256;
-    p = rv = ngx_palloc(pool, len);
+    p = rv = ngx_pcalloc(pool, len);
     if (rv == NULL) {
         return NULL;
     }
@@ -432,6 +446,8 @@ ajp_msg_dump(ngx_pool_t *pool, ajp_msg_t *msg, char *err)
             p = ngx_snprintf(p, last - p, "\n");
         }
     }
+
+    p = ngx_snprintf(p, last - p, "\n");
 
     return rv;
 }

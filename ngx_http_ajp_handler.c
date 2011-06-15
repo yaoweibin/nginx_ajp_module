@@ -694,9 +694,32 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
     save_used = 0;
     while(buf->pos < buf->last) {
 
+        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, p->log, 0,
+                "input filter packet, begin length:%z, buffer_size:%z",
+                       a->length, ngx_buf_size(buf));
+
         /* This a new data packet */
         if (a->length == 0) {
+
+            /* zero length packet? */
+            if (ngx_buf_size(buf) == AJP_HEADER_LEN) {
+                if (ajp_msg_is_zero_length(buf->pos)) {
+
+                    ngx_http_ajp_end_response(a, p, 0);
+                    buf->pos = buf->last;
+
+                    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, p->log, 0,
+                            "input filter packet with zero data response, no reuse");
+
+                    return NGX_OK;
+                }
+            }
+
             if (ngx_buf_size(buf) < (AJP_HEADER_LEN + 1)) {
+
+                ngx_log_error(NGX_LOG_DEBUG, r->connection->log, 0,
+                        "ngx_http_ajp_input_filter: save_tiny_buffer=%O", ngx_buf_size(buf));
+
                 ngx_http_ajp_input_filter_save_tiny_buffer(r, buf);
                 break;
             }
@@ -704,8 +727,11 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
             msg = ajp_msg_reuse(&a->msg);
 
             if ((a->save != NULL) && ngx_buf_size(a->save->buf)) {
+
                 sb = a->save->buf;
                 size = sb->last - sb->pos;
+                ngx_log_error(NGX_LOG_DEBUG, r->connection->log, 0,
+                        "ngx_http_ajp_input_filter: use saved tiny buffer=%O", ngx_buf_size(sb));
 
                 offset = size = AJP_HEADER_SAVE_SZ - size;
                 if ((size_t)ngx_buf_size(buf) >= size) {
@@ -783,10 +809,6 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
             }
         }
 
-        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, p->log, 0,
-                "input filter packet, length:%z, buffer_size:%z",
-                       a->length, ngx_buf_size(buf));
-
         /* Get a zero length packet */
         if ((a->length == 0) && a->extra_zero_byte 
                 && (buf->pos < buf->last) && (*(buf->pos) == 0x00)) {
@@ -796,6 +818,10 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
 
             continue;
         }
+
+        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, p->log, 0,
+                "input filter packet, length:%z, buffer_size:%z",
+                       a->length, ngx_buf_size(buf));
 
         if (p->free) {
             b = p->free->buf;
