@@ -715,16 +715,13 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
                 }
             }
 
-            if (ngx_buf_size(buf) <= (AJP_HEADER_LEN + 1)) {
+            if (ngx_buf_size(buf) < (AJP_HEADER_LEN + 1)) {
 
                 ngx_log_error(NGX_LOG_DEBUG, r->connection->log, 0,
                         "ngx_http_ajp_input_filter: save_tiny_buffer=%O", ngx_buf_size(buf));
 
                 ngx_http_ajp_input_filter_save_tiny_buffer(r, buf);
-
-                if (ngx_buf_size(a->save->buf) <= (AJP_HEADER_LEN + 1)) {
-                    break;
-                }
+                break;
             }
 
             msg = ajp_msg_reuse(&a->msg);
@@ -736,13 +733,15 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
                 ngx_log_error(NGX_LOG_DEBUG, r->connection->log, 0,
                         "ngx_http_ajp_input_filter: use saved tiny buffer=%O", ngx_buf_size(sb));
 
-                offset = AJP_HEADER_SAVE_SZ - size;
-                if ((size_t)ngx_buf_size(buf) < offset) {
-                    offset = ngx_buf_size(buf);
+                offset = size = AJP_HEADER_SAVE_SZ - size;
+                if ((size_t)ngx_buf_size(buf) >= size) {
+                    ngx_memcpy(sb->last, buf->pos, size);
+                    sb->last += size;
                 }
-
-                ngx_memcpy(sb->last, buf->pos, offset);
-                sb->last += offset;
+                else {
+                    ngx_http_ajp_input_filter_save_tiny_buffer(r, buf);
+                    break;
+                }
 
                 msg->buf = sb;
                 save_used = 1;
@@ -951,10 +950,6 @@ ngx_http_ajp_input_filter_save_tiny_buffer(ngx_http_request_t *r,
         sb = a->save->buf;
 
         size = buf->last - buf->pos;
-        if (size > (size_t)(sb->end - sb->last)) {
-            size = sb->end - sb->last;
-        }
-
         ngx_memcpy(sb->last, buf->pos, size);
 
         sb->last += size;
