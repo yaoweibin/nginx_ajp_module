@@ -22,10 +22,22 @@ typedef enum {
     ngx_http_ajp_st_response_end
 } ngx_http_ajp_state_e;
 
+typedef enum {
+    ngx_http_ajp_pst_init_state = 0,
+    ngx_http_ajp_pst_preamble1,
+    ngx_http_ajp_pst_preamble2,
+    ngx_http_ajp_pst_payload_length_hi,
+    ngx_http_ajp_pst_payload_length_lo,
+    ngx_http_ajp_pst_end_response,
+    ngx_http_ajp_pst_data_length_hi,
+    ngx_http_ajp_pst_data_length_lo
+} ngx_http_ajp_packet_state_e;
 
 typedef struct {
     ngx_http_ajp_state_e           state;
+    ngx_http_ajp_packet_state_e    pstate;
 
+    u_char                         length_hi;
     /* record the response body chunk packet's length */
     size_t                         length;
 
@@ -34,9 +46,6 @@ typedef struct {
 
     /* reuse in sending request and receiving response */
     ajp_msg_t                      msg;
-
-    /* save tiny buffer for packet parsing */
-    ngx_chain_t                   *save;
 
     /* save the left request body buffers */
     ngx_chain_t                   *body;
