@@ -697,8 +697,12 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
 
         /* This a new data packet */
         if (a->length == 0) {
-            if (a->extra_zero_byte && (*(buf->pos) == 0x00)) {
-                buf->pos++;
+
+            if (a->extra_zero_byte) { 
+                if (*(buf->pos) == 0x00){
+                    buf->pos++;
+                }
+
                 a->extra_zero_byte = 0;
             }
 
@@ -831,8 +835,8 @@ ngx_http_ajp_process_packet_header(ngx_http_request_t *r,
     while(buf->pos < buf->last) {
         ch = *buf->pos++;
 
-        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                "http ajp packet header byte: %02Xd", ch);
+        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                "http ajp packet header pstate: %d, byte: %02Xd", state, ch);
 
         switch (state) {
         case ngx_http_ajp_pst_init_state:
@@ -894,6 +898,7 @@ ngx_http_ajp_process_packet_header(ngx_http_request_t *r,
             }
 
             ngx_http_ajp_end_response(a, r->upstream->pipe, reuse); 
+            a->pstate = ngx_http_ajp_pst_init_state;
 
             return NGX_DONE;
 
@@ -906,6 +911,7 @@ ngx_http_ajp_process_packet_header(ngx_http_request_t *r,
         case ngx_http_ajp_pst_data_length_lo:
             a->length = (a->length_hi << 8) + ch; 
 
+            a->pstate = ngx_http_ajp_pst_init_state;
             a->length_hi = 0x00;
             a->extra_zero_byte = 1;
 
