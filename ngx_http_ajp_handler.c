@@ -787,6 +787,10 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
             b->last = buf->last;
         }
 
+        if (b->pos == b->last) {
+            b->sync = 1;
+        }
+
         if ((a->length == 0) && a->extra_zero_byte 
                 && (buf->pos < buf->last) && (*(buf->pos) == 0x00)) {
 
