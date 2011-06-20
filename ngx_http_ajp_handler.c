@@ -323,7 +323,7 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
         rc = ajp_msg_parse_begin(msg);
         if (rc != NGX_OK) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                    "ngx_http_ajp_input_filter: bad header\n" 
+                    "ngx_http_ajp_process_header: bad header\n" 
                     "%s",
                     ajp_msg_dump(r->pool, msg, "bad header"));
 
@@ -713,7 +713,7 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
             }
 
             if (rc == NGX_DONE) {
-                return NGX_OK;
+                break;
             }
 
             if (rc == NGX_ERROR) {
@@ -722,11 +722,13 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
         }
 
         /* Get a zero length packet */
-        if ((a->length == 0) && a->extra_zero_byte 
-                && (buf->pos < buf->last) && (*(buf->pos) == 0x00)) {
+        if (a->length == 0) {
 
-            buf->pos++;
-            a->extra_zero_byte = 0;
+            if (a->extra_zero_byte && 
+                    (buf->pos < buf->last) && (*(buf->pos) == 0x00)) {
+                buf->pos++;
+                a->extra_zero_byte = 0;
+            }
 
             continue;
         }
@@ -900,6 +902,9 @@ ngx_http_ajp_process_packet_header(ngx_http_request_t *r,
             else {
                 reuse = 0;
             }
+
+            ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                    "ngx_http_ajp_end_response: reuse=%d", reuse);
 
             ngx_http_ajp_end_response(a, r->upstream->pipe, reuse); 
             a->pstate = ngx_http_ajp_pst_init_state;
