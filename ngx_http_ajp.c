@@ -608,7 +608,6 @@ ajp_unmarshal_response(ajp_msg_t *msg,
     ngx_str_t                       str;
     ngx_log_t                      *log;
     ngx_table_elt_t                *h;
-    ngx_http_ajp_ctx_t             *a;
     ngx_http_upstream_t            *u;
     ngx_http_upstream_header_t     *hh;
     ngx_http_upstream_main_conf_t  *umcf;
@@ -616,8 +615,6 @@ ajp_unmarshal_response(ajp_msg_t *msg,
     log = r->connection->log; 
 
     umcf = ngx_http_get_module_main_conf(r, ngx_http_upstream_module);
-
-    a = ngx_http_get_module_ctx(r, ngx_http_ajp_module);
 
     u = r->upstream;
 

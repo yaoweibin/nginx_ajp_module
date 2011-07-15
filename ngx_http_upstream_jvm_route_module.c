@@ -579,10 +579,6 @@ ngx_http_upstream_init_jvm_route(ngx_conf_t *cf, ngx_http_upstream_srv_conf_t *u
     ngx_uint_t                              shm_size;
     ngx_shm_zone_t                         *shm_zone;
     ngx_http_upstream_jvm_route_peers_t    *peers;
-    ngx_http_upstream_jvm_route_srv_conf_t *ujrscf;
-
-    ujrscf = ngx_http_conf_upstream_srv_conf(us,
-                                          ngx_http_upstream_jvm_route_module);
 
     if (ngx_http_upstream_init_jvm_route_rr(cf, us) != NGX_OK) {
         return NGX_ERROR;

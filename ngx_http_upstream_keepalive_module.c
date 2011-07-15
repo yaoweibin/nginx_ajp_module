@@ -274,7 +274,6 @@ ngx_http_upstream_free_keepalive_peer(ngx_peer_connection_t *pc, void *data,
     ngx_http_upstream_keepalive_peer_data_t  *kp = data;
     ngx_http_upstream_keepalive_cache_t      *item;
 
-    ngx_uint_t            status;
     ngx_queue_t          *q;
     ngx_connection_t     *c;
     ngx_http_upstream_t  *u;
@@ -312,7 +311,12 @@ ngx_http_upstream_free_keepalive_peer(ngx_peer_connection_t *pc, void *data,
      */
 
     u = kp->upstream;
+
+#if !(NGX_AJP_MODULE)
+    ngx_uint_t            status;
+
     status = u->headers_in.status_n;
+#endif
 
     if (!kp->failed
         && pc->connection != NULL
