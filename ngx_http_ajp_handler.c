@@ -277,6 +277,24 @@ ngx_http_ajp_reinit_request(ngx_http_request_t *r)
 }
 
 
+static ngx_list_t *
+ngx_list_reinit(ngx_list_t *list)
+{
+    ngx_list_part_t  *head;
+
+    head = &list->part;
+
+    if (head->nelts > 0) {
+        list->last = head;
+
+        head->nelts = 0;
+        head->next = NULL;
+    }
+
+    return list;
+}
+
+
 static ngx_int_t
 ngx_http_ajp_process_header(ngx_http_request_t *r)
 {
@@ -359,11 +377,15 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
                     return NGX_OK;
                 }
                 else if (rc == AJP_EOVERFLOW) {
+                    a->state = ngx_http_ajp_st_response_recv_headers;
+
+                    /* reinit the headers_int list, the memory may be stale */
+                    ngx_list_reinit(&u->headers_in.headers);
+
                     /* 
                      * It's an uncomplete AJP packet, move back to the header of packet, 
                      * and parse the header again in next call
                      * */
-                    a->state = ngx_http_ajp_st_response_recv_headers;
                     return ngx_http_ajp_move_buffer(r, buf, pos, last);
                 }
                 else {
