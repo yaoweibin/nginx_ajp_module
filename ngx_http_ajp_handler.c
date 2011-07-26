@@ -457,7 +457,11 @@ ngx_http_ajp_move_buffer(ngx_http_request_t *r, ngx_buf_t *buf, u_char *pos, u_c
 
     /*
      * The first buffer, there should have enough buffer room.
+     * Back to the orginal postion.
      * */
+
+    buf->pos = pos;
+
     return NGX_AGAIN;
 }
 
