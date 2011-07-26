@@ -437,6 +437,9 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
 static ngx_int_t 
 ngx_http_ajp_move_buffer(ngx_http_request_t *r, ngx_buf_t *buf, u_char *pos, u_char *last)
 {
+    /*
+     * The first buffer, there should have enough buffer room.
+     */
     if (buf->last == buf->end) {
         buf->pos = buf->start;
         buf->last = buf->start + (last - pos);
@@ -454,13 +457,13 @@ ngx_http_ajp_move_buffer(ngx_http_request_t *r, ngx_buf_t *buf, u_char *pos, u_c
 
         ngx_memcpy(buf->pos, pos, last - pos);
     }
+    else {
+        buf->pos = pos;
+    }
 
     /*
-     * The first buffer, there should have enough buffer room.
      * Back to the orginal postion.
      * */
-
-    buf->pos = pos;
 
     return NGX_AGAIN;
 }
