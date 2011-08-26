@@ -458,12 +458,11 @@ ngx_http_ajp_move_buffer(ngx_http_request_t *r, ngx_buf_t *buf, u_char *pos, u_c
         ngx_memcpy(buf->pos, pos, last - pos);
     }
     else {
+        /*
+         * Back to the orginal postion.
+         * */
         buf->pos = pos;
     }
-
-    /*
-     * Back to the orginal postion.
-     * */
 
     return NGX_AGAIN;
 }
