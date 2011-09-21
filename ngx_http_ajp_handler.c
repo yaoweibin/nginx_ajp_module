@@ -14,6 +14,7 @@ static ngx_int_t ngx_http_ajp_create_key(ngx_http_request_t *r);
 static ngx_int_t ngx_http_ajp_create_request(ngx_http_request_t *r);
 static ngx_int_t ngx_http_ajp_reinit_request(ngx_http_request_t *r);
 static ngx_int_t ngx_http_ajp_process_header(ngx_http_request_t *r);
+static ngx_int_t ngx_http_ajp_input_filter_init(void *data);
 static ngx_int_t ngx_http_ajp_input_filter(ngx_event_pipe_t *p,
     ngx_buf_t *buf);
 static void ngx_http_ajp_abort_request(ngx_http_request_t *r);
@@ -33,7 +34,7 @@ static ngx_int_t ngx_http_ajp_move_buffer(ngx_http_request_t *r, ngx_buf_t *buf,
         u_char *pos, u_char *last);
 static ngx_int_t ngx_http_ajp_process_packet_header(ngx_http_request_t *r,
         ngx_http_ajp_ctx_t *a, ngx_buf_t *buf);
-static void ngx_http_ajp_end_response(ngx_http_ajp_ctx_t *a, ngx_event_pipe_t *p, int reuse);
+static void ngx_http_ajp_end_response(ngx_http_request_t *r, int reuse);
 
 
 ngx_int_t
@@ -100,7 +101,10 @@ ngx_http_ajp_handler(ngx_http_request_t *r)
 
     u->pipe->input_filter = ngx_http_ajp_input_filter;
     u->pipe->input_ctx = r;
+#if (nginx_version) < 1001004 
     u->pipe->keepalive = 1;
+#endif
+    u->input_filter_init = ngx_http_ajp_input_filter_init;
 
     rc = ngx_http_read_client_request_body(r, ngx_http_upstream_init);
 
@@ -411,7 +415,7 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
                     return ngx_http_ajp_move_buffer(r, buf, pos, last);
                 }
 
-                ngx_http_ajp_end_response(a, u->pipe, reuse);
+                ngx_http_ajp_end_response(r, reuse);
 
                 buf->last_buf = 1;
                 return NGX_OK;
@@ -431,6 +435,19 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
     }
 
     return NGX_AGAIN;
+}
+
+
+static ngx_int_t
+ngx_http_ajp_input_filter_init(void *data)
+{
+#if (nginx_version) >= 1001004 
+    ngx_http_request_t           *r = data;
+
+    r->upstream->pipe->length = (off_t) AJP_HEADER_LEN;
+#endif
+
+    return NGX_OK;
 }
 
 
@@ -698,11 +715,12 @@ ngx_http_upstream_dummy_handler(ngx_http_request_t *r,
 static ngx_int_t
 ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
 {
-    ngx_int_t                rc;
-    ngx_buf_t               *b, **prev;
-    ngx_chain_t             *cl;
-    ngx_http_request_t      *r;
-    ngx_http_ajp_ctx_t      *a;
+    ngx_int_t                     rc;
+    ngx_buf_t                    *b, **prev;
+    ngx_chain_t                  *cl;
+    ngx_http_request_t           *r;
+    ngx_http_ajp_ctx_t           *a;
+    ngx_http_ajp_loc_conf_t      *alcf;
 
     if (buf->pos == buf->last) {
         return NGX_OK;
@@ -710,6 +728,7 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
 
     r = p->input_ctx;
     a = ngx_http_get_module_ctx(r, ngx_http_ajp_module);
+    alcf = ngx_http_get_module_loc_conf(r, ngx_http_ajp_module);
 
     ngx_log_error(NGX_LOG_DEBUG, r->connection->log, 0,
             "ngx_http_ajp_input_filter: state(%d)", a->state);
@@ -837,6 +856,21 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
     ngx_log_debug2(NGX_LOG_DEBUG_EVENT, p->log, 0,
             "free buf %p %z", buf->pos, ngx_buf_size(buf));
 
+    if (alcf->keep_conn) {
+#if (nginx_version) >= 1001004 
+        /* set p->length, minimal amount of data we want to see */
+        if (!a->length) {
+            p->length = 1;
+        } else {
+            p->length = a->length;
+        }
+
+        if (p->upstream_done) {
+            p->length = 0;
+        }
+#endif
+    }
+
     if (b) {
         b->shadow = buf;
         b->last_shadow = 1;
@@ -934,7 +968,7 @@ ngx_http_ajp_process_packet_header(ngx_http_request_t *r,
             ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
                     "ngx_http_ajp_end_response: reuse=%d", reuse);
 
-            ngx_http_ajp_end_response(a, r->upstream->pipe, reuse); 
+            ngx_http_ajp_end_response(r, reuse); 
             a->pstate = ngx_http_ajp_pst_init_state;
 
             return NGX_DONE;
@@ -963,10 +997,29 @@ ngx_http_ajp_process_packet_header(ngx_http_request_t *r,
 
 
 static void
-ngx_http_ajp_end_response(ngx_http_ajp_ctx_t *a, ngx_event_pipe_t *p, int reuse) 
+ngx_http_ajp_end_response(ngx_http_request_t *r, int reuse) 
 {
+    ngx_event_pipe_t             *p;
+    ngx_http_ajp_ctx_t           *a;
+    ngx_http_ajp_loc_conf_t      *alcf;
+
+    a = ngx_http_get_module_ctx(r, ngx_http_ajp_module);
+    alcf = ngx_http_get_module_loc_conf(r, ngx_http_ajp_module);
+
+    if (a == NULL || alcf == NULL) {
+        return;
+    }
+
+    p = r->upstream->pipe;
+
     a->ajp_reuse = reuse;
+#if (nginx_version) < 1001004 
     p->keepalive = reuse ? 1 : 0;
+#else
+    if (alcf->keep_conn && reuse) {
+        r->upstream->keepalive = 1;
+    }
+#endif
     p->upstream_done = 1;
     a->state = ngx_http_ajp_st_response_end;
 }

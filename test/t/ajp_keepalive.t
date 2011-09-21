@@ -36,7 +36,8 @@ __DATA__
         keepalive 10;
     }
 --- config
-    location / {      
+    location / {
+        ajp_keep_conn on;
         ajp_pass tomcats;
     }
 --- request
@@ -50,6 +51,20 @@ __DATA__
     }
 --- config
     location / {      
+        ajp_pass tomcats;
+    }
+--- request
+    GET /index.html
+--- response_body_like: ^(.*)$
+
+=== TEST 3: the GET of AJP without keepalive module
+--- http_config
+    upstream tomcats{
+        server 127.0.0.1:8009;
+    }
+--- config
+    location / {      
+        ajp_keep_conn on;
         ajp_pass tomcats;
     }
 --- request

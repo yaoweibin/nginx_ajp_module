@@ -17,6 +17,8 @@ typedef struct {
     ngx_array_t                   *ajp_lengths;
     ngx_array_t                   *ajp_values;
 
+    ngx_flag_t                     keep_conn;
+
 #if (NGX_HTTP_CACHE)
     ngx_http_complex_value_t       cache_key;
 #endif

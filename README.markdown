@@ -297,6 +297,20 @@ Note: You need to explicitly define the error_page handler for this for it to be
 
 
 
+## ajp_keep_conn
+
+
+
+__syntax:__ _ajp_keep_conn on|off;_
+
+__default:__ _ajp_keep_conn off;_
+
+__context:__ _http, server, location_
+
+This directive determines whether or not to keep the connectin alive with backend server.
+
+
+
 ## ajp_next_upstream
 
 

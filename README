@@ -222,6 +222,16 @@ Directives
     there is no custom handler for it it does not show its default pages.
     This allows to intercept some errors, while passing others as are."
 
+  ajp_keep_conn
+    syntax: *ajp_keep_conn on|off;*
+
+    default: *ajp_keep_conn off;*
+
+    context: *http, server, location*
+
+    This directive determines whether or not to keep the connectin alive
+    with backend server.
+
   ajp_next_upstream
     syntax: *ajp_next_upstream
     [error|timeout|invalid_header|http_500|http_502|http_503|http_504|http_4
