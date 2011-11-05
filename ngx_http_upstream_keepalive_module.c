@@ -402,6 +402,20 @@ ngx_http_upstream_keepalive_close_handler(ngx_event_t *ev)
     item = c->data;
     conf = item->conf;
 
+#if (NGX_DEBUG)
+    u_char                                   buffer[64], n, i;
+
+    n = c->recv(c, buffer, 64);
+
+    if (n > 0) {
+        for (i = 0; i < n; i++) {
+            ngx_log_debug1(NGX_LOG_DEBUG_HTTP, ev->log, 0,
+                    "keepalive close handler, dump: %02Xd", buffer[i]);
+        }
+    }
+
+#endif
+
     ngx_queue_remove(&item->queue);
     ngx_close_connection(item->connection);
     ngx_queue_insert_head(&conf->free, &item->queue);
