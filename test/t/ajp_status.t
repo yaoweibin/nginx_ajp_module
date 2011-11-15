@@ -22,6 +22,7 @@ use lib 'lib';
 use Test::Nginx::LWP;
 
 plan tests => repeat_each() * 2 * blocks();
+$ENV{TEST_NGINX_TOMCAT_AJP_PORT} ||= 8009;
 
 #no_diff;
 
@@ -32,7 +33,7 @@ __DATA__
 === TEST 1: the jvm_route status of AJP
 --- http_config
     upstream tomcats{      
-        server 127.0.0.1:8009 srun_id=jvm1;
+        server 127.0.0.1:$TEST_NGINX_TOMCAT_AJP_PORT srun_id=jvm1;
         jvm_route $cookie_JSESSIONID reverse;
         keepalive 10;
     }

@@ -22,6 +22,7 @@ use lib 'lib';
 use Test::Nginx::LWP;
 
 plan tests => repeat_each() * 2 * blocks();
+$ENV{TEST_NGINX_TOMCAT_AJP_PORT} ||= 8009;
 
 #no_diff;
 
@@ -32,7 +33,7 @@ __DATA__
 === TEST 1: the first time request for the cache
 --- http_config
     upstream tomcats{      
-        server 127.0.0.1:8009;
+        server 127.0.0.1:$TEST_NGINX_TOMCAT_AJP_PORT;
         keepalive 10;
     }
 
@@ -55,7 +56,7 @@ __DATA__
 === TEST 2: the second time request for the cache
 --- http_config
     upstream tomcats{      
-        server 127.0.0.1:8009;
+        server 127.0.0.1:$TEST_NGINX_TOMCAT_AJP_PORT;
         keepalive 10;
     }
 

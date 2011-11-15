@@ -21,7 +21,8 @@
 #define AJP13_SSL_KEY_SIZE_INDICATOR    "SSL_CIPHER_USEKEYSIZE"
 
 
-#define AJP_EOVERFLOW  1001           
+#define AJP_NULL_STRING_LENGTH (uint16_t)(-1)
+#define AJP_EOVERFLOW          1001           
 
 typedef struct ajp_msg ajp_msg_t;
 

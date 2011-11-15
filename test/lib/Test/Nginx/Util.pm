@@ -39,7 +39,8 @@ if ($Profiling) {
 
 our $Workers                = 1;
 our $WorkerConnections      = 64;
-our $LogLevel               = 'debug';
+#our $LogLevel               = 'debug';
+our $LogLevel               = 'error';
 our $MasterProcessEnabled   = 'on';
 our $DaemonEnabled          = 'on';
 our $ServerPort             = 1984;
