@@ -23,6 +23,7 @@ use Test::Nginx::LWP;
 
 plan tests => repeat_each() * 2 * blocks();
 $ENV{TEST_NGINX_TOMCAT_AJP_PORT} ||= 8009;
+no_root_location();
 
 #no_diff;
 
