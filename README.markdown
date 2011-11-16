@@ -703,6 +703,8 @@ Grab the nginx source code from nginx.org ([http://nginx.org/](http://nginx.org/
 
 - My test bed is 0.7.65 and 0.8.40.
 
+- For Nginx-1.1.4+, you should use the branch for_1.1.4 ([https://github.com/yaoweibin/nginx_ajp_module/tree/for_1.1.4](https://github.com/yaoweibin/nginx_ajp_module/tree/for_1.1.4)).
+
 
 
 

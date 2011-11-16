@@ -630,36 +630,44 @@ ajp_unmarshal_response(ajp_msg_t *msg,
 
     u = r->upstream;
 
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, log, 0, "ajp_unmarshal_response");
+
     rc = ajp_msg_get_uint16(msg, &status);
     if (rc != NGX_OK) {
-        if (rc != AJP_EOVERFLOW) {
-            ngx_log_error(NGX_LOG_ERR, log, 0,
-                    "ajp_unmarshal_response: Null status");
-        }
         return rc;
     }
     u->headers_in.status_n = status;
 
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, log, 0,
+            "ajp_unmarshal_response: status = %d", status);
+
     rc = ajp_msg_get_string(msg, &str);
     if (rc == NGX_OK) {
-        last = ngx_snprintf(line, 1024, "%d %V", status, &str);
+        if (str.len > 0) {
+            last = ngx_snprintf(line, 1024, "%d %V", status, &str);
 
-        str.data = line;
-        str.len = last - line;
+            str.data = line;
+            str.len = last - line;
 
-        u->headers_in.status_line.data = ngx_pstrdup(r->pool, &str);
-        u->headers_in.status_line.len = str.len;
-    } else {
-        u->headers_in.status_line.data = NULL;
-        u->headers_in.status_line.len = 0;
+            u->headers_in.status_line.data = ngx_pstrdup(r->pool, &str);
+            u->headers_in.status_line.len = str.len;
+        }
+        else {
+            u->headers_in.status_line.data = NULL;
+            u->headers_in.status_line.len = 0;
+        }
     }
+    else {
+        return rc;
+    }
+
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, log, 0,
+            "ajp_unmarshal_response: status_line = \"%V\"", 
+            &u->headers_in.status_line);
 
     if (u->state) {
         u->state->status = u->headers_in.status_n;
     }
-
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, log, 0,
-            "ajp_unmarshal_response: status = %d", status);
 
     num_headers = 0;
     rc = ajp_msg_get_uint16(msg, &num_headers);

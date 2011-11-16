@@ -454,6 +454,10 @@ ngx_http_ajp_input_filter_init(void *data)
 static ngx_int_t 
 ngx_http_ajp_move_buffer(ngx_http_request_t *r, ngx_buf_t *buf, u_char *pos, u_char *last)
 {
+    /* Move the end part data to the head of buffer, reuse the buffer. */
+    ngx_log_error(NGX_LOG_WARN, r->connection->log, 0,
+            "ngx_http_ajp_process_header: move buffer for the ajp packet.\n");
+
     /*
      * The first buffer, there should have enough buffer room.
      */
@@ -467,10 +471,6 @@ ngx_http_ajp_move_buffer(ngx_http_request_t *r, ngx_buf_t *buf, u_char *pos, u_c
 
             return NGX_ERROR;
         }
-
-        /* Move the end part data to the head of buffer, reuse the buffer. */
-        ngx_log_error(NGX_LOG_WARN, r->connection->log, 0,
-                "ngx_http_ajp_process_header: move buffer for the ajp packet.\n");
 
         ngx_memcpy(buf->pos, pos, last - pos);
     }
@@ -739,7 +739,7 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
     while(buf->pos < buf->last) {
 
         ngx_log_debug2(NGX_LOG_DEBUG_HTTP, p->log, 0,
-                "input filter packet, begin length:%z, buffer_size:%z",
+                "input filter packet, begin length: %z, buffer_size: %z",
                        a->length, ngx_buf_size(buf));
 
         /* This a new data packet */
@@ -755,6 +755,10 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
 
             rc = ngx_http_ajp_process_packet_header(r, a, buf);
 
+            if (buf->pos == buf->last) {
+                break;
+            }
+
             if (rc == NGX_AGAIN) {
                 break;
             }
@@ -766,6 +770,7 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
             if (rc == NGX_ERROR) {
                 return NGX_ERROR;
             }
+
         }
 
         /* Get a zero length packet */
@@ -900,13 +905,15 @@ ngx_http_ajp_process_packet_header(ngx_http_request_t *r,
     ngx_http_ajp_packet_state_e    state;
 
     state = a->pstate;
-    while(buf->pos < buf->last) {
-        ch = *buf->pos++;
 
+    while(buf->pos < buf->last) {
+
+        ch = *buf->pos++;
         ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
                 "http ajp packet header pstate: %d, byte: %02Xd", state, ch);
 
         switch (state) {
+
         case ngx_http_ajp_pst_init_state:
             if (ch != 0x41) {
                 ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
