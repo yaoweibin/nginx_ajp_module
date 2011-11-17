@@ -399,6 +399,10 @@ ngx_http_upstream_free_keepalive_peer(ngx_peer_connection_t *pc, void *data,
 
         item = ngx_queue_data(q, ngx_http_upstream_keepalive_cache_t, queue);
 
+        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, pc->log, 0,
+                "free keepalive peer: exceed max cached keepalive connection, "
+                "close connection %p, fd:%d", item->connection, item->connection->fd);
+
         ngx_http_upstream_keepalive_close(item->connection);
 
     } else {
