@@ -575,6 +575,10 @@ Authors
     Matthew Ma(东坡) *mj19821214 AT gmail DOT com*
     Weibin Yao(姚伟斌) *yaoweibin AT gmail DOT com*
 
+Acknowledgments
+    Thanks 李金虎(beagem@163.com) to improve the keepalive feature with this
+    module.
+
 License
     This README template is from agentzh (<http://github.com/agentzh>).
 

@@ -779,6 +779,20 @@ Grab the nginx source code from nginx.org ([http://nginx.org/](http://nginx.org/
 
 
 
+# Acknowledgments
+
+
+
+
+
+
+
+- Thanks 李金虎(beagem@163.com) to improve the keepalive feature with this module.
+
+
+
+
+
 # License
 
 
