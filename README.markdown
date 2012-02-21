@@ -29,6 +29,7 @@ http {
         listen 80;
 
         location / {
+            ajp_keep_conn on;
             ajp_pass tomcats;
         }
     }
