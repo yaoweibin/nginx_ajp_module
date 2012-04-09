@@ -1,4 +1,4 @@
-﻿= Name =
+﻿﻿= Name =
 
 '''nginx_ajp_module''' - support AJP protocol proxy with Nginx
 
@@ -501,12 +501,12 @@ NOTE: This module does not support the parameter of 'backup' yet.
 
 Download the latest version of the release tarball of this module from [http://github.com/yaoweibin/nginx_ajp_module github]
 
-Grab the nginx source code from [http://nginx.org/ nginx.org], for example, the version 0.7.65 (see nginx compatibility), and then build the source with this module:
+Grab the nginx source code from [http://nginx.org/ nginx.org], for example, the version 1.0.14 (see nginx compatibility), and then build the source with this module:
 
 <geshi lang="bash">
-    $ wget 'http://nginx.org/download/nginx-0.7.65.tar.gz'
-    $ tar -xzvf nginx-0.7.65.tar.gz
-    $ cd nginx-0.7.65/
+    $ wget 'http://nginx.org/download/nginx-1.0.14.tar.gz'
+    $ tar -xzvf nginx-1.0.14.tar.gz
+    $ cd nginx-1.0.14/
     $ patch -p1 < /path/to/nginx_ajp_module/ajp.patch
 
     $ ./configure --add-module=/path/to/nginx_ajp_module
@@ -517,7 +517,7 @@ Grab the nginx source code from [http://nginx.org/ nginx.org], for example, the 
     
 = Compatibility =
 
-* My test bed is 0.7.65 and 0.8.40.
+* My test bed is 1.0.14+
 * For Nginx-1.1.4+, you should use the branch [https://github.com/yaoweibin/nginx_ajp_module/tree/for_1.1.4 for_1.1.4].
 
 = TODO =

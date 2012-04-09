@@ -4,7 +4,7 @@
 
 
 
-__nginx_ajp_module__ - support AJP protocol proxy with Nginx
+__nginx\_ajp\_module__ - support AJP protocol proxy with Nginx
 
 
 
@@ -51,13 +51,13 @@ The motivation of writing these modules is Nginx's high performance and robustne
 
 
 
-## ajp_buffers
+## ajp\_buffers
 
 
 
-__syntax:__ _ajp_buffers the_number is_size;_
+__syntax:__ _ajp\_buffers the\_number is\_size;_
 
-__default:__ _ajp_buffers 8 4k/8k;_
+__default:__ _ajp\_buffers 8 4k/8k;_
 
 __context:__ _http, server, location_
 
@@ -65,13 +65,13 @@ This directive sets the number and the size of buffers, into which will be read 
 
 
 
-## ajp_buffer_size
+## ajp\_buffer\_size
 
 
 
-__syntax:__ _ajp_buffer_size the_size;_
+__syntax:__ _ajp\_buffer\_size the\_size;_
 
-__default:__ _ajp_buffer_size 4k/8k;_
+__default:__ _ajp\_buffer\_size 4k/8k;_
 
 __context:__ _http, server, location_
 
@@ -83,11 +83,11 @@ By default, the buffersize is equal to the size of one buffer in directive `ajp_
 
 
 
-## ajp_cache
+## ajp\_cache
 
 
 
-__syntax:__ _ajp_cache zone;_
+__syntax:__ _ajp\_cache zone;_
 
 __default:__ _off_
 
@@ -97,11 +97,11 @@ The directive specifies the area  which actually is the share memory's name for 
 
 
 
-## ajp_cache_key
+## ajp\_cache\_key
 
 
 
-__syntax:__ _ajp_cache_key line;_
+__syntax:__ _ajp\_cache\_key line;_
 
 __default:__ _none_
 
@@ -111,23 +111,23 @@ The directive specifies what information is included in the key for caching, for
 
 
 
-ajp_cache_key "$host$request_uri$cookie_user";
+ajp\_cache\_key "$host$request\_uri$cookie\_user";
 
 
 
 Note that by default, the hostname of the server is not included in the cache key. If you are using subdomains for different locations on your website, you need to include it, e.g. by changing the cache key to something like
 
-ajp_cache_key "$scheme$host$request_uri";
+ajp\_cache\_key "$scheme$host$request\_uri";
 
 
 
-## ajp_cache_methods
+## ajp\_cache\_methods
 
 
 
-__syntax:__ _ajp_cache_methods [GET HEAD POST];_
+__syntax:__ _ajp\_cache\_methods \[GET HEAD POST\];_
 
-__default:__ _ajp_cache_methods GET HEAD;_
+__default:__ _ajp\_cache\_methods GET HEAD;_
 
 __context:__ _main,http,location_
 
@@ -135,19 +135,19 @@ GET/HEAD is syntax sugar, i.e. you can not disable GET/HEAD even if you set just
 
 
 
-ajp_cache_methods  POST;
+ajp\_cache\_methods  POST;
 
 
 
 
 
-## ajp_cache_min_uses
+## ajp\_cache\_min\_uses
 
 
 
-__syntax:__ _ajp_cache_min_uses n;_
+__syntax:__ _ajp\_cache\_min\_uses n;_
 
-__default:__ _ajp_cache_min_uses 1;_
+__default:__ _ajp\_cache\_min\_uses 1;_
 
 __context:__ _http, server, location_
 
@@ -155,11 +155,11 @@ TODO: Description.
 
 
 
-## ajp_cache_path
+## ajp\_cache\_path
 
 
 
-__syntax:__ _ajp_cache_path /path/to/cache [levels=m:n keys_zone=name:time inactive=time clean_time=time];_
+__syntax:__ _ajp\_cache\_path /path/to/cache \[levels=m:n keys\_zone=name:time inactive=time clean\_time=time\];_
 
 __default:__ _none_
 
@@ -169,7 +169,7 @@ This directive sets the cache path and other cache parameters. Cached data store
 
 
 
-ajp_cache_path  /data/nginx/cache  levels=1:2   keys_zone=one:10m;
+ajp\_cache\_path  /data/nginx/cache  levels=1:2   keys\_zone=one:10m;
 
 
 
@@ -179,13 +179,13 @@ file names will be like:
 
 
 
-## ajp_cache_use_stale
+## ajp\_cache\_use\_stale
 
 
 
-__syntax:__ _ajp_cache_use_stale [updating|error|timeout|invalid_header|http_500];_
+__syntax:__ _ajp\_cache\_use\_stale \[updating|error|timeout|invalid\_header|http\_500\];_
 
-__default:__ _ajp_cache_use_stale off;_
+__default:__ _ajp\_cache\_use\_stale off;_
 
 __context:__ _http, server, location_
 
@@ -193,11 +193,11 @@ TODO: Description.
 
 
 
-## ajp_cache_valid
+## ajp\_cache\_valid
 
 
 
-__syntax:__ _ajp_cache_valid [http_error_code|time];_
+__syntax:__ _ajp\_cache\_valid \[http\_error\_code|time\];_
 
 __default:__ _none_
 
@@ -207,29 +207,29 @@ TODO: Description.
 
 
 
-## ajp_connect_timeout
+## ajp\_connect\_timeout
 
 
 
-__syntax:__ _ajp_connect_timeout time;_
+__syntax:__ _ajp\_connect\_timeout time;_
 
-__default:__ _ajp_connect_timeout 60s;_
+__default:__ _ajp\_connect\_timeout 60s;_
 
 __context:__ _http, server, location_
 
 This directive assigns a timeout for the connection to the upstream server. It is necessary to keep in mind that this time out cannot be more than 75 seconds.
 
-This is not the time until the server returns the pages, this is the ["ajp_read_timeout"](#pod_"ajp_read_timeout")  statement. If your upstream server is up, but hanging (e.g. it does not have enough threads to process your request so it puts you in the pool of connections to deal with later), then this statement will not help as the connection to the server has been made.
+This is not the time until the server returns the pages, this is the [ ajp\_read\_timeout](#ajp\_read\_timeout)  statement. If your upstream server is up, but hanging (e.g. it does not have enough threads to process your request so it puts you in the pool of connections to deal with later), then this statement will not help as the connection to the server has been made.
 
 
 
-## ajp_header_packet_buffer_size
+## ajp\_header\_packet\_buffer\_size
 
 
 
-__syntax:__ _ajp_header packet_buffer_size;_
+__syntax:__ _ajp\_header packet\_buffer\_size;_
 
-__default:__ _ajp_header_packet_buffer_size 8k;_
+__default:__ _ajp\_header\_packet\_buffer\_size 8k;_
 
 __context:__ _http, server, location_
 
@@ -237,25 +237,25 @@ Set the buffer size of Forward Request packet. The range is (0, 2^16).
 
 
 
-## ajp_hide_header
+## ajp\_hide\_header
 
 
 
-__syntax:__ _ajp_hide_header name;_
+__syntax:__ _ajp\_hide\_header name;_
 
 __context:__ _http, server, location_
 
 By default, Nginx does not pass headers "Status" and "X-Accel-..." from the AJP process back to the client.  This directive can be used to hide other headers as well.
 
-If the headers "Status" and "X-Accel-..." must be provided, then it is necessary to use directive ajp_pass_header to force them to be returned to the client.
+If the headers "Status" and "X-Accel-..." must be provided, then it is necessary to use directive ajp\_pass\_header to force them to be returned to the client.
 
 
 
-## ajp_ignore_headers
+## ajp\_ignore\_headers
 
 
 
-__syntax:__ _ajp_ignore_headers name [name ...];_
+__syntax:__ _ajp\_ignore\_headers name \[name ...\];_
 
 __default:__ _none_
 
@@ -267,13 +267,13 @@ It can specify the string as "[X-Accel-Redirect](http://search.cpan.org/perldoc?
 
 
 
-## ajp_ignore_client_abort
+## ajp\_ignore\_client\_abort
 
 
 
-__syntax:__ _ajp_ignore_client_abort on|off;_
+__syntax:__ _ajp\_ignore\_client\_abort on|off;_
 
-__default:__ _ajp_ignore_client_abort off;_
+__default:__ _ajp\_ignore\_client\_abort off;_
 
 __context:__ _http, server, location_
 
@@ -281,29 +281,29 @@ This directive determines if current request to the AJP-server must be aborted i
 
 
 
-## ajp_intercept_errors
+## ajp\_intercept\_errors
 
 
 
-__syntax:__ _ajp_intercept_errors on|off;_
+__syntax:__ _ajp\_intercept\_errors on|off;_
 
-__default:__ _ajp_intercept_errors off;_
+__default:__ _ajp\_intercept\_errors off;_
 
 __context:__ _http, server, location_
 
-This directive determines whether or not to transfer 4xx and 5xx errors back to the client or to allow Nginx to answer with directive error_page.
+This directive determines whether or not to transfer 4xx and 5xx errors back to the client or to allow Nginx to answer with directive error\_page.
 
-Note: You need to explicitly define the error_page handler for this for it to be useful. As Igor says, "nginx does not intercept an error if there is no custom handler for it it does not show its default pages. This allows to intercept some errors, while passing others as are."
-
-
-
-## ajp_next_upstream
+Note: You need to explicitly define the error\_page handler for this for it to be useful. As Igor says, "nginx does not intercept an error if there is no custom handler for it it does not show its default pages. This allows to intercept some errors, while passing others as are."
 
 
 
-__syntax:__ _ajp_next_upstream [error|timeout|invalid_header|http_500|http_502|http_503|http_504|http_404|off];_
+## ajp\_next\_upstream
 
-__default:__ _ajp_next_upstream error timeout;_
+
+
+__syntax:__ _ajp\_next\_upstream \[error|timeout|invalid\_header|http\_500|http\_502|http\_503|http\_504|http\_404|off\];_
+
+__default:__ _ajp\_next\_upstream error timeout;_
 
 __context:__ _http, server, location_
 
@@ -314,62 +314,54 @@ Directive determines, in what cases the request will be transmitted to the next 
 
 
 - error — an error has occurred while connecting to the server, sending a request to it, or reading its response;
-
 - timeout — occurred timeout during the connection with the server, transfer the request or while reading response from the server;
-
-- invalid_header — server returned a empty or incorrect answer;
-
-- http_500 — server returned answer with code 500;
-
-- http_502 — server returned answer with code 502;
-
-- http_503 — server returned answer with code 503;
-
-- http_504 — server returned answer with code 504;
-
-- http_404 — server returned answer with code 404;
-
+- invalid\_header — server returned a empty or incorrect answer;
+- http\_500 — server returned answer with code 500;
+- http\_502 — server returned answer with code 502;
+- http\_503 — server returned answer with code 503;
+- http\_504 — server returned answer with code 504;
+- http\_404 — server returned answer with code 404;
 - off — it forbids the request transfer to the next server Transferring the request to the next server is only possible when nothing has been transferred to the client -- that is, if an error or timeout arises in the middle of the transfer of the request, then it is not possible to retry the current request on a different server.
 
 
 
 
 
-## ajp_max_data_packet_size
+## ajp\_max\_data\_packet\_size
 
 
 
-__syntax:__ _ajp_max_data_packet_size size;_
+__syntax:__ _ajp\_max\_data\_packet\_size size;_
 
-__default:__ _ajp_max_data_packet_size 8k;_
+__default:__ _ajp\_max\_data\_packet\_size 8k;_
 
 __context:__ _http, server, location_
 
-Set the maximum size of AJP's Data packet. The range is [8k, 2^16];
+Set the maximum size of AJP's Data packet. The range is \[8k, 2^16\];
 
 
 
-## ajp_max_temp_file_size
+## ajp\_max\_temp\_file\_size
 
 
 
-__syntax:__ _ajp_max_temp_file_size size;_
+__syntax:__ _ajp\_max\_temp\_file\_size size;_
 
-__default:__ _ajp_max_temp_file_size 1G;_
+__default:__ _ajp\_max\_temp\_file\_size 1G;_
 
 __context:__ _http, server, location, if_
 
 The maximum size of a temporary file when the content is larger than the proxy buffer.  If file is larger than this size, it will be served synchronously from upstream server rather than buffered to disk.
 
-If ajp_max_temp_file_size is equal to zero, temporary files usage will be disabled.
+If ajp\_max\_temp\_file\_size is equal to zero, temporary files usage will be disabled.
 
 
 
-## ajp_pass
+## ajp\_pass
 
 
 
-__syntax:__ _ajp_pass ajp-server_
+__syntax:__ _ajp\_pass ajp-server_
 
 __default:__ _none_
 
@@ -379,7 +371,7 @@ Directive assigns the port or socket on which the AJP-server is listening. Port 
 
 
 
-ajp_pass   localhost:9000;
+ajp\_pass   localhost:9000;
 
 
 
@@ -387,7 +379,7 @@ using a Unix domain socket:
 
 
 
-ajp_pass   unix:/tmp/ajp.socket;
+ajp\_pass   unix:/tmp/ajp.socket;
 
 
 
@@ -401,29 +393,15 @@ upstream backend  {
 
 }
 
-ajp_pass   backend;
+ajp\_pass   backend;
 
 
 
-## ajp_pass_header
+## ajp\_pass\_header
 
 
 
-__syntax:__ _ajp_pass_header name;_
-
-__context:__ _http, server, location_
-
-TODO: Description.
-
-
-
-## ajp_pass_request_headers
-
-
-
-__syntax:__ _ajp_pass_request_headers [ on | off ];_
-
-__default:__ _ajp_pass_request_headers on;_
+__syntax:__ _ajp\_pass\_header name;_
 
 __context:__ _http, server, location_
 
@@ -431,13 +409,13 @@ TODO: Description.
 
 
 
-## ajp_pass_request_body
+## ajp\_pass\_request\_headers
 
 
 
-__syntax:__ _ajp_pass_request_body [ on | off ] ;_
+__syntax:__ _ajp\_pass\_request\_headers \[ on | off \];_
 
-__default:__ _ajp_pass_request_body on;_
+__default:__ _ajp\_pass\_request\_headers on;_
 
 __context:__ _http, server, location_
 
@@ -445,13 +423,27 @@ TODO: Description.
 
 
 
-## ajp_read_timeout
+## ajp\_pass\_request\_body
 
 
 
-__syntax:__ _ajp_read_timeout time;_
+__syntax:__ _ajp\_pass\_request\_body \[ on | off \] ;_
 
-__default:__ _ajp_read_timeout_time 60_
+__default:__ _ajp\_pass\_request\_body on;_
+
+__context:__ _http, server, location_
+
+TODO: Description.
+
+
+
+## ajp\_read\_timeout
+
+
+
+__syntax:__ _ajp\_read\_timeout time;_
+
+__default:__ _ajp\_read\_timeout\_time 60_
 
 __context:__ _http, server, location_
 
@@ -459,27 +451,27 @@ Directive sets the amount of time for upstream to wait for a ajp process to send
 
 
 
-## ajp_send_lowat
+## ajp\_send\_lowat
 
 
 
-__syntax:__ _ajp_send_lowat [ on | off ];_
+__syntax:__ _ajp\_send\_lowat \[ on | off \];_
 
-__default:__ _ajp_send_lowat off;_
+__default:__ _ajp\_send\_lowat off;_
 
 __context:__ _http, server, location, if_
 
-This directive set SO_SNDLOWAT. This directive is only available on FreeBSD
+This directive set SO\_SNDLOWAT. This directive is only available on FreeBSD
 
 
 
-## ajp_send_timeout
+## ajp\_send\_timeout
 
 
 
-__syntax:__ _ajp_send_timeout time;_
+__syntax:__ _ajp\_send\_timeout time;_
 
-__default:__ _ajp_send_timeout 60;_
+__default:__ _ajp\_send\_timeout 60;_
 
 __context:__ _http, server, location_
 
@@ -487,21 +479,21 @@ This directive assigns timeout with the transfer of request to the upstream serv
 
 
 
-## ajp_store
+## ajp\_store
 
 
 
-__syntax:__ _ajp_store [on | off | path] ;_
+__syntax:__ _ajp\_store \[on | off | path\] ;_
 
-__default:__ _ajp_store off;_
+__default:__ _ajp\_store off;_
 
 __context:__ _http, server, location_
 
 This directive sets the path in which upstream files are stored. The parameter "on" preserves files in accordance with path specified in directives _alias_ or _root_. The parameter "off" forbids storing. Furthermore, the name of the path can be clearly assigned with the aid of the line with the variables:
 
-ajp_store   /data/www$original_uri;
+ajp\_store   /data/www$original\_uri;
 
-The time of modification for the file will be set to the date of "Last-Modified" header in the response. To be able to safe files in this directory it is necessary that the path is under the directory with temporary files, given by directive ajp_temp_path for the data location.
+The time of modification for the file will be set to the date of "Last-Modified" header in the response. To be able to safe files in this directory it is necessary that the path is under the directory with temporary files, given by directive ajp\_temp\_path for the data location.
 
 This directive can be used for creating the local copies for dynamic output of the backend which is not very often changed, for example:
 
@@ -523,91 +515,91 @@ location @fetch {
     root               /data/www;
 }
 
-To be clear ajp_store is not a cache, it's rather mirror on demand.
+To be clear ajp\_store is not a cache, it's rather mirror on demand.
 
 
 
-## ajp_store_access
+## ajp\_store\_access
 
 
 
-__syntax:__ _ajp_store_access users:permissions [users:permission ...];_
+__syntax:__ _ajp\_store\_access users:permissions \[users:permission ...\];_
 
-__default:__ _ajp_store_access user:rw;_
+__default:__ _ajp\_store\_access user:rw;_
 
 __context:__ _http, server, location_
 
 This directive assigns the permissions for the created files and directories, for example:
 
-ajp_store_access  user:rw  group:rw  all:r;
+ajp\_store\_access  user:rw  group:rw  all:r;
 
 If any rights for groups or all are assigned, then it is not necessary to assign rights for user:
 
-ajp_store_access  group:rw  all:r;
+ajp\_store\_access  group:rw  all:r;
 
 
 
-## ajp_temp_path
+## ajp\_temp\_path
 
 
 
-__syntax:__ _ajp_temp_path dir-path [ level1 [ level2 [ level3 ] ] ] ;_
+__syntax:__ _ajp\_temp\_path dir-path \[ level1 \[ level2 \[ level3 \] \] \] ;_
 
-__default:__ _$NGX_PREFIX/ajp_temp_
+__default:__ _$NGX\_PREFIX/ajp\_temp_
 
 __context:__ _http, server, location_
 
-This directive works like L<NginxHttpCoreModule/"client_body_temp_path">  to specify a location to buffer large proxied requests to the filesystem.
+This directive works like [client\_body\_temp\_path](http://search.cpan.org/perldoc?NginxHttpCoreModule#client\_body\_temp\_path)  to specify a location to buffer large proxied requests to the filesystem.
 
 
 
-## ajp_temp_file_write_size
+## ajp\_temp\_file\_write\_size
 
 
 
-__syntax:__ _ajp_temp_file_write_size size;_
+__syntax:__ _ajp\_temp\_file\_write\_size size;_
 
-__default:__ _ajp_temp_file_write_size ["#ajp buffer size"]  * 2;_
+__default:__ _ajp\_temp\_file\_write\_size \["\#ajp buffer size"\]  \* 2;_
 
 __context:__ _http, server, location, if_
 
-Sets the amount of data that will be flushed to the ajp_temp_path when writing. It may be used to prevent a worker process blocking for too long while spooling data.
+Sets the amount of data that will be flushed to the ajp\_temp\_path when writing. It may be used to prevent a worker process blocking for too long while spooling data.
 
 
 
-## jvm_route
+## jvm\_route
 
 
 
-__syntax:__ _jvm_route $cookie_SESSION_COOKIE[|session_url] [reverse]_
+__syntax:__ _jvm\_route $cookie\_SESSION\_COOKIE\[|session\_url\] \[reverse\]_
 
 __default:__ _none_
 
 __context:__ _upstream_
 
-This directive comes from ngx_http_upstream_jvm_route_module ([http://code.google.com/p/nginx-upstream-jvm-route/](http://code.google.com/p/nginx-upstream-jvm-route/)).
+This directive comes from ngx\_http\_upstream\_jvm\_route\_module ([http://code.google.com/p/nginx-upstream-jvm-route/](http://code.google.com/p/nginx-upstream-jvm-route/)).
 
-'$cookie_SESSION_COOKIE' specifies the session cookie name(0.7.24+). 'session_url' specifies a different session name in the URL when the client does not accept a cookie. The session name is case-insensitive. In this module, if it does not find the session_url, it will use the session cookie name instead. So if the session name in cookie is the name with its in URL, you don't need give the session_url name.
+'$cookie\_SESSION\_COOKIE' specifies the session cookie name(0.7.24+). 'session\_url' specifies a different session name in the URL when the client does not accept a cookie. The session name is case-insensitive. In this module, if it does not find the session\_url, it will use the session cookie name instead. So if the session name in cookie is the name with its in URL, you don't need give the session\_url name.
 
-With scanning this cookie, the module will send the request to right backend server. As far as I know, the resin's srun_id name is in the head of cookie. For example, requests with cookie value 'a$$$' are always sent to the server with the srun_id of 'a'. But tomcat's JSESSIONID is opposite, which is like '$$$.a'. The parameter of 'reverse' specifies the cookie scanned from tail to head.
+With scanning this cookie, the module will send the request to right backend server. As far as I know, the resin's srun\_id name is in the head of cookie. For example, requests with cookie value 'a$$$' are always sent to the server with the srun\_id of 'a'. But tomcat's JSESSIONID is opposite, which is like '$$$.a'. The parameter of 'reverse' specifies the cookie scanned from tail to head.
 
-If the request fails to be sent to the chosen backend server, It will try another server with the Round-Robin mode until all the upstream servers tried. The directive ajp_next_upstream can specify in what cases the request will be transmitted to the next server. If you want to force the session sticky, you can set 'ajp_next_upstream off'.
-
-
-
-## jvm_route_status
+If the request fails to be sent to the chosen backend server, It will try another server with the Round-Robin mode until all the upstream servers tried. The directive ajp\_next\_upstream can specify in what cases the request will be transmitted to the next server. If you want to force the session sticky, you can set 'ajp\_next\_upstream off'.
 
 
 
-__syntax:__ _jvm_route_status upstream_name_
+## jvm\_route\_status
+
+
+
+__syntax:__ _jvm\_route\_status upstream\_name_
 
 __default:__ _none_
 
 _'context:_ _location_
 
-This directive comes from ngx_http_upstream_jvm_route_module ([http://code.google.com/p/nginx-upstream-jvm-route/](http://code.google.com/p/nginx-upstream-jvm-route/)).
+This directive comes from ngx\_http\_upstream\_jvm\_route\_module ([http://code.google.com/p/nginx-upstream-jvm-route/](http://code.google.com/p/nginx-upstream-jvm-route/)).
 
-Set the location of pages return the status of the jvm_route peers. Example:
+Set the location of pages return the status of the jvm\_route peers. Example:
 location status {
 
     jvm_route_status backend;
@@ -619,20 +611,19 @@ location status {
 
 
 
-__syntax:__ _keepalive <num> [single]_
+__syntax:__ _keepalive <num> \[single\]_
 
 __default:__ _none_
 
 __context:__ _upstream_
 
-Switches on keepalive module for the upstream in question. This directive comes from ngx_http_upstream_keepalive_module ([http://mdounin.ru/hg/ngx_http_upstream_keepalive/](http://mdounin.ru/hg/ngx_http_upstream_keepalive/)).
+Switches on keepalive module for the upstream in question. This directive comes from ngx\_http\_upstream\_keepalive\_module ([http://mdounin.ru/hg/ngx\_http\_upstream\_keepalive/](http://mdounin.ru/hg/ngx\_http\_upstream\_keepalive/)).
 
 Parameters:
 
 
 
 - num: Maximum number of connections to cache.  If there isn't enough room to cache new connections - last recently used connections will be kicked off the cache.
-
 - single: Treat everything as single host.  With this flag connections to different backends are treated as equal.
 
 
@@ -643,15 +634,14 @@ Parameters:
 
 
 
-This directive comes from ngx_http_upstream_jvm_route_module ([http://code.google.com/p/nginx-upstream-jvm-route/](http://code.google.com/p/nginx-upstream-jvm-route/)).
+This directive comes from ngx\_http\_upstream\_jvm\_route\_module ([http://code.google.com/p/nginx-upstream-jvm-route/](http://code.google.com/p/nginx-upstream-jvm-route/)).
 
 Main syntax is the same as the official directive. This module add these parameters:
 
 
 
-- 'srun_id': identifies the backend JVM's name by cookie. The default srun_id's value is 'a'. The name can be more than one letter.
-
-- 'max_busy': the maximum of active connections with the backend server. The default value is 0 which means unlimited. If the server's active connections is higher than this parameter, it will not be chosen until the server is less busier. If all the servers are busy, Nginx will return 502.
+- 'srun\_id': identifies the backend JVM's name by cookie. The default srun\_id's value is 'a'. The name can be more than one letter.
+- 'max\_busy': the maximum of active connections with the backend server. The default value is 0 which means unlimited. If the server's active connections is higher than this parameter, it will not be chosen until the server is less busier. If all the servers are busy, Nginx will return 502.
 
 
 
@@ -663,13 +653,13 @@ NOTE: This module does not support the parameter of 'backup' yet.
 
 
 
-Download the latest version of the release tarball of this module from github ([http://github.com/yaoweibin/nginx_ajp_module](http://github.com/yaoweibin/nginx_ajp_module))
+Download the latest version of the release tarball of this module from github ([http://github.com/yaoweibin/nginx\_ajp\_module](http://github.com/yaoweibin/nginx\_ajp\_module))
 
-Grab the nginx source code from nginx.org ([http://nginx.org/](http://nginx.org/)), for example, the version 0.7.65 (see nginx compatibility), and then build the source with this module:
+Grab the nginx source code from nginx.org ([http://nginx.org/](http://nginx.org/)), for example, the version 1.0.14 (see nginx compatibility), and then build the source with this module:
 
-    $ wget 'http://nginx.org/download/nginx-0.7.65.tar.gz'
-    $ tar -xzvf nginx-0.7.65.tar.gz
-    $ cd nginx-0.7.65/
+    $ wget 'http://nginx.org/download/nginx-1.0.14.tar.gz'
+    $ tar -xzvf nginx-1.0.14.tar.gz
+    $ cd nginx-1.0.14/
     $ patch -p1 < /path/to/nginx_ajp_module/ajp.patch
 
     $ ./configure --add-module=/path/to/nginx_ajp_module
@@ -687,9 +677,8 @@ Grab the nginx source code from nginx.org ([http://nginx.org/](http://nginx.org/
 
 
 
-- My test bed is 0.7.65 and 0.8.40.
-
-- For Nginx-1.1.4+, you should use the branch for_1.1.4 ([https://github.com/yaoweibin/nginx_ajp_module/tree/for_1.1.4](https://github.com/yaoweibin/nginx_ajp_module/tree/for_1.1.4)).
+- My test bed is 1.0.14+
+- For Nginx-1.1.4+, you should use the branch for\_1.1.4 (\[https://github.com/yaoweibin/nginx\_ajp\_module/tree/for\_1.1.4\](https://github.com/yaoweibin/nginx\_ajp\_module/tree/for\_1.1.4)).
 
 
 
@@ -704,7 +693,6 @@ Grab the nginx source code from nginx.org ([http://nginx.org/](http://nginx.org/
 
 
 - SSL
-
 - Backends connection pool?
 
 
@@ -751,15 +739,11 @@ Grab the nginx source code from nginx.org ([http://nginx.org/](http://nginx.org/
 
 
 
-- Jinti Shen(路奇) _jinti.shen AT gmail DOT com_
-
-- Joshua Zhu(叔度) _zhuzhaoyuan AT gmail DOT com_
-
-- Simon Liu(雕梁) _simohayha.bobo AT gmail DOT com_
-
-- Matthew Ma(东坡) _mj19821214 AT gmail DOT com_
-
-- Weibin Yao(姚伟斌) _yaoweibin AT gmail DOT com_
+- Jinti Shen(路奇) \_jinti.shen AT gmail DOT com\_
+- Joshua Zhu(叔度) \_zhuzhaoyuan AT gmail DOT com\_
+- Simon Liu(雕梁) \_simohayha.bobo AT gmail DOT com\_
+- Matthew Ma(东坡) \_mj19821214 AT gmail DOT com\_
+- Weibin Yao(姚伟斌) \_yaoweibin AT gmail DOT com\_
 
 
 
@@ -785,7 +769,7 @@ Grab the nginx source code from nginx.org ([http://nginx.org/](http://nginx.org/
 
 This README template is from agentzh ([http://github.com/agentzh](http://github.com/agentzh)).
 
-I borrowed a lot of codes from Fastcgi module of Nginx. This part of code is copyrighted by Igor Sysoev. And the design of apache's mod_ajp_proxy ([http://httpd.apache.org/docs/trunk/mod/mod_proxy_ajp.html](http://httpd.apache.org/docs/trunk/mod/mod_proxy_ajp.html)). Thanks for their hard work.
+I borrowed a lot of codes from Fastcgi module of Nginx. This part of code is copyrighted by Igor Sysoev. And the design of apache's mod\_ajp\_proxy ([http://httpd.apache.org/docs/trunk/mod/mod\_proxy\_ajp.html](http://httpd.apache.org/docs/trunk/mod/mod\_proxy\_ajp.html)). Thanks for their hard work.
 
 This module is licensed under the BSD license.
 
@@ -796,7 +780,6 @@ Redistribution and use in source and binary forms, with or without modification,
 
 
 - Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-
 - Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
 
 

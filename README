@@ -529,12 +529,12 @@ Installation
     github (<http://github.com/yaoweibin/nginx_ajp_module>)
 
     Grab the nginx source code from nginx.org (<http://nginx.org/>), for
-    example, the version 0.7.65 (see nginx compatibility), and then build
+    example, the version 1.0.14 (see nginx compatibility), and then build
     the source with this module:
 
-        $ wget 'http://nginx.org/download/nginx-0.7.65.tar.gz'
-        $ tar -xzvf nginx-0.7.65.tar.gz
-        $ cd nginx-0.7.65/
+        $ wget 'http://nginx.org/download/nginx-1.0.14.tar.gz'
+        $ tar -xzvf nginx-1.0.14.tar.gz
+        $ cd nginx-1.0.14/
         $ patch -p1 < /path/to/nginx_ajp_module/ajp.patch
 
         $ ./configure --add-module=/path/to/nginx_ajp_module
@@ -543,7 +543,7 @@ Installation
         $ make install
 
 Compatibility
-    My test bed is 0.7.65 and 0.8.40.
+    My test bed is 1.0.14+
     For Nginx-1.1.4+, you should use the branch for_1.1.4
     (<https://github.com/yaoweibin/nginx_ajp_module/tree/for_1.1.4>).
 
