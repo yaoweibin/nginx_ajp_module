@@ -1,0 +1,27 @@
+ngx_feature="nginx_ajp_module"
+ngx_feature_name=
+ngx_feature_run=no
+ngx_feature_incs=
+ngx_feature_path="$ngx_addon_dir/modules $ngx_addon_dir"
+ajp_deps="$ngx_addon_dir/ngx_http_ajp.h" 
+ajp_src="$ngx_addon_dir/ngx_http_ajp_msg.c $ngx_addon_dir/ngx_http_ajp.c" 
+ngx_feature_deps="$ngx_addon_dir/ngx_http_ajp_module.h $ngx_addon_dir/ngx_http_ajp_handler.h $ajp_deps"
+ngx_ajp_src="$ajp_src $ngx_addon_dir/ngx_http_ajp_module.c $ngx_addon_dir/ngx_http_ajp_handler.c $ngx_addon_dir/ngx_http_upstream_jvm_route_module.c $ngx_addon_dir/ngx_http_upstream_keepalive_module.c "
+ngx_feature_test="int a;"
+. auto/feature
+
+if [ $ngx_found = yes ]; then
+    have=NGX_HTTP_AJP_TEMP_PATH value="\"ajp_temp\""
+    . auto/define
+    have=NGX_AJP_MODULE . auto/have
+    CORE_INCS="$CORE_INCS $ngx_feature_path"
+    ngx_addon_name=ngx_ajp_module
+    HTTP_MODULES="$HTTP_MODULES ngx_http_ajp_module ngx_http_upstream_jvm_route_module ngx_http_upstream_keepalive_module"
+    NGX_ADDON_DEPS="$NGX_ADDON_DEPS $ngx_feature_deps"
+    NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_ajp_src"
+else 
+    cat << END
+    $0: error: the ngx_ajp_module addon error.
+END
+    exit 1
+fi

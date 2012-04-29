@@ -29,6 +29,7 @@ http {
         listen 80;
 
         location / {
+            ajp_keep_conn on;
             ajp_pass tomcats;
         }
     }
@@ -294,6 +295,20 @@ __context:__ _http, server, location_
 This directive determines whether or not to transfer 4xx and 5xx errors back to the client or to allow Nginx to answer with directive error\_page.
 
 Note: You need to explicitly define the error\_page handler for this for it to be useful. As Igor says, "nginx does not intercept an error if there is no custom handler for it it does not show its default pages. This allows to intercept some errors, while passing others as are."
+
+
+
+## ajp_keep_conn
+
+
+
+__syntax:__ _ajp_keep_conn on|off;_
+
+__default:__ _ajp_keep_conn off;_
+
+__context:__ _http, server, location_
+
+This directive determines whether or not to keep the connectin alive with backend server.
 
 
 

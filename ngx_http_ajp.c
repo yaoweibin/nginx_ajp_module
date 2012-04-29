@@ -406,8 +406,9 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
         return NGX_ERROR;
     }
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, log, 0,
-            "Into ajp_marshal_into_msgb, uri: \"%V\"", &uri);
+    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, log, 0,
+            "Into ajp_marshal_into_msgb, uri: \"%V\", version: \"%V\"",
+            &uri, &r->http_protocol);
 
     ajp_msg_reset(msg);
 
@@ -456,6 +457,17 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
                             "ajp_marshal_into_msgb: "
                             "Error appending the header name");
                     return AJP_EOVERFLOW;
+                }
+            }
+
+            if (sc == SC_REQ_CONNECTION) {
+                if (alcf->keep_conn) {
+                    header[i].value.data = (u_char *)"keep-alive"; 
+                    header[i].value.len = sizeof("keep-alive") - 1; 
+                }
+                else {
+                    header[i].value.data = (u_char *)"close"; 
+                    header[i].value.len = sizeof("close") - 1; 
                 }
             }
 

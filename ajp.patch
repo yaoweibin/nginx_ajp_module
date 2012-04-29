@@ -1,32 +1,46 @@
+diff --git a/src/core/ngx_config.h b/src/core/ngx_config.h
+index 9762b18..da40f80 100644
+--- a/src/core/ngx_config.h
++++ b/src/core/ngx_config.h
+@@ -10,6 +10,7 @@
+ 
+ #include <ngx_auto_headers.h>
+ 
++#include <nginx.h>
+ 
+ #if defined __DragonFly__ && !defined __FreeBSD__
+ #define __FreeBSD__        4
 diff --git a/src/event/ngx_event_pipe.c b/src/event/ngx_event_pipe.c
-index 5d5035c..27e9e50 100644
+index 4f45bb8..c80c1b0 100644
 --- a/src/event/ngx_event_pipe.c
 +++ b/src/event/ngx_event_pipe.c
-@@ -305,24 +305,28 @@ ngx_event_pipe_read_upstream(ngx_event_pipe_t *p)
- 
+@@ -313,6 +313,9 @@ ngx_event_pipe_read_upstream(ngx_event_pipe_t *p)
              if (n >= size) {
                  cl->buf->last = cl->buf->end;
--
--                /* STUB */ cl->buf->num = p->num++;
--
--                if (p->input_filter(p, cl->buf) == NGX_ERROR) {
--                    return NGX_ABORT;
--                }
--
-                 n -= size;
--                ln = cl;
--                cl = cl->next;
--                ngx_free_chain(p->pool, ln);
--
+ 
++#if (nginx_version) < 1001004 
++                n -= size;
++#else
+                 /* STUB */ cl->buf->num = p->num++;
+ 
+                 if (p->input_filter(p, cl->buf) == NGX_ERROR) {
+@@ -323,11 +326,29 @@ ngx_event_pipe_read_upstream(ngx_event_pipe_t *p)
+                 ln = cl;
+                 cl = cl->next;
+                 ngx_free_chain(p->pool, ln);
++#endif
+ 
              } else {
                  cl->buf->last += n;
                  n = 0;
-+
++#if (nginx_version) < 1001004 
 +                if(!p->keepalive) {
 +                    continue;
 +                }
++#endif
 +            }
 +
++#if (nginx_version) < 1001004 
 +            /* STUB */ cl->buf->num = p->num++;
 +
 +            if (p->input_filter(p, cl->buf) == NGX_ERROR) {
@@ -36,30 +50,29 @@ index 5d5035c..27e9e50 100644
 +            ln = cl;
 +            cl = cl->next;
 +            ngx_free_chain(p->pool, ln);
++#endif
          }
  
-+
          if (cl) {
-             for (ln = cl; ln->next; ln = ln->next) { /* void */ }
- 
 diff --git a/src/event/ngx_event_pipe.h b/src/event/ngx_event_pipe.h
-index 00b8acf..016ab4c 100644
+index 2633467..a3b342e 100644
 --- a/src/event/ngx_event_pipe.h
 +++ b/src/event/ngx_event_pipe.h
-@@ -58,6 +58,8 @@ struct ngx_event_pipe_s {
+@@ -58,6 +58,9 @@ struct ngx_event_pipe_s {
      unsigned           downstream_error:1;
      unsigned           cyclic_temp_file:1;
  
++#if (nginx_version) < 1001004 
 +    unsigned           keepalive:1;
-+
++#endif
      ngx_int_t          allocated;
      ngx_bufs_t         bufs;
      ngx_buf_tag_t      tag;
 diff --git a/src/http/ngx_http_upstream.c b/src/http/ngx_http_upstream.c
-index 2deec48..2452fcd 100644
+index ef16a66..3df0e78 100644
 --- a/src/http/ngx_http_upstream.c
 +++ b/src/http/ngx_http_upstream.c
-@@ -3849,6 +3849,8 @@ ngx_http_upstream(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
+@@ -4039,6 +4039,8 @@ ngx_http_upstream(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
                                           |NGX_HTTP_UPSTREAM_WEIGHT
                                           |NGX_HTTP_UPSTREAM_MAX_FAILS
                                           |NGX_HTTP_UPSTREAM_FAIL_TIMEOUT
@@ -68,7 +81,7 @@ index 2deec48..2452fcd 100644
                                           |NGX_HTTP_UPSTREAM_DOWN
                                           |NGX_HTTP_UPSTREAM_BACKUP);
      if (uscf == NULL) {
-@@ -3940,9 +3942,9 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+@@ -4130,9 +4132,9 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
      ngx_http_upstream_srv_conf_t  *uscf = conf;
  
      time_t                       fail_timeout;
@@ -80,7 +93,7 @@ index 2deec48..2452fcd 100644
      ngx_uint_t                   i;
      ngx_http_upstream_server_t  *us;
  
-@@ -3979,7 +3981,10 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+@@ -4169,7 +4171,10 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
  
      weight = 1;
      max_fails = 1;
@@ -91,7 +104,7 @@ index 2deec48..2452fcd 100644
  
      for (i = 2; i < cf->args->nelts; i++) {
  
-@@ -4013,6 +4018,21 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+@@ -4203,6 +4208,21 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
              continue;
          }
  
@@ -113,7 +126,7 @@ index 2deec48..2452fcd 100644
          if (ngx_strncmp(value[i].data, "fail_timeout=", 13) == 0) {
  
              if (!(uscf->flags & NGX_HTTP_UPSTREAM_FAIL_TIMEOUT)) {
-@@ -4031,6 +4051,22 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+@@ -4221,6 +4241,22 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
              continue;
          }
  
@@ -136,7 +149,7 @@ index 2deec48..2452fcd 100644
          if (ngx_strncmp(value[i].data, "backup", 6) == 0) {
  
              if (!(uscf->flags & NGX_HTTP_UPSTREAM_BACKUP)) {
-@@ -4060,7 +4096,9 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+@@ -4250,7 +4286,9 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
      us->naddrs = u.naddrs;
      us->weight = weight;
      us->max_fails = max_fails;
@@ -147,10 +160,10 @@ index 2deec48..2452fcd 100644
      return NGX_CONF_OK;
  
 diff --git a/src/http/ngx_http_upstream.h b/src/http/ngx_http_upstream.h
-index ac2682d..f81d9b4 100644
+index bcdd64b..52e3871 100644
 --- a/src/http/ngx_http_upstream.h
 +++ b/src/http/ngx_http_upstream.h
-@@ -85,6 +85,8 @@ typedef struct {
+@@ -86,6 +86,8 @@ typedef struct {
      ngx_uint_t                       weight;
      ngx_uint_t                       max_fails;
      time_t                           fail_timeout;
@@ -159,7 +172,7 @@ index ac2682d..f81d9b4 100644
  
      unsigned                         down:1;
      unsigned                         backup:1;
-@@ -97,6 +99,8 @@ typedef struct {
+@@ -98,6 +100,8 @@ typedef struct {
  #define NGX_HTTP_UPSTREAM_FAIL_TIMEOUT  0x0008
  #define NGX_HTTP_UPSTREAM_DOWN          0x0010
  #define NGX_HTTP_UPSTREAM_BACKUP        0x0020

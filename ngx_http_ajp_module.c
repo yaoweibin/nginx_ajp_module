@@ -313,6 +313,13 @@ static ngx_command_t  ngx_http_ajp_commands[] = {
       offsetof(ngx_http_ajp_loc_conf_t, upstream.ignore_headers),
       &ngx_http_upstream_ignore_headers_masks },
 
+    { ngx_string("ajp_keep_conn"),
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
+      ngx_conf_set_flag_slot,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      offsetof(ngx_http_ajp_loc_conf_t, keep_conn),
+      NULL },
+
       ngx_null_command
 };
 
@@ -659,6 +666,10 @@ ngx_http_ajp_create_loc_conf(ngx_conf_t *cf)
     /* "ajp_cyclic_temp_file" is disabled */
     conf->upstream.cyclic_temp_file = 0;
 
+    conf->keep_conn = NGX_CONF_UNSET;
+
+    ngx_str_set(&conf->upstream.module, "ajp");
+
     return conf;
 }
 
@@ -890,6 +901,8 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_conf_merge_value(conf->upstream.intercept_errors,
                               prev->upstream.intercept_errors, 0);
+
+    ngx_conf_merge_value(conf->keep_conn, prev->keep_conn, 0);
 
     hash.max_size = 512;
     hash.bucket_size = ngx_align(64, ngx_cacheline_size);
