@@ -463,7 +463,7 @@ Directives
     This directive comes from ngx_http_upstream_jvm_route_module
     (<http://code.google.com/p/nginx-upstream-jvm-route/>).
 
-    '$cookie_SESSION_COOKIE' specifies the session cookie name(0.7.24+).
+    '$cookie_SESSION_COOKIE' specifies the session cookie name (0.7.24+).
     'session_url' specifies a different session name in the URL when the
     client does not accept a cookie. The session name is case-insensitive.
     In this module, if it does not find the session_url, it will use the
@@ -540,12 +540,12 @@ Installation
     github (<http://github.com/yaoweibin/nginx_ajp_module>)
 
     Grab the nginx source code from nginx.org (<http://nginx.org/>), for
-    example, the version 1.0.14 (see nginx compatibility), and then build
-    the source with this module:
+    example, the version 1.2.0 (see nginx compatibility), and then build the
+    source with this module:
 
-        $ wget 'http://nginx.org/download/nginx-1.0.14.tar.gz'
-        $ tar -xzvf nginx-1.0.14.tar.gz
-        $ cd nginx-1.0.14/
+        $ wget 'http://nginx.org/download/nginx-1.2.0.tar.gz'
+        $ tar -xzvf nginx-1.2.0.tar.gz
+        $ cd nginx-1.2.0/
         $ patch -p1 < /path/to/nginx_ajp_module/ajp.patch
 
         $ ./configure --add-module=/path/to/nginx_ajp_module
@@ -554,13 +554,12 @@ Installation
         $ make install
 
 Compatibility
-    My test bed is 1.0.14+
-    For Nginx-1.1.4+, you should use the branch for_1.1.4
-    (<https://github.com/yaoweibin/nginx_ajp_module/tree/for_1.1.4>).
+    The master branch is for Nginx-1.1.4+
+    If you want to use it with Nginx-1.0.x, you can use this nginx-1.0
+    (<https://github.com/yaoweibin/nginx_ajp_module/tree/nginx-1.0>) branch.
 
 TODO
     SSL
-    Backends connection pool?
 
 Known Issues
     Developing

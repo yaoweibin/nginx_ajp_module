@@ -298,13 +298,13 @@ Note: You need to explicitly define the error\_page handler for this for it to b
 
 
 
-## ajp_keep_conn
+## ajp\_keep\_conn
 
 
 
-__syntax:__ _ajp_keep_conn on|off;_
+__syntax:__ _ajp\_keep\_conn on|off;_
 
-__default:__ _ajp_keep_conn off;_
+__default:__ _ajp\_keep\_conn off;_
 
 __context:__ _http, server, location_
 
@@ -594,7 +594,7 @@ __context:__ _upstream_
 
 This directive comes from ngx\_http\_upstream\_jvm\_route\_module ([http://code.google.com/p/nginx-upstream-jvm-route/](http://code.google.com/p/nginx-upstream-jvm-route/)).
 
-'$cookie\_SESSION\_COOKIE' specifies the session cookie name(0.7.24+). 'session\_url' specifies a different session name in the URL when the client does not accept a cookie. The session name is case-insensitive. In this module, if it does not find the session\_url, it will use the session cookie name instead. So if the session name in cookie is the name with its in URL, you don't need give the session\_url name.
+'$cookie\_SESSION\_COOKIE' specifies the session cookie name (0.7.24+). 'session\_url' specifies a different session name in the URL when the client does not accept a cookie. The session name is case-insensitive. In this module, if it does not find the session\_url, it will use the session cookie name instead. So if the session name in cookie is the name with its in URL, you don't need give the session\_url name.
 
 With scanning this cookie, the module will send the request to right backend server. As far as I know, the resin's srun\_id name is in the head of cookie. For example, requests with cookie value 'a$$$' are always sent to the server with the srun\_id of 'a'. But tomcat's JSESSIONID is opposite, which is like '$$$.a'. The parameter of 'reverse' specifies the cookie scanned from tail to head.
 
@@ -670,11 +670,11 @@ NOTE: This module does not support the parameter of 'backup' yet.
 
 Download the latest version of the release tarball of this module from github ([http://github.com/yaoweibin/nginx\_ajp\_module](http://github.com/yaoweibin/nginx\_ajp\_module))
 
-Grab the nginx source code from nginx.org ([http://nginx.org/](http://nginx.org/)), for example, the version 1.0.14 (see nginx compatibility), and then build the source with this module:
+Grab the nginx source code from nginx.org ([http://nginx.org/](http://nginx.org/)), for example, the version 1.2.0 (see nginx compatibility), and then build the source with this module:
 
-    $ wget 'http://nginx.org/download/nginx-1.0.14.tar.gz'
-    $ tar -xzvf nginx-1.0.14.tar.gz
-    $ cd nginx-1.0.14/
+    $ wget 'http://nginx.org/download/nginx-1.2.0.tar.gz'
+    $ tar -xzvf nginx-1.2.0.tar.gz
+    $ cd nginx-1.2.0/
     $ patch -p1 < /path/to/nginx_ajp_module/ajp.patch
 
     $ ./configure --add-module=/path/to/nginx_ajp_module
@@ -692,8 +692,8 @@ Grab the nginx source code from nginx.org ([http://nginx.org/](http://nginx.org/
 
 
 
-- My test bed is 1.0.14+
-- For Nginx-1.1.4+, you should use the branch for\_1.1.4 (\[https://github.com/yaoweibin/nginx\_ajp\_module/tree/for\_1.1.4\](https://github.com/yaoweibin/nginx\_ajp\_module/tree/for\_1.1.4)).
+- The master branch is for Nginx-1.1.4+
+- If you want to use it with Nginx-1.0.x, you can use this nginx-1.0 (\[https://github.com/yaoweibin/nginx\_ajp\_module/tree/nginx-1.0\](https://github.com/yaoweibin/nginx\_ajp\_module/tree/nginx-1.0)) branch. 
 
 
 
@@ -708,7 +708,6 @@ Grab the nginx source code from nginx.org ([http://nginx.org/](http://nginx.org/
 
 
 - SSL
-- Backends connection pool?
 
 
 
