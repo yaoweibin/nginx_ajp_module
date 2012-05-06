@@ -248,6 +248,20 @@ static ngx_command_t  ngx_http_ajp_commands[] = {
       offsetof(ngx_http_ajp_loc_conf_t, upstream.cache_methods),
       &ngx_http_upstream_cache_method_mask },
 
+    { ngx_string("ajp_cache_lock"),
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
+      ngx_conf_set_flag_slot,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      offsetof(ngx_http_ajp_loc_conf_t, upstream.cache_lock),
+      NULL },
+
+     { ngx_string("ajp_cache_lock_timeout"),
+       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+       ngx_conf_set_msec_slot,
+       NGX_HTTP_LOC_CONF_OFFSET,
+       offsetof(ngx_http_ajp_loc_conf_t, upstream.cache_lock_timeout),
+       NULL },
+
 #endif
 
     { ngx_string("ajp_temp_path"),
@@ -656,6 +670,8 @@ ngx_http_ajp_create_loc_conf(ngx_conf_t *cf)
     conf->upstream.cache = NGX_CONF_UNSET_PTR;
     conf->upstream.cache_min_uses = NGX_CONF_UNSET_UINT;
     conf->upstream.cache_valid = NGX_CONF_UNSET_PTR;
+    conf->upstream.cache_lock = NGX_CONF_UNSET;
+    conf->upstream.cache_lock_timeout = NGX_CONF_UNSET_MSEC;
 #endif
 
     conf->upstream.hide_headers = NGX_CONF_UNSET_PTR;
@@ -851,7 +867,7 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 #if (NGX_HTTP_CACHE)
 
     ngx_conf_merge_ptr_value(conf->upstream.cache,
-                              prev->upstream.cache, NULL);
+                             prev->upstream.cache, NULL);
 
     if (conf->upstream.cache && conf->upstream.cache->data == NULL) {
         ngx_shm_zone_t  *shm_zone;
@@ -879,6 +895,10 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
                                          |NGX_HTTP_UPSTREAM_FT_OFF;
     }
 
+    if (conf->upstream.cache_use_stale & NGX_HTTP_UPSTREAM_FT_ERROR) {
+        conf->upstream.cache_use_stale |= NGX_HTTP_UPSTREAM_FT_NOLIVE;
+    }
+
     if (conf->upstream.cache_methods == 0) {
         conf->upstream.cache_methods = prev->upstream.cache_methods;
     }
@@ -892,15 +912,21 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
         conf->cache_key = prev->cache_key;
     }
 
+    ngx_conf_merge_value(conf->upstream.cache_lock,
+                         prev->upstream.cache_lock, 0);
+
+    ngx_conf_merge_msec_value(conf->upstream.cache_lock_timeout,
+                              prev->upstream.cache_lock_timeout, 5000);
+
 #endif
 
     ngx_conf_merge_value(conf->upstream.pass_request_headers,
-                              prev->upstream.pass_request_headers, 1);
+                         prev->upstream.pass_request_headers, 1);
     ngx_conf_merge_value(conf->upstream.pass_request_body,
-                              prev->upstream.pass_request_body, 1);
+                         prev->upstream.pass_request_body, 1);
 
     ngx_conf_merge_value(conf->upstream.intercept_errors,
-                              prev->upstream.intercept_errors, 0);
+                         prev->upstream.intercept_errors, 0);
 
     ngx_conf_merge_value(conf->keep_conn, prev->keep_conn, 0);
 
