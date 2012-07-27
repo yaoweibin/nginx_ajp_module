@@ -14,26 +14,25 @@ __nginx\_ajp\_module__ - support AJP protocol proxy with Nginx
 
 
 
-http {
+	http {
+		upstream tomcats {
 
-    upstream tomcats {
+			server 127.0.0.1:8009 srun_id=jvm1;
 
-        server 127.0.0.1:8009 srun_id=jvm1;
+			jvm_route $cookie_JSESSIONID reverse;
+			keepalive 10;
+		}
 
-        jvm_route $cookie_JSESSIONID reverse;
-        keepalive 10;
-    }
+		server {
 
-    server {
+			listen 80;
 
-        listen 80;
-
-        location / {
-            ajp_keep_conn on;
-            ajp_pass tomcats;
-        }
-    }
-}
+			location / {
+				ajp_keep_conn on;
+				ajp_pass tomcats;
+			}
+		}
+	}
 
 
 
@@ -112,13 +111,13 @@ The directive specifies what information is included in the key for caching, for
 
 
 
-ajp\_cache\_key "$host$request\_uri$cookie\_user";
+	ajp_cache_key "$host$request_uri$cookie_user";
 
 
 
 Note that by default, the hostname of the server is not included in the cache key. If you are using subdomains for different locations on your website, you need to include it, e.g. by changing the cache key to something like
 
-ajp\_cache\_key "$scheme$host$request\_uri";
+	ajp_cache_key "$scheme$host$request_uri";
 
 
 
@@ -136,7 +135,7 @@ GET/HEAD is syntax sugar, i.e. you can not disable GET/HEAD even if you set just
 
 
 
-ajp\_cache\_methods  POST;
+	ajp_cache_methods  POST;
 
 
 
@@ -170,7 +169,7 @@ This directive sets the cache path and other cache parameters. Cached data store
 
 
 
-ajp\_cache\_path  /data/nginx/cache  levels=1:2   keys\_zone=one:10m;
+	ajp_cache_path  /data/nginx/cache  levels=1:2   keys_zone=one:10m;
 
 
 
@@ -210,8 +209,8 @@ Sets caching time for different response codes. For example, the following direc
 
 
 
-ajp\_cache\_valid 200 302 10m;
-ajp\_cache\_valid 404      1m;
+	ajp_cache_valid 200 302 10m;
+	ajp_cache_valid 404      1m;
 
 
 
@@ -221,7 +220,7 @@ If only caching time is specified
 
 
 
-ajp\_cache\_valid 5m;
+	ajp_cache_valid 5m;
 
 
 
@@ -231,9 +230,9 @@ In addition, it can be specified to cache any responses using the any parameter:
 
 
 
-ajp\_cache\_valid 200 302 10m;
-ajp\_cache\_valid 301      1h;
-ajp\_cache\_valid any      1m;
+	ajp_cache_valid 200 302 10m;
+	ajp_cache_valid 301      1h;
+	ajp_cache_valid any      1m;
 
 
 
@@ -419,7 +418,7 @@ Directive assigns the port or socket on which the AJP-server is listening. Port 
 
 
 
-ajp\_pass   localhost:9000;
+	ajp_pass   localhost:9000;
 
 
 
@@ -427,7 +426,7 @@ using a Unix domain socket:
 
 
 
-ajp\_pass   unix:/tmp/ajp.socket;
+	ajp_pass   unix:/tmp/ajp.socket;
 
 
 
@@ -435,13 +434,13 @@ You may also use an upstream block.
 
 
 
-upstream backend  {
+	upstream backend  {
+		server   localhost:1234;
+	}
 
-    server   localhost:1234;
+	ajp_pass   backend;
 
-}
 
-ajp\_pass   backend;
 
 
 
@@ -539,29 +538,26 @@ __context:__ _http, server, location_
 
 This directive sets the path in which upstream files are stored. The parameter "on" preserves files in accordance with path specified in directives _alias_ or _root_. The parameter "off" forbids storing. Furthermore, the name of the path can be clearly assigned with the aid of the line with the variables:
 
-ajp\_store   /data/www$original\_uri;
+	ajp_store   /data/www$original_uri;
 
 The time of modification for the file will be set to the date of "Last-Modified" header in the response. To be able to safe files in this directory it is necessary that the path is under the directory with temporary files, given by directive `ajp_temp_path` for the data location.
 
 This directive can be used for creating the local copies for dynamic output of the backend which is not very often changed, for example:
 
-location /images/ {
+	location /images/ {
+		root                 /data/www;
+		error_page           404 = @fetch;
+	}
 
-    root                 /data/www;
-    error_page           404 = @fetch;
+	location @fetch {
+		internal;
+		ajp_pass           backend;
+		ajp_store          on;
+		ajp_store_access   user:rw  group:rw  all:r;
+		ajp_temp_path      /data/temp;
 
-}
-
-location @fetch {
-
-    internal;
-    ajp_pass           backend;
-    ajp_store          on;
-    ajp_store_access   user:rw  group:rw  all:r;
-    ajp_temp_path      /data/temp;
-
-    root               /data/www;
-}
+		root               /data/www;
+	}
 
 To be clear ajp\_store is not a cache, it's rather mirror on demand.
 
@@ -579,11 +575,11 @@ __context:__ _http, server, location_
 
 This directive assigns the permissions for the created files and directories, for example:
 
-ajp\_store\_access  user:rw  group:rw  all:r;
+	ajp_store_access  user:rw  group:rw  all:r;
 
 If any rights for groups or all are assigned, then it is not necessary to assign rights for user:
 
-ajp\_store\_access  group:rw  all:r;
+	ajp_store_access  group:rw  all:r;
 
 
 
@@ -648,10 +644,9 @@ _'context:_ _location_
 This directive comes from ngx\_http\_upstream\_jvm\_route\_module ([http://code.google.com/p/nginx-upstream-jvm-route/](http://code.google.com/p/nginx-upstream-jvm-route/)).
 
 Set the location of pages return the status of the jvm\_route peers. Example:
-location status {
-
-    jvm_route_status backend;
-}
+	location status {
+		jvm\_route\_status backend;
+	}
 
 
 
