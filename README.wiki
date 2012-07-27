@@ -1,4 +1,4 @@
-﻿﻿﻿= Name =
+﻿= Name =
 
 '''nginx_ajp_module''' - support AJP protocol proxy with Nginx
 
@@ -30,7 +30,7 @@ http {
 </geshi>
 
 = Description =
-With this module, Nginx can connect to Tomcat's AJP port directly. The backend connections are keepalive, session sticky.
+With this module, Nginx can connect to AJP port directly. The backend connections can be keepalive, session sticky.
 The motivation of writing these modules is Nginx's high performance and robustness.
 
 = Directives =
@@ -43,7 +43,7 @@ The motivation of writing these modules is Nginx's high performance and robustne
 
 '''context:''' ''http, server, location''
 
-This directive sets the number and the size of buffers, into which will be read the response, obtained from the ajp server.  By default, the size of one buffer is equal to the size of pages. Depending on platform this is either 4K, 8K or 16K.
+This directive specifies the number and the size of buffers, into which will be read the response, obtained from the AJP server. By default, the size of one buffer is equal to the size of a page. Depending on platform this is either 4K, 8K or 16K.
 
 == ajp_buffer_size ==
 
@@ -53,7 +53,7 @@ This directive sets the number and the size of buffers, into which will be read 
 
 '''context:''' ''http, server, location''
 
-This directive sets the buffersize, into which will be read the first part of the response, obtained from the ajp server.
+This directive sets the buffer size, into which will be read the first part of the response, obtained from the AJP server.
 
 In this part of response the small response-header is located, as a rule.
 
@@ -67,7 +67,7 @@ By default, the buffersize is equal to the size of one buffer in directive <code
 
 '''context:''' ''http, server, location''
 
-The directive specifies the area  which actually is the share memory's name for caching. The same area can be used in several places. You must set the <code>ajp_cache_path</code> first.
+The directive specifies the area which actually is the share memory's name for caching. The same area can be used in several places. You must set the <code>ajp_cache_path</code> first.
 
 == ajp_cache_key ==
 
@@ -115,7 +115,7 @@ ajp_cache_methods  POST;
 
 '''context:''' ''http, server, location''
 
-TODO: Description.
+Sets the number of requests after which the response will be cached.
 
 == ajp_cache_path ==
 
@@ -145,7 +145,9 @@ file names will be like:
 
 '''context:''' ''http, server, location''
 
-TODO: Description.
+If an error occurs while working with the AJP server it is possible to use a stale cached response. This directives determines in which cases it is permitted. The directive’s parameters match those of the <code>ajp_next_upstream</code> directive.
+
+Additionally, the updating parameter permits to use a stale cached response if it is currently being updated. This allows to minimize the number of accesses to AJP servers when updating cached data.
 
 == ajp_cache_valid ==
 
@@ -155,7 +157,38 @@ TODO: Description.
 
 '''context:''' ''http, server, location''
 
-TODO: Description.
+Sets caching time for different response codes. For example, the following directives
+
+<geshi lang="nginx">
+
+ajp_cache_valid 200 302 10m;
+ajp_cache_valid 404      1m;
+
+</geshi>
+
+set 10 minutes of caching for responses with codes 200 and 302, and 1 minute for responses with code 404.
+
+If only caching time is specified
+
+<geshi lang="nginx">
+
+ajp_cache_valid 5m;
+
+</geshi>
+
+then only 200, 301, and 302 responses are cached.
+
+In addition, it can be specified to cache any responses using the any parameter:
+
+<geshi lang="nginx">
+
+ajp_cache_valid 200 302 10m;
+ajp_cache_valid 301      1h;
+ajp_cache_valid any      1m;
+
+</geshi>
+
+Parameters of caching can also be set directly in the response header. This has a higher precedence than setting of caching time using the directive. The “X-Accel-Expires” header field sets caching time of a response in seconds. The value 0 disables to cache a response. If a value starts with the prefix @, it sets an absolute time in seconds since Epoch, up to which the response may be cached. If header does not include the “X-Accel-Expires” field, parameters of caching may be set in the header fields “Expires” or “Cache-Control”. If a header includes the “Set-Cookie” field, such a response will not be cached. Processing of one or more of these response header fields can be disabled using the <code>ajp_ignore_headers</code> directive.
 
 == ajp_connect_timeout ==
 
@@ -231,7 +264,7 @@ Note: You need to explicitly define the error_page handler for this for it to be
 
 '''context:''' ''http, server, location''
 
-This directive determines whether or not to keep the connectin alive with backend server.
+This directive determines whether or not to keep the connection alive with backend server.
 
 == ajp_next_upstream ==
 
@@ -318,7 +351,7 @@ ajp_pass   backend;
 
 '''context:''' ''http, server, location''
 
-TODO: Description.
+Permits to pass specific header fields from the AJP server to a client.
 
 == ajp_pass_request_headers ==
 
@@ -328,7 +361,7 @@ TODO: Description.
 
 '''context:''' ''http, server, location''
 
-TODO: Description.
+Permits to pass request header fields from the client to server.
 
 == ajp_pass_request_body ==
 
@@ -338,7 +371,7 @@ TODO: Description.
 
 '''context:''' ''http, server, location''
 
-TODO: Description.
+Permits to pass request body from the client to server.
 
 == ajp_read_timeout ==
 
@@ -348,7 +381,7 @@ TODO: Description.
 
 '''context:''' ''http, server, location''
 
-Directive sets the amount of time for upstream to wait for a ajp process to send data.  Change this directive if you have long running ajp processes that do not produce output until they have finished processing.  If you are seeing an upstream timed out error in the error log, then increase this parameter to something more appropriate.
+Directive sets the amount of time for upstream to wait for a AJP process to send data.  Change this directive if you have long running AJP processes that do not produce output until they have finished processing.  If you are seeing an upstream timed out error in the error log, then increase this parameter to something more appropriate.
 
 == ajp_send_lowat ==
 
@@ -384,7 +417,7 @@ This directive sets the path in which upstream files are stored. The parameter "
 ajp_store   /data/www$original_uri;
 </geshi>
 
-The time of modification for the file will be set to the date of "Last-Modified" header in the response. To be able to safe files in this directory it is necessary that the path is under the directory with temporary files, given by directive ajp_temp_path for the data location.
+The time of modification for the file will be set to the date of "Last-Modified" header in the response. To be able to safe files in this directory it is necessary that the path is under the directory with temporary files, given by directive <code>ajp_temp_path</code> for the data location.
 
 This directive can be used for creating the local copies for dynamic output of the backend which is not very often changed, for example:
 
@@ -492,11 +525,10 @@ location status {
 
 '''context:''' ''upstream''
 
-Switches on keepalive module for the upstream in question. This directive comes from [http://mdounin.ru/hg/ngx_http_upstream_keepalive/ ngx_http_upstream_keepalive_module].
+Switches on keepalive module for the upstream in question. This directive comes from [http://mdounin.ru/hg/ngx_http_upstream_keepalive/ ngx_http_upstream_keepalive_module]. This module is merged into official Nginx after Nginx-1.1.4.
 
 Parameters:
 * num: Maximum number of connections to cache.  If there isn't enough room to cache new connections - last recently used connections will be kicked off the cache.
-* single: Treat everything as single host.  With this flag connections to different backends are treated as equal.
 
 == server(in upstream) ==
 

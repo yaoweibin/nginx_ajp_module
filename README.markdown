@@ -41,7 +41,7 @@ http {
 
 # Description
 
-With this module, Nginx can connect to Tomcat's AJP port directly. The backend connections are keepalive, session sticky.
+With this module, Nginx can connect to AJP port directly. The backend connections can be keepalive, session sticky.
 The motivation of writing these modules is Nginx's high performance and robustness.
 
 
@@ -62,7 +62,7 @@ __default:__ _ajp\_buffers 8 4k/8k;_
 
 __context:__ _http, server, location_
 
-This directive sets the number and the size of buffers, into which will be read the response, obtained from the ajp server.  By default, the size of one buffer is equal to the size of pages. Depending on platform this is either 4K, 8K or 16K.
+This directive specifies the number and the size of buffers, into which will be read the response, obtained from the AJP server. By default, the size of one buffer is equal to the size of a page. Depending on platform this is either 4K, 8K or 16K.
 
 
 
@@ -76,7 +76,7 @@ __default:__ _ajp\_buffer\_size 4k/8k;_
 
 __context:__ _http, server, location_
 
-This directive sets the buffersize, into which will be read the first part of the response, obtained from the ajp server.
+This directive sets the buffer size, into which will be read the first part of the response, obtained from the AJP server.
 
 In this part of response the small response-header is located, as a rule.
 
@@ -94,7 +94,7 @@ __default:__ _off_
 
 __context:__ _http, server, location_
 
-The directive specifies the area  which actually is the share memory's name for caching. The same area can be used in several places. You must set the `ajp_cache_path` first.
+The directive specifies the area which actually is the share memory's name for caching. The same area can be used in several places. You must set the `ajp_cache_path` first.
 
 
 
@@ -152,7 +152,7 @@ __default:__ _ajp\_cache\_min\_uses 1;_
 
 __context:__ _http, server, location_
 
-TODO: Description.
+Sets the number of requests after which the response will be cached.
 
 
 
@@ -190,7 +190,9 @@ __default:__ _ajp\_cache\_use\_stale off;_
 
 __context:__ _http, server, location_
 
-TODO: Description.
+If an error occurs while working with the AJP server it is possible to use a stale cached response. This directives determines in which cases it is permitted. The directive’s parameters match those of the `ajp_next_upstream` directive.
+
+Additionally, the updating parameter permits to use a stale cached response if it is currently being updated. This allows to minimize the number of accesses to AJP servers when updating cached data.
 
 
 
@@ -204,7 +206,38 @@ __default:__ _none_
 
 __context:__ _http, server, location_
 
-TODO: Description.
+Sets caching time for different response codes. For example, the following directives
+
+
+
+ajp\_cache\_valid 200 302 10m;
+ajp\_cache\_valid 404      1m;
+
+
+
+set 10 minutes of caching for responses with codes 200 and 302, and 1 minute for responses with code 404.
+
+If only caching time is specified
+
+
+
+ajp\_cache\_valid 5m;
+
+
+
+then only 200, 301, and 302 responses are cached.
+
+In addition, it can be specified to cache any responses using the any parameter:
+
+
+
+ajp\_cache\_valid 200 302 10m;
+ajp\_cache\_valid 301      1h;
+ajp\_cache\_valid any      1m;
+
+
+
+Parameters of caching can also be set directly in the response header. This has a higher precedence than setting of caching time using the directive. The “X-Accel-Expires” header field sets caching time of a response in seconds. The value 0 disables to cache a response. If a value starts with the prefix @, it sets an absolute time in seconds since Epoch, up to which the response may be cached. If header does not include the “X-Accel-Expires” field, parameters of caching may be set in the header fields “Expires” or “Cache-Control”. If a header includes the “Set-Cookie” field, such a response will not be cached. Processing of one or more of these response header fields can be disabled using the `ajp_ignore_headers` directive.
 
 
 
@@ -308,7 +341,7 @@ __default:__ _ajp\_keep\_conn off;_
 
 __context:__ _http, server, location_
 
-This directive determines whether or not to keep the connectin alive with backend server.
+This directive determines whether or not to keep the connection alive with backend server.
 
 
 
@@ -420,7 +453,7 @@ __syntax:__ _ajp\_pass\_header name;_
 
 __context:__ _http, server, location_
 
-TODO: Description.
+Permits to pass specific header fields from the AJP server to a client.
 
 
 
@@ -434,7 +467,7 @@ __default:__ _ajp\_pass\_request\_headers on;_
 
 __context:__ _http, server, location_
 
-TODO: Description.
+Permits to pass request header fields from the client to server.
 
 
 
@@ -448,7 +481,7 @@ __default:__ _ajp\_pass\_request\_body on;_
 
 __context:__ _http, server, location_
 
-TODO: Description.
+Permits to pass request body from the client to server.
 
 
 
@@ -462,7 +495,7 @@ __default:__ _ajp\_read\_timeout\_time 60_
 
 __context:__ _http, server, location_
 
-Directive sets the amount of time for upstream to wait for a ajp process to send data.  Change this directive if you have long running ajp processes that do not produce output until they have finished processing.  If you are seeing an upstream timed out error in the error log, then increase this parameter to something more appropriate.
+Directive sets the amount of time for upstream to wait for a AJP process to send data.  Change this directive if you have long running AJP processes that do not produce output until they have finished processing.  If you are seeing an upstream timed out error in the error log, then increase this parameter to something more appropriate.
 
 
 
@@ -508,7 +541,7 @@ This directive sets the path in which upstream files are stored. The parameter "
 
 ajp\_store   /data/www$original\_uri;
 
-The time of modification for the file will be set to the date of "Last-Modified" header in the response. To be able to safe files in this directory it is necessary that the path is under the directory with temporary files, given by directive ajp\_temp\_path for the data location.
+The time of modification for the file will be set to the date of "Last-Modified" header in the response. To be able to safe files in this directory it is necessary that the path is under the directory with temporary files, given by directive `ajp_temp_path` for the data location.
 
 This directive can be used for creating the local copies for dynamic output of the backend which is not very often changed, for example:
 
@@ -632,14 +665,13 @@ __default:__ _none_
 
 __context:__ _upstream_
 
-Switches on keepalive module for the upstream in question. This directive comes from ngx\_http\_upstream\_keepalive\_module ([http://mdounin.ru/hg/ngx\_http\_upstream\_keepalive/](http://mdounin.ru/hg/ngx\_http\_upstream\_keepalive/)).
+Switches on keepalive module for the upstream in question. This directive comes from ngx\_http\_upstream\_keepalive\_module ([http://mdounin.ru/hg/ngx\_http\_upstream\_keepalive/](http://mdounin.ru/hg/ngx\_http\_upstream\_keepalive/)). This module is merged into official Nginx after Nginx-1.1.4.
 
 Parameters:
 
 
 
 - num: Maximum number of connections to cache.  If there isn't enough room to cache new connections - last recently used connections will be kicked off the cache.
-- single: Treat everything as single host.  With this flag connections to different backends are treated as equal.
 
 
 

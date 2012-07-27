@@ -24,9 +24,9 @@ Synopsis
     }
 
 Description
-    With this module, Nginx can connect to Tomcat's AJP port directly. The
-    backend connections are keepalive, session sticky. The motivation of
-    writing these modules is Nginx's high performance and robustness.
+    With this module, Nginx can connect to AJP port directly. The backend
+    connections can be keepalive, session sticky. The motivation of writing
+    these modules is Nginx's high performance and robustness.
 
 Directives
   ajp_buffers
@@ -36,10 +36,10 @@ Directives
 
     context: *http, server, location*
 
-    This directive sets the number and the size of buffers, into which will
-    be read the response, obtained from the ajp server. By default, the size
-    of one buffer is equal to the size of pages. Depending on platform this
-    is either 4K, 8K or 16K.
+    This directive specifies the number and the size of buffers, into which
+    will be read the response, obtained from the AJP server. By default, the
+    size of one buffer is equal to the size of a page. Depending on platform
+    this is either 4K, 8K or 16K.
 
   ajp_buffer_size
     syntax: *ajp_buffer_size the_size;*
@@ -48,8 +48,8 @@ Directives
 
     context: *http, server, location*
 
-    This directive sets the buffersize, into which will be read the first
-    part of the response, obtained from the ajp server.
+    This directive sets the buffer size, into which will be read the first
+    part of the response, obtained from the AJP server.
 
     In this part of response the small response-header is located, as a
     rule.
@@ -106,7 +106,7 @@ Directives
 
     context: *http, server, location*
 
-    TODO: Description.
+    Sets the number of requests after which the response will be cached.
 
   ajp_cache_path
     syntax: *ajp_cache_path /path/to/cache [levels=m:n keys_zone=name:time
@@ -134,7 +134,14 @@ Directives
 
     context: *http, server, location*
 
-    TODO: Description.
+    If an error occurs while working with the AJP server it is possible to
+    use a stale cached response. This directives determines in which cases
+    it is permitted. The directive’s parameters match those of the
+    "ajp_next_upstream" directive.
+
+    Additionally, the updating parameter permits to use a stale cached
+    response if it is currently being updated. This allows to minimize the
+    number of accesses to AJP servers when updating cached data.
 
   ajp_cache_valid
     syntax: *ajp_cache_valid [http_error_code|time];*
@@ -143,7 +150,37 @@ Directives
 
     context: *http, server, location*
 
-    TODO: Description.
+    Sets caching time for different response codes. For example, the
+    following directives
+
+    ajp_cache_valid 200 302 10m; ajp_cache_valid 404 1m;
+
+    set 10 minutes of caching for responses with codes 200 and 302, and 1
+    minute for responses with code 404.
+
+    If only caching time is specified
+
+    ajp_cache_valid 5m;
+
+    then only 200, 301, and 302 responses are cached.
+
+    In addition, it can be specified to cache any responses using the any
+    parameter:
+
+    ajp_cache_valid 200 302 10m; ajp_cache_valid 301 1h; ajp_cache_valid any
+    1m;
+
+    Parameters of caching can also be set directly in the response header.
+    This has a higher precedence than setting of caching time using the
+    directive. The “X-Accel-Expires” header field sets caching time of a
+    response in seconds. The value 0 disables to cache a response. If a
+    value starts with the prefix @, it sets an absolute time in seconds
+    since Epoch, up to which the response may be cached. If header does not
+    include the “X-Accel-Expires” field, parameters of caching may be
+    set in the header fields “Expires” or “Cache-Control”. If a
+    header includes the “Set-Cookie” field, such a response will not be
+    cached. Processing of one or more of these response header fields can be
+    disabled using the "ajp_ignore_headers" directive.
 
   ajp_connect_timeout
     syntax: *ajp_connect_timeout time;*
@@ -230,7 +267,7 @@ Directives
 
     context: *http, server, location*
 
-    This directive determines whether or not to keep the connectin alive
+    This directive determines whether or not to keep the connection alive
     with backend server.
 
   ajp_next_upstream
@@ -245,8 +282,8 @@ Directives
     Directive determines, in what cases the request will be transmitted to
     the next server:
 
-    error — an error has occurred while connecting to the server, sending a
-    request to it, or reading its response;
+    error — an error has occurred while connecting to the server, sending
+    a request to it, or reading its response;
     timeout — occurred timeout during the connection with the server,
     transfer the request or while reading response from the server;
     invalid_header — server returned a empty or incorrect answer;
@@ -260,7 +297,6 @@ Directives
     transferred to the client -- that is, if an error or timeout arises in
     the middle of the transfer of the request, then it is not possible to
     retry the current request on a different server.
-
   ajp_max_data_packet_size
     syntax: *ajp_max_data_packet_size size;*
 
@@ -316,7 +352,7 @@ Directives
 
     context: *http, server, location*
 
-    TODO: Description.
+    Permits to pass specific header fields from the AJP server to a client.
 
   ajp_pass_request_headers
     syntax: *ajp_pass_request_headers [ on | off ];*
@@ -325,7 +361,7 @@ Directives
 
     context: *http, server, location*
 
-    TODO: Description.
+    Permits to pass request header fields from the client to server.
 
   ajp_pass_request_body
     syntax: *ajp_pass_request_body [ on | off ] ;*
@@ -334,7 +370,7 @@ Directives
 
     context: *http, server, location*
 
-    TODO: Description.
+    Permits to pass request body from the client to server.
 
   ajp_read_timeout
     syntax: *ajp_read_timeout time;*
@@ -343,8 +379,8 @@ Directives
 
     context: *http, server, location*
 
-    Directive sets the amount of time for upstream to wait for a ajp process
-    to send data. Change this directive if you have long running ajp
+    Directive sets the amount of time for upstream to wait for a AJP process
+    to send data. Change this directive if you have long running AJP
     processes that do not produce output until they have finished
     processing. If you are seeing an upstream timed out error in the error
     log, then increase this parameter to something more appropriate.
@@ -390,7 +426,8 @@ Directives
     The time of modification for the file will be set to the date of
     "Last-Modified" header in the response. To be able to safe files in this
     directory it is necessary that the path is under the directory with
-    temporary files, given by directive ajp_temp_path for the data location.
+    temporary files, given by directive "ajp_temp_path" for the data
+    location.
 
     This directive can be used for creating the local copies for dynamic
     output of the backend which is not very often changed, for example:
@@ -508,16 +545,14 @@ Directives
 
     Switches on keepalive module for the upstream in question. This
     directive comes from ngx_http_upstream_keepalive_module
-    (<http://mdounin.ru/hg/ngx_http_upstream_keepalive/>).
+    (<http://mdounin.ru/hg/ngx_http_upstream_keepalive/>). This module is
+    merged into official Nginx after Nginx-1.1.4.
 
     Parameters:
 
     num: Maximum number of connections to cache. If there isn't enough room
     to cache new connections - last recently used connections will be kicked
     off the cache.
-    single: Treat everything as single host. With this flag connections to
-    different backends are treated as equal.
-
   server(in upstream)
     This directive comes from ngx_http_upstream_jvm_route_module
     (<http://code.google.com/p/nginx-upstream-jvm-route/>).
@@ -532,7 +567,6 @@ Directives
     connections is higher than this parameter, it will not be chosen until
     the server is less busier. If all the servers are busy, Nginx will
     return 502.
-
     NOTE: This module does not support the parameter of 'backup' yet.
 
 Installation
@@ -557,28 +591,22 @@ Compatibility
     The master branch is for Nginx-1.1.4+
     If you want to use it with Nginx-1.0.x, you can use this nginx-1.0
     (<https://github.com/yaoweibin/nginx_ajp_module/tree/nginx-1.0>) branch.
-
 TODO
     SSL
-
 Known Issues
     Developing
-
 Changelogs
   v0.1
     first release
-
 Authors
     Jinti Shen(路奇) *jinti.shen AT gmail DOT com*
     Joshua Zhu(叔度) *zhuzhaoyuan AT gmail DOT com*
     Simon Liu(雕梁) *simohayha.bobo AT gmail DOT com*
     Matthew Ma(东坡) *mj19821214 AT gmail DOT com*
     Weibin Yao(姚伟斌) *yaoweibin AT gmail DOT com*
-
 Acknowledgments
-    Thanks 李金虎(beagem@163.com) to improve the keepalive feature with this
-    module.
-
+    Thanks 李金虎(beagem@163.com) to improve the keepalive feature with
+    this module.
 License
     This README template is from agentzh (<http://github.com/agentzh>).
 
@@ -599,7 +627,6 @@ License
     Redistributions in binary form must reproduce the above copyright
     notice, this list of conditions and the following disclaimer in the
     documentation and/or other materials provided with the distribution.
-
     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
     IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
     TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
