@@ -44,7 +44,7 @@ __DATA__
         ajp_pass tomcats;
     }
 --- request
-    POST /upload.jsp
+    POST /single_upload_page.jsp
     username=yaoweibin
     aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
     aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
