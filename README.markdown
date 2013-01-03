@@ -735,6 +735,7 @@ Grab the nginx source code from nginx.org ([http://nginx.org/](http://nginx.org/
 
 
 - SSL
+- refactor with nginx-1.2.x
 
 
 

@@ -560,6 +560,7 @@ Grab the nginx source code from [http://nginx.org/ nginx.org], for example, the 
 = TODO =
 
 * SSL
+* refactor with nginx-1.2.x
 
 = Known Issues =
 

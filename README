@@ -586,6 +586,7 @@ Compatibility
     (<https://github.com/yaoweibin/nginx_ajp_module/tree/nginx-1.0>) branch.
 TODO
     SSL
+    refactor with nginx-1.2.x
 Known Issues
     Developing
 Changelogs
