@@ -4,10 +4,7 @@ Name
 Synopsis
             http {
                     upstream tomcats {
-
                             server 127.0.0.1:8009 srun_id=jvm1;
-
-                            jvm_route $cookie_JSESSIONID reverse;
                             keepalive 10;
                     }
 
@@ -528,18 +525,6 @@ Directives
 
     Set the location of pages return the status of the jvm_route peers.
     Example: location status { jvm_route_status backend; }
-
-  keepalive
-    syntax: *keepalive <num> [single]*
-
-    default: *none*
-
-    context: *upstream*
-
-    Switches on keepalive module for the upstream in question. This
-    directive comes from ngx_http_upstream_keepalive_module
-    (<http://mdounin.ru/hg/ngx_http_upstream_keepalive/>). This module is
-    merged into official Nginx after Nginx-1.1.4.
 
     Parameters:
 

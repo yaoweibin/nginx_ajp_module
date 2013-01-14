@@ -16,10 +16,7 @@ __nginx\_ajp\_module__ - support AJP protocol proxy with Nginx
 
 	http {
 		upstream tomcats {
-
 			server 127.0.0.1:8009 srun_id=jvm1;
-
-			jvm_route $cookie_JSESSIONID reverse;
 			keepalive 10;
 		}
 
@@ -647,20 +644,6 @@ Set the location of pages return the status of the jvm\_route peers. Example:
 	location status {
 		jvm\_route\_status backend;
 	}
-
-
-
-## keepalive
-
-
-
-__syntax:__ _keepalive <num> \[single\]_
-
-__default:__ _none_
-
-__context:__ _upstream_
-
-Switches on keepalive module for the upstream in question. This directive comes from ngx\_http\_upstream\_keepalive\_module ([http://mdounin.ru/hg/ngx\_http\_upstream\_keepalive/](http://mdounin.ru/hg/ngx\_http\_upstream\_keepalive/)). This module is merged into official Nginx after Nginx-1.1.4.
 
 Parameters:
 

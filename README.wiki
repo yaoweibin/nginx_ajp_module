@@ -1,4 +1,4 @@
-﻿﻿= Name =
+﻿= Name =
 
 '''nginx_ajp_module''' - support AJP protocol proxy with Nginx
 
@@ -8,10 +8,7 @@
 
 	http {
 		upstream tomcats {
-
 			server 127.0.0.1:8009 srun_id=jvm1;
-
-			jvm_route $cookie_JSESSIONID reverse;
 			keepalive 10;
 		}
 
