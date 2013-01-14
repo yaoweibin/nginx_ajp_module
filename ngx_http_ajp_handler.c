@@ -101,9 +101,6 @@ ngx_http_ajp_handler(ngx_http_request_t *r)
 
     u->pipe->input_filter = ngx_http_ajp_input_filter;
     u->pipe->input_ctx = r;
-#if (nginx_version) < 1001004 
-    u->pipe->keepalive = 1;
-#endif
     u->input_filter_init = ngx_http_ajp_input_filter_init;
 
     rc = ngx_http_read_client_request_body(r, ngx_http_upstream_init);
@@ -441,11 +438,9 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
 static ngx_int_t
 ngx_http_ajp_input_filter_init(void *data)
 {
-#if (nginx_version) >= 1001004 
     ngx_http_request_t           *r = data;
 
     r->upstream->pipe->length = (off_t) AJP_HEADER_LEN;
-#endif
 
     return NGX_OK;
 }
@@ -862,7 +857,6 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
             "free buf %p %z", buf->pos, ngx_buf_size(buf));
 
     if (alcf->keep_conn) {
-#if (nginx_version) >= 1001004 
         /* set p->length, minimal amount of data we want to see */
         if (!a->length) {
             p->length = 1;
@@ -873,7 +867,6 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
         if (p->upstream_done) {
             p->length = 0;
         }
-#endif
     }
 
     if (b) {
@@ -1020,13 +1013,9 @@ ngx_http_ajp_end_response(ngx_http_request_t *r, int reuse)
     p = r->upstream->pipe;
 
     a->ajp_reuse = reuse;
-#if (nginx_version) < 1001004 
-    p->keepalive = reuse ? 1 : 0;
-#else
     if (alcf->keep_conn && reuse) {
         r->upstream->keepalive = 1;
     }
-#endif
     p->upstream_done = 1;
     a->state = ngx_http_ajp_st_response_end;
 }
