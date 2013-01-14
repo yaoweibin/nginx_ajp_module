@@ -1,4 +1,4 @@
-﻿= Name =
+﻿﻿= Name =
 
 '''nginx_ajp_module''' - support AJP protocol proxy with Nginx
 
@@ -510,16 +510,6 @@ Set the location of pages return the status of the jvm_route peers. Example:
 		jvm_route_status backend;
 	}
 </geshi>
-
-== keepalive ==
-
-'''syntax:''' ''keepalive <num> [single]''
-
-'''default:''' ''none''
-
-'''context:''' ''upstream''
-
-Switches on keepalive module for the upstream in question. This directive comes from [http://mdounin.ru/hg/ngx_http_upstream_keepalive/ ngx_http_upstream_keepalive_module]. This module is merged into official Nginx after Nginx-1.1.4.
 
 Parameters:
 * num: Maximum number of connections to cache.  If there isn't enough room to cache new connections - last recently used connections will be kicked off the cache.
