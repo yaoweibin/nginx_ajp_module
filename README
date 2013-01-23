@@ -4,7 +4,7 @@ Name
 Synopsis
             http {
                     upstream tomcats {
-                            server 127.0.0.1:8009 srun_id=jvm1;
+                            server 127.0.0.1:8009;
                             keepalive 10;
                     }
 
@@ -556,10 +556,8 @@ Installation
     source with this module:
 
         $ wget 'http://nginx.org/download/nginx-1.2.0.tar.gz'
-        $ tar -xzvf nginx-1.2.0.tar.gz
-        $ cd nginx-1.2.0/
-        $ patch -p1 < /path/to/nginx_ajp_module/ajp.patch
-
+        $ tar -xzvf nginx-1.2.6.tar.gz
+        $ cd nginx-1.2.6/
         $ ./configure --add-module=/path/to/nginx_ajp_module
 
         $ make
@@ -578,11 +576,11 @@ Changelogs
   v0.1
     first release
 Authors
+    Weibin Yao(姚伟斌) *yaoweibin AT gmail DOT com*
     Jinti Shen(路奇) *jinti.shen AT gmail DOT com*
     Joshua Zhu(叔度) *zhuzhaoyuan AT gmail DOT com*
     Simon Liu(雕梁) *simohayha.bobo AT gmail DOT com*
     Matthew Ma(东坡) *mj19821214 AT gmail DOT com*
-    Weibin Yao(姚伟斌) *yaoweibin AT gmail DOT com*
 Acknowledgments
     Thanks 李金虎(beagem@163.com) to improve the keepalive feature with
     this module.

@@ -16,7 +16,7 @@ __nginx\_ajp\_module__ - support AJP protocol proxy with Nginx
 
 	http {
 		upstream tomcats {
-			server 127.0.0.1:8009 srun_id=jvm1;
+			server 127.0.0.1:8009;
 			keepalive 10;
 		}
 
@@ -683,10 +683,8 @@ Download the latest version of the release tarball of this module from github ([
 Grab the nginx source code from nginx.org ([http://nginx.org/](http://nginx.org/)), for example, the version 1.2.0 (see nginx compatibility), and then build the source with this module:
 
     $ wget 'http://nginx.org/download/nginx-1.2.0.tar.gz'
-    $ tar -xzvf nginx-1.2.0.tar.gz
-    $ cd nginx-1.2.0/
-    $ patch -p1 < /path/to/nginx_ajp_module/ajp.patch
-
+    $ tar -xzvf nginx-1.2.6.tar.gz
+    $ cd nginx-1.2.6/
     $ ./configure --add-module=/path/to/nginx_ajp_module
 
     $ make
@@ -764,11 +762,11 @@ Grab the nginx source code from nginx.org ([http://nginx.org/](http://nginx.org/
 
 
 
+- Weibin Yao(姚伟斌) \_yaoweibin AT gmail DOT com\_
 - Jinti Shen(路奇) \_jinti.shen AT gmail DOT com\_
 - Joshua Zhu(叔度) \_zhuzhaoyuan AT gmail DOT com\_
 - Simon Liu(雕梁) \_simohayha.bobo AT gmail DOT com\_
 - Matthew Ma(东坡) \_mj19821214 AT gmail DOT com\_
-- Weibin Yao(姚伟斌) \_yaoweibin AT gmail DOT com\_
 
 
 
