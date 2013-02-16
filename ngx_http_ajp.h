@@ -24,16 +24,13 @@
 #define AJP_NULL_STRING_LENGTH (uint16_t)(-1)
 #define AJP_EOVERFLOW          1001           
 
-typedef struct ajp_msg ajp_msg_t;
-
-struct ajp_msg
-{
+typedef struct ajp_msg {
     ngx_buf_t  *buf;
     size_t      len;
     int         server_side;
-};
+} ajp_msg_t;
 
-/**
+/*
  * Signature for the messages sent from Apache to tomcat
  */
 #define AJP13_WS_HEADER             0x1234
@@ -45,36 +42,41 @@ struct ajp_msg
 #define AJP13_MAX_SEND_BODY_SZ      (AJP_MAX_BUFFER_SZ - AJP_HEADER_SZ)
 #define AJP_PING_PONG_SZ            128
 
-/** Send a request from web server to container*/
+/* Send a request from web server to container */
 #define CMD_AJP13_FORWARD_REQUEST   (unsigned char)2
 
-/** Write a body chunk from the servlet container to the web server */
+/* Write a body chunk from the servlet container to the web server */
 #define CMD_AJP13_SEND_BODY_CHUNK   (unsigned char)3
 
-/** Send response headers from the servlet container to the web server. */
+/* Send response headers from the servlet container to the web server. */
 #define CMD_AJP13_SEND_HEADERS      (unsigned char)4
 
-/** Marks the end of response. */
+/* Marks the end of response. */
 #define CMD_AJP13_END_RESPONSE      (unsigned char)5
 
-/** Get further data from the web server if it hasn't all been transferred yet. */
+/*
+ * Get further data from the web server if it hasn't all been
+ * transferred yet.
+ */
 #define CMD_AJP13_GET_BODY_CHUNK    (unsigned char)6
 
-/** The web server asks the container to shut itself down. */
+/* The web server asks the container to shut itself down. */
 #define CMD_AJP13_SHUTDOWN          (unsigned char)7
 
-/** Webserver ask container to take control (logon phase) */
+/* Webserver ask container to take control (logon phase) */
 #define CMD_AJP13_PING              (unsigned char)8
 
-/** Container response to cping request */
+/* Container response to cping request */
 #define CMD_AJP13_CPONG             (unsigned char)9
 
-/** Webserver check if container is alive, since container should respond by cpong */
+/*
+ * Webserver check if container is alive, since container should
+ * respond by cpong
+ */
 #define CMD_AJP13_CPING             (unsigned char)10
 
 /*
  * Conditional request attributes
- * 
  */
 #define SC_A_CONTEXT            (unsigned char)1
 #define SC_A_SERVLET_PATH       (unsigned char)2
@@ -231,15 +233,16 @@ struct ajp_msg
 
 ngx_int_t ajp_msg_is_zero_length(u_char *head);
 
-/**
- * Begin to parse an AJP Message, move the buffer header to the type's position.
+/*
+ * Begin to parse an AJP Message, move the buffer header to the type's
+ * position.
  *
  * @param msg       AJP Message to parse
  * @return          NGX_OK or error
  */
 ngx_int_t ajp_msg_parse_begin(ajp_msg_t *msg);
 
-/**
+/*
  * Reset an AJP Message
  *
  * @param msg       AJP Message to reset
@@ -247,7 +250,7 @@ ngx_int_t ajp_msg_parse_begin(ajp_msg_t *msg);
  */
 ngx_int_t ajp_msg_reset(ajp_msg_t *msg);
 
-/**
+/*
  * Reuse an AJP Message
  *
  * @param msg       AJP Message to reuse
@@ -255,7 +258,7 @@ ngx_int_t ajp_msg_reset(ajp_msg_t *msg);
  */
 ajp_msg_t * ajp_msg_reuse(ajp_msg_t *msg);
 
-/**
+/*
  * Mark the end of an AJP Message
  *
  * @param msg       AJP Message to end
@@ -263,7 +266,7 @@ ajp_msg_t * ajp_msg_reuse(ajp_msg_t *msg);
  */
 ngx_int_t ajp_msg_end(ajp_msg_t *msg);
 
-/**
+/*
  * Add an unsigned 32bits value to AJP Message
  *
  * @param msg       AJP Message to get value from
@@ -272,7 +275,7 @@ ngx_int_t ajp_msg_end(ajp_msg_t *msg);
  */
 ngx_int_t ajp_msg_append_uint32(ajp_msg_t *msg, uint32_t value);
 
-/**
+/*
  * Add an unsigned 16bits value to AJP Message
  *
  * @param msg       AJP Message to get value from
@@ -281,7 +284,7 @@ ngx_int_t ajp_msg_append_uint32(ajp_msg_t *msg, uint32_t value);
  */
 ngx_int_t ajp_msg_append_uint16(ajp_msg_t *msg, uint16_t value);
 
-/**
+/*
  * Add an unsigned 8bits value to AJP Message
  *
  * @param msg       AJP Message to get value from
@@ -290,7 +293,7 @@ ngx_int_t ajp_msg_append_uint16(ajp_msg_t *msg, uint16_t value);
  */
 ngx_int_t ajp_msg_append_uint8(ajp_msg_t *msg, u_char value);
 
-/**
+/*
  *  Add a String in AJP message
  *
  * @param msg       AJP Message to get value from
@@ -299,7 +302,7 @@ ngx_int_t ajp_msg_append_uint8(ajp_msg_t *msg, u_char value);
  */
 ngx_int_t ajp_msg_append_string(ajp_msg_t *msg, ngx_str_t *value);
 
-/**
+/*
  * Get a 32bits unsigned value from AJP Message
  *
  * @param msg       AJP Message to get value from
@@ -308,7 +311,7 @@ ngx_int_t ajp_msg_append_string(ajp_msg_t *msg, ngx_str_t *value);
  */
 ngx_int_t ajp_msg_get_uint32(ajp_msg_t *msg, uint32_t *rvalue);
 
-/**
+/*
  * Get a 16bits unsigned value from AJP Message
  *
  * @param msg       AJP Message to get value from
@@ -317,7 +320,7 @@ ngx_int_t ajp_msg_get_uint32(ajp_msg_t *msg, uint32_t *rvalue);
  */
 ngx_int_t ajp_msg_get_uint16(ajp_msg_t *msg, uint16_t *rvalue);
 
-/**
+/*
  * Peek a 16bits unsigned value from AJP Message, position in message
  * is not updated
  *
@@ -327,7 +330,7 @@ ngx_int_t ajp_msg_get_uint16(ajp_msg_t *msg, uint16_t *rvalue);
  */
 ngx_int_t ajp_msg_peek_uint16(ajp_msg_t *msg, uint16_t *rvalue);
 
-/**
+/*
  * Get a 8bits unsigned value from AJP Message
  *
  * @param msg       AJP Message to get value from
@@ -336,7 +339,7 @@ ngx_int_t ajp_msg_peek_uint16(ajp_msg_t *msg, uint16_t *rvalue);
  */
 ngx_int_t ajp_msg_get_uint8(ajp_msg_t *msg, u_char *rvalue);
 
-/**
+/*
  * Peek a 8bits unsigned value from AJP Message, position in message
  * is not updated
  *
@@ -346,7 +349,7 @@ ngx_int_t ajp_msg_get_uint8(ajp_msg_t *msg, u_char *rvalue);
  */
 ngx_int_t ajp_msg_peek_uint8(ajp_msg_t *msg, u_char *rvalue);
 
-/**
+/*
  * Get a String value from AJP Message
  *
  * @param msg       AJP Message to get value from
@@ -356,7 +359,7 @@ ngx_int_t ajp_msg_peek_uint8(ajp_msg_t *msg, u_char *rvalue);
 ngx_int_t ajp_msg_get_string(ajp_msg_t *msg, ngx_str_t *rvalue);
 
 
-/**
+/*
  * Create an AJP Message from pool
  *
  * @param pool      memory pool to allocate AJP message from
@@ -366,7 +369,7 @@ ngx_int_t ajp_msg_get_string(ajp_msg_t *msg, ngx_str_t *rvalue);
  */
 ngx_int_t ajp_msg_create(ngx_pool_t *pool, size_t size, ajp_msg_t **rmsg);
 
-/**
+/*
  * Create an AJP Message's buffer from pool
  *
  * @param pool      memory pool to allocate AJP message from
@@ -376,7 +379,7 @@ ngx_int_t ajp_msg_create(ngx_pool_t *pool, size_t size, ajp_msg_t **rmsg);
  */
 ngx_int_t ajp_msg_create_buffer(ngx_pool_t *pool, size_t size, ajp_msg_t *msg);
 
-/**
+/*
  * Create an AJP Message from pool without buffer
  *
  * @param pool      memory pool to allocate AJP message from
@@ -385,7 +388,7 @@ ngx_int_t ajp_msg_create_buffer(ngx_pool_t *pool, size_t size, ajp_msg_t *msg);
  */
 ngx_int_t ajp_msg_create_without_buffer(ngx_pool_t *pool, ajp_msg_t **rmsg);
 
-/**
+/*
  * Allocate a msg to send data
  *
  * @param pool      pool to allocate from
@@ -394,7 +397,7 @@ ngx_int_t ajp_msg_create_without_buffer(ngx_pool_t *pool, ajp_msg_t **rmsg);
  */
 ngx_int_t  ajp_alloc_data_msg(ngx_pool_t *pool, ajp_msg_t *msg);
 
-/**
+/*
  * Finalize a data message
  *
  * @param msg       returned AJP message
@@ -403,7 +406,7 @@ ngx_int_t  ajp_alloc_data_msg(ngx_pool_t *pool, ajp_msg_t *msg);
  */
 ngx_int_t  ajp_data_msg_end(ajp_msg_t *msg, size_t len);
 
-/**
+/*
  * Dump up to the first DUMP_LENGTH bytes on an AJP Message
  *
  * @param pool      pool to allocate from
@@ -414,12 +417,12 @@ ngx_int_t  ajp_data_msg_end(ajp_msg_t *msg, size_t len);
 u_char * ajp_msg_dump(ngx_pool_t *pool, ajp_msg_t *msg, char *err);
 
 
-/**
+/*
  * Initialize the headers of request and reponse
  */
 void ajp_header_init(void);
 
-/**
+/*
  * Fill the request packet into AJP message
  *
  * @param msg       AJP message
@@ -430,7 +433,7 @@ void ajp_header_init(void);
 ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
         ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *alcf);
 
-/**
+/*
  * Parse the binary AJP response packet
  *
  * @param msg       AJP message
@@ -441,12 +444,12 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
 ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg, 
         ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *alcf);
 
-/** 
+/* 
  * Handle the CPING/CPONG messages
  * TODO: health check
  */
 
-/**
+/*
  * Serialize in an AJP Message a PING command
  *
  * +-----------------------+
@@ -458,7 +461,7 @@ ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
  */
 ngx_int_t ajp_msg_serialize_ping(ajp_msg_t *msg);
 
-/** 
+/* 
  * Serialize in an AJP Message a CPING command
  *
  * +-----------------------+
@@ -472,4 +475,3 @@ ngx_int_t ajp_msg_serialize_cping(ajp_msg_t *msg);
 
 
 #endif /* NGX_HTTP_AJP_H */
-

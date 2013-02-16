@@ -10,11 +10,11 @@ ajp_msg_check_header(ajp_msg_t *msg)
     u_char *head = msg->buf->pos;
 
     if (!((head[0] == 0x41 && head[1] == 0x42) ||
-                (head[0] == 0x12 && head[1] == 0x34))) {
+          (head[0] == 0x12 && head[1] == 0x34))) {
 
         ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                "ajp_check_msg_header() got bad signature %02Xd%02Xd",
-                head[0], head[1]);
+                      "ajp_check_msg_header() got bad signature %02Xd%02Xd",
+                      head[0], head[1]);
 
         return NGX_ERROR;
     }
@@ -28,7 +28,7 @@ ajp_msg_is_zero_length(u_char *head)
 {
 
     if (head[0] == 0x41 && head[1] == 0x42 &&
-            head[3] == 0x00 && head[4] == 0x00)
+        head[3] == 0x00 && head[4] == 0x00)
     {
         return 1;
     }
@@ -63,8 +63,8 @@ ajp_msg_reset(ajp_msg_t *msg)
 
     if (buf->end > buf->start + AJP_HEADER_LEN) {
         buf->pos = buf->last = buf->start + AJP_HEADER_LEN;
-    }
-    else {
+
+    } else {
         return NGX_ERROR;
     }
 
@@ -93,8 +93,7 @@ ajp_msg_end(ajp_msg_t *msg)
     if (msg->server_side) {
         buf->start[0] = 0x41;
         buf->start[1] = 0x42;
-    }
-    else {
+    } else {
         buf->start[0] = 0x12;
         buf->start[1] = 0x34;
     }
@@ -112,8 +111,8 @@ static inline int
 ajp_log_overflow(ajp_msg_t *msg, const char *context)
 {
     ngx_log_error(NGX_LOG_WARN, ngx_cycle->log, 0,
-            "%s(): BufferOverflowException pos:%p, last:%p, end:%p",
-            context, msg->buf->pos, msg->buf->last, msg->buf->end);
+                  "%s(): BufferOverflowException pos:%p, last:%p, end:%p",
+                  context, msg->buf->pos, msg->buf->last, msg->buf->end);
 
     return AJP_EOVERFLOW;
 }
@@ -280,7 +279,6 @@ ajp_msg_peek_uint8(ajp_msg_t *msg, u_char *rvalue)
 ngx_int_t 
 ajp_msg_get_uint8(ajp_msg_t *msg, u_char *rvalue)
 {
-
     if ((msg->buf->pos + 1) > msg->buf->last) {
         return ajp_log_overflow(msg, "ajp_msg_get_uint8");
     }
@@ -316,7 +314,7 @@ ajp_msg_get_string(ajp_msg_t *msg, ngx_str_t *value)
     }
 
     buf->pos += (size_t)size;
-    buf->pos++;      /* a String in AJP is NULL terminated */
+    buf->pos++;   /* a String in AJP is NULL terminated */
 
     value->data = start;
     value->len = size;
@@ -410,7 +408,7 @@ ajp_data_msg_end(ajp_msg_t *msg, size_t len)
     buf->start[AJP_HEADER_SZ - 2] = (u_char)((len >> 8) & 0xFF);
     buf->start[AJP_HEADER_SZ - 1] = (u_char)(len & 0xFF);
 
-    /*len include AJP_HEADER_SIZE_LEN*/
+    /* len include AJP_HEADER_SIZE_LEN */
     len += AJP_HEADER_SZ_LEN;
     buf->start[AJP_HEADER_LEN - 2] = (u_char)((len >> 8) & 0xFF);
     buf->start[AJP_HEADER_LEN - 1] = (u_char)(len & 0xFF);

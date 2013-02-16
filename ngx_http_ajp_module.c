@@ -38,14 +38,14 @@ static ngx_conf_post_t  ngx_http_ajp_lowat_post = { ngx_http_ajp_lowat_check };
 
 
 static ngx_conf_bitmask_t  ngx_http_ajp_next_upstream_masks[] = {
-    { ngx_string("error"), NGX_HTTP_UPSTREAM_FT_ERROR },
-    { ngx_string("timeout"), NGX_HTTP_UPSTREAM_FT_TIMEOUT },
+    { ngx_string("error"),          NGX_HTTP_UPSTREAM_FT_ERROR },
+    { ngx_string("timeout"),        NGX_HTTP_UPSTREAM_FT_TIMEOUT },
     { ngx_string("invalid_header"), NGX_HTTP_UPSTREAM_FT_INVALID_HEADER },
-    { ngx_string("http_500"), NGX_HTTP_UPSTREAM_FT_HTTP_500 },
-    { ngx_string("http_503"), NGX_HTTP_UPSTREAM_FT_HTTP_503 },
-    { ngx_string("http_404"), NGX_HTTP_UPSTREAM_FT_HTTP_404 },
-    { ngx_string("updating"), NGX_HTTP_UPSTREAM_FT_UPDATING },
-    { ngx_string("off"), NGX_HTTP_UPSTREAM_FT_OFF },
+    { ngx_string("http_500"),       NGX_HTTP_UPSTREAM_FT_HTTP_500 },
+    { ngx_string("http_503"),       NGX_HTTP_UPSTREAM_FT_HTTP_503 },
+    { ngx_string("http_404"),       NGX_HTTP_UPSTREAM_FT_HTTP_404 },
+    { ngx_string("updating"),       NGX_HTTP_UPSTREAM_FT_UPDATING },
+    { ngx_string("off"),            NGX_HTTP_UPSTREAM_FT_OFF },
     { ngx_null_string, 0 }
 };
 
@@ -449,8 +449,8 @@ ngx_http_ajp_store(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_http_ajp_loc_conf_t    *alcf = conf;
     ngx_http_script_compile_t   sc;
 
-    if (alcf->upstream.store != NGX_CONF_UNSET
-        || alcf->upstream.store_lengths)
+    if ((alcf->upstream.store != NGX_CONF_UNSET) ||
+        alcf->upstream.store_lengths)
     {
         return "is duplicate";
     }
@@ -520,7 +520,6 @@ ngx_http_ajp_lowat_check(ngx_conf_t *cf, void *post, void *data)
                        "\"ajp_send_lowat\" is not supported, ignored");
 
     *np = 0;
-
 #endif
 
     return NGX_CONF_OK;
@@ -696,13 +695,13 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_http_ajp_loc_conf_t *prev = parent;
     ngx_http_ajp_loc_conf_t *conf = child;
 
-    size_t                        size;
-    ngx_str_t                    *h;
-    ngx_hash_init_t               hash;
+    size_t            size;
+    ngx_str_t        *h;
+    ngx_hash_init_t   hash;
 
     if (conf->upstream.store != 0) {
         ngx_conf_merge_value(conf->upstream.store,
-                              prev->upstream.store, 0);
+                             prev->upstream.store, 0);
 
         if (conf->upstream.store_lengths == NULL) {
             conf->upstream.store_lengths = prev->upstream.store_lengths;
@@ -711,21 +710,21 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
     }
 
     ngx_conf_merge_size_value(conf->ajp_header_packet_buffer_size_conf,
-            prev->ajp_header_packet_buffer_size_conf,
-            (size_t) AJP_MSG_BUFFER_SZ);
+                              prev->ajp_header_packet_buffer_size_conf,
+                              (size_t) AJP_MSG_BUFFER_SZ);
 
     ngx_conf_merge_size_value(conf->max_ajp_data_packet_size_conf,
-            prev->max_ajp_data_packet_size_conf,
-            (size_t) AJP_MSG_BUFFER_SZ);
+                              prev->max_ajp_data_packet_size_conf,
+                              (size_t) AJP_MSG_BUFFER_SZ);
 
     ngx_conf_merge_uint_value(conf->upstream.store_access,
                               prev->upstream.store_access, 0600);
 
     ngx_conf_merge_value(conf->upstream.buffering,
-                              prev->upstream.buffering, 1);
+                         prev->upstream.buffering, 1);
 
     ngx_conf_merge_value(conf->upstream.ignore_client_abort,
-                              prev->upstream.ignore_client_abort, 0);
+                         prev->upstream.ignore_client_abort, 0);
 
     ngx_conf_merge_msec_value(conf->upstream.connect_timeout,
                               prev->upstream.connect_timeout, 60000);
@@ -758,8 +757,7 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 
     if(conf->max_ajp_data_packet_size_conf < AJP_MSG_BUFFER_SZ) {
         conf->max_ajp_data_packet_size_conf = AJP_MSG_BUFFER_SZ;
-    }
-    else if(conf->max_ajp_data_packet_size_conf > AJP_MAX_BUFFER_SZ ) {
+    } else if(conf->max_ajp_data_packet_size_conf > AJP_MAX_BUFFER_SZ ) {
         conf->max_ajp_data_packet_size_conf = AJP_MAX_BUFFER_SZ;
     }
 
