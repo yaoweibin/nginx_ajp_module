@@ -302,13 +302,6 @@ ajp_msg_get_string(ajp_msg_t *msg, ngx_str_t *value)
     buf = msg->buf;
     status = ajp_msg_get_uint16(msg, &size);
 
-    if (size == AJP_NULL_STRING_LENGTH) {
-        value->data = NULL;
-        value->len = 0;
-
-        return NGX_OK;
-    }
-
     start = buf->pos;
 
     if ((status != NGX_OK) || (start + size + 1 > buf->last)) {
