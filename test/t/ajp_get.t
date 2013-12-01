@@ -35,6 +35,7 @@ __DATA__
 --- http_config
     upstream tomcats{      
         server 127.0.0.1:$TEST_NGINX_TOMCAT_AJP_PORT;
+         jvm_route $cookie_JSESSIONID reverse;
         keepalive 10;
     }
 --- config

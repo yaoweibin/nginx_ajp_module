@@ -388,7 +388,9 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
         return NGX_ERROR;
     }
 
-    /* TODO: is_ssl = ?*/
+#if (NGX_HTTP_SSL)
+    is_ssl = r->http_connection->ssl;
+#endif
 
     part = &r->headers_in.headers.part;
 
@@ -530,10 +532,6 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
             return AJP_EOVERFLOW;
         }
     }
-
-#if (NGX_HTTP_SSL)
-    is_ssl = r->http_connection->ssl;
-#endif
 
     /* Forward the remote port information, which was forgotten
      * from the builtin data of the AJP 13 protocol.
