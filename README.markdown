@@ -454,9 +454,13 @@ Grab the nginx source code from nginx.org ([http://nginx.org/](http://nginx.org/
 
 # Changelogs
 
-## v0.2
+## v0.3
 
 - remove the jvm\_route and keepalive module
+
+## v0.2
+
+- bugfix
 
 ## v0.1
 
