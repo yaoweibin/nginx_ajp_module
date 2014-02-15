@@ -22,7 +22,7 @@
 
 
 #define AJP_NULL_STRING_LENGTH (uint16_t)(-1)
-#define AJP_EOVERFLOW          1001           
+#define AJP_EOVERFLOW          1001
 
 typedef struct ajp_msg {
     ngx_buf_t  *buf;
@@ -105,12 +105,12 @@ typedef struct ajp_msg {
  * The list of methods was taken from Section 5.1.1 of RFC 2616,
  * RFC 2518, the ACL IETF draft, and the DeltaV IESG Proposed Standard.
  *          Method        = "OPTIONS"
- *                        | "GET"    
- *                        | "HEAD"   
- *                        | "POST"   
- *                        | "PUT"    
- *                        | "DELETE" 
- *                        | "TRACE"  
+ *                        | "GET"
+ *                        | "HEAD"
+ *                        | "POST"
+ *                        | "PUT"
+ *                        | "DELETE"
+ *                        | "TRACE"
  *                        | "PROPFIND"
  *                        | "PROPPATCH"
  *                        | "MKCOL"
@@ -131,7 +131,7 @@ typedef struct ajp_msg {
  *                        | "MERGE"
  *                        | "BASELINE-CONTROL"
  *                        | "MKACTIVITY"
- * 
+ *
  */
 #define SC_M_OPTIONS            (unsigned char)1
 #define SC_M_GET                (unsigned char)2
@@ -167,7 +167,7 @@ typedef struct ajp_msg {
 /*
  * Frequent request headers, these headers are coded as numbers
  * instead of strings.
- * 
+ *
  * Accept
  * Accept-Charset
  * Accept-Encoding
@@ -182,7 +182,7 @@ typedef struct ajp_msg {
  * Pragma
  * Referer
  * User-Agent
- * 
+ *
  */
 #define SC_REQ_ACCEPT               (unsigned short)0xA001
 #define SC_REQ_ACCEPT_CHARSET       (unsigned short)0xA002
@@ -192,7 +192,7 @@ typedef struct ajp_msg {
 #define SC_REQ_CONNECTION           (unsigned short)0xA006
 #define SC_REQ_CONTENT_TYPE         (unsigned short)0xA007
 #define SC_REQ_CONTENT_LENGTH       (unsigned short)0xA008
-#define SC_REQ_COOKIE               (unsigned short)0xA009    
+#define SC_REQ_COOKIE               (unsigned short)0xA009
 #define SC_REQ_COOKIE2              (unsigned short)0xA00A
 #define SC_REQ_HOST                 (unsigned short)0xA00B
 #define SC_REQ_PRAGMA               (unsigned short)0xA00C
@@ -202,7 +202,7 @@ typedef struct ajp_msg {
 /*
  * Frequent response headers, these headers are coded as numbers
  * instead of strings.
- * 
+ *
  * Content-Type
  * Content-Language
  * Content-Length
@@ -213,7 +213,7 @@ typedef struct ajp_msg {
  * Servlet-Engine
  * Status
  * WWW-Authenticate
- * 
+ *
  */
 #define SC_RESP_CONTENT_TYPE        (unsigned short)0xA001
 #define SC_RESP_CONTENT_LANGUAGE    (unsigned short)0xA002
@@ -441,10 +441,10 @@ ngx_int_t ajp_marshal_into_msgb(ajp_msg_t *msg,
  * @param alcf      AJP configration structure
  * @return          NGX_OK or error
  */
-ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg, 
+ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
         ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *alcf);
 
-/* 
+/*
  * Handle the CPING/CPONG messages
  * TODO: health check
  */
@@ -461,7 +461,7 @@ ngx_int_t ajp_unmarshal_response(ajp_msg_t *msg,
  */
 ngx_int_t ajp_msg_serialize_ping(ajp_msg_t *msg);
 
-/* 
+/*
  * Serialize in an AJP Message a CPING command
  *
  * +-----------------------+

@@ -63,15 +63,15 @@ static response_known_headers_t response_known_headers[] = {
 
 
 /* This will be called in the ajp_module's init_process function. */
-void 
-ajp_header_init(void) 
+void
+ajp_header_init(void)
 {
     request_known_headers_calc_hash();
     response_known_headers_calc_hash();
 }
 
 
-static void 
+static void
 request_known_headers_calc_hash (void)
 {
     static ngx_int_t         is_calc_request_hash = 0;
@@ -93,7 +93,7 @@ request_known_headers_calc_hash (void)
 }
 
 
-static void 
+static void
 response_known_headers_calc_hash(void)
 {
     static ngx_int_t          is_calc_response_hash = 0;
@@ -108,7 +108,7 @@ response_known_headers_calc_hash(void)
     header = response_known_headers;
 
     while (header->name.len != 0) {
-        header->hash = 
+        header->hash =
             ngx_hash_key(header->lowcase_name.data, header->lowcase_name.len);
 
         header++;
@@ -116,7 +116,7 @@ response_known_headers_calc_hash(void)
 }
 
 
-static ngx_uint_t 
+static ngx_uint_t
 sc_for_req_get_headers_num(ngx_list_part_t *part)
 {
     ngx_uint_t num = 0;
@@ -130,7 +130,7 @@ sc_for_req_get_headers_num(ngx_list_part_t *part)
 }
 
 
-static ngx_int_t 
+static ngx_int_t
 sc_for_req_get_uri(ngx_http_request_t *r, ngx_str_t *uri)
 {
     uintptr_t escape;
@@ -138,7 +138,7 @@ sc_for_req_get_uri(ngx_http_request_t *r, ngx_str_t *uri)
     escape = 0;
 
     if (r->quoted_uri || r->space_in_uri || r->internal) {
-        escape = 2 * ngx_escape_uri(NULL, r->uri.data, 
+        escape = 2 * ngx_escape_uri(NULL, r->uri.data,
                 r->uri.len, NGX_ESCAPE_URI);
     }
 
@@ -161,7 +161,7 @@ sc_for_req_get_uri(ngx_http_request_t *r, ngx_str_t *uri)
 }
 
 
-static ngx_uint_t 
+static ngx_uint_t
 request_known_headers_find_hash (ngx_uint_t hash)
 {
     request_known_headers_t *header;
@@ -180,7 +180,7 @@ request_known_headers_find_hash (ngx_uint_t hash)
 }
 
 
-static int 
+static int
 sc_for_req_header(ngx_table_elt_t *header)
 {
     size_t len = header->key.len;
@@ -225,7 +225,7 @@ sc_for_req_get_header_vaule_by_hash(ngx_list_part_t *part,
 }
 
 
-static int 
+static int
 sc_for_req_method_by_id(ngx_http_request_t *r)
 {
     int method_id = r->method;
@@ -269,7 +269,7 @@ sc_for_req_method_by_id(ngx_http_request_t *r)
 }
 
 
-static void 
+static void
 sc_for_req_auth_type(ngx_http_request_t *r, ngx_str_t *auth_type)
 {
     size_t     i;
@@ -317,9 +317,9 @@ get_res_header_for_sc(int sc, ngx_table_elt_t *h)
 }
 
 
-static ngx_int_t 
+static ngx_int_t
 get_res_unknown_header_by_str(ngx_str_t *name,
-    ngx_table_elt_t *h, ngx_pool_t *pool) 
+    ngx_table_elt_t *h, ngx_pool_t *pool)
 {
     h->key = *name;
 
@@ -358,13 +358,13 @@ get_res_unknown_header_by_str(ngx_str_t *name,
  ?ssl_cert      (byte)(string)
  ?ssl_cipher    (byte)(string)
  ?ssl_session   (byte)(string)
- ?ssl_key_size  (byte)(int)  
+ ?ssl_key_size  (byte)(int)
  request_terminator (byte)
  ?body          content_length*(var binary)
  */
 
-ngx_int_t 
-ajp_marshal_into_msgb(ajp_msg_t *msg, 
+ngx_int_t
+ajp_marshal_into_msgb(ajp_msg_t *msg,
     ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *alcf)
 {
     int                  sc;
@@ -463,12 +463,12 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
 
             if (sc == SC_REQ_CONNECTION) {
                 if (alcf->keep_conn) {
-                    header[i].value.data = (u_char *)"keep-alive"; 
-                    header[i].value.len = sizeof("keep-alive") - 1; 
+                    header[i].value.data = (u_char *)"keep-alive";
+                    header[i].value.len = sizeof("keep-alive") - 1;
                 }
                 else {
-                    header[i].value.data = (u_char *)"close"; 
-                    header[i].value.len = sizeof("close") - 1; 
+                    header[i].value.data = (u_char *)"close";
+                    header[i].value.len = sizeof("close") - 1;
                 }
             }
 
@@ -498,7 +498,7 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
     sc_for_req_auth_type(r, &temp_str);
     if (temp_str.len > 0) {
         if (ajp_msg_append_uint8(msg, SC_A_AUTH_TYPE) ||
-                ajp_msg_append_string(msg, &temp_str)) 
+                ajp_msg_append_string(msg, &temp_str))
         {
             ngx_log_error(NGX_LOG_ERR, log, 0,
                           "ajp_marshal_into_msgb: "
@@ -611,7 +611,7 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
     body    length*(var binary)
 */
 
-ngx_int_t 
+ngx_int_t
 ajp_unmarshal_response(ajp_msg_t *msg,
     ngx_http_request_t *r, ngx_http_ajp_loc_conf_t *alcf)
 {
@@ -628,7 +628,7 @@ ajp_unmarshal_response(ajp_msg_t *msg,
     ngx_http_upstream_header_t     *hh;
     ngx_http_upstream_main_conf_t  *umcf;
 
-    log = r->connection->log; 
+    log = r->connection->log;
 
     umcf = ngx_http_get_module_main_conf(r, ngx_http_upstream_module);
 

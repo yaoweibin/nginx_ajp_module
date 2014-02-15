@@ -22,7 +22,7 @@ static void ngx_http_ajp_abort_request(ngx_http_request_t *r);
 static void ngx_http_ajp_finalize_request(ngx_http_request_t *r,
     ngx_int_t rc);
 
-static ngx_int_t ngx_http_upstream_send_request_body(ngx_http_request_t *r, 
+static ngx_int_t ngx_http_upstream_send_request_body(ngx_http_request_t *r,
     ngx_http_upstream_t *u);
 static ngx_chain_t *ajp_data_msg_send_body(ngx_http_request_t *r, size_t max_size,
     ngx_chain_t **body);
@@ -233,7 +233,7 @@ ngx_http_ajp_create_request(ngx_http_request_t *r)
         a->body = r->upstream->request_bufs;
         r->upstream->request_bufs = cl;
 
-        cl->next = ajp_data_msg_send_body(r, 
+        cl->next = ajp_data_msg_send_body(r,
                 alcf->max_ajp_data_packet_size_conf, &a->body);
 
         if (a->body) {
@@ -322,7 +322,6 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
     u = r->upstream;
 
     msg = ajp_msg_reuse(&a->msg);
-        
     buf = msg->buf = &u->buffer;
 
     while (buf->pos < buf->last) {
@@ -342,7 +341,7 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
         rc = ajp_msg_parse_begin(msg);
         if (rc != NGX_OK) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                          "ngx_http_ajp_process_header: bad header\n" 
+                          "ngx_http_ajp_process_header: bad header\n"
                           "%s", ajp_msg_dump(r->pool, msg, "bad header"));
 
             return NGX_ERROR;
@@ -382,8 +381,7 @@ ngx_http_ajp_process_header(ngx_http_request_t *r)
                     /* reinit the headers_int list, the memory may be stale */
                     ngx_list_reinit(&u->headers_in.headers);
 
-                    /* 
-                     * It's an uncomplete AJP packet, move back to the header
+                    /* It's an uncomplete AJP packet, move back to the header
                      * of packet, and parse the header again in next call
                      */
                     return ngx_http_ajp_move_buffer(r, buf, pos, last);
@@ -440,7 +438,7 @@ ngx_http_ajp_input_filter_init(void *data)
 }
 
 
-static ngx_int_t 
+static ngx_int_t
 ngx_http_ajp_move_buffer(ngx_http_request_t *r, ngx_buf_t *buf,
     u_char *pos, u_char *last)
 {
@@ -504,8 +502,7 @@ ngx_http_upstream_send_request_body(ngx_http_request_t *r,
 
     if (u->output.in == NULL && u->output.busy == NULL) {
         if (cl == NULL) {
-            /* 
-             * If there is no more data in the body (i.e. the servlet
+            /* If there is no more data in the body (i.e. the servlet
              * container is trying to read past the end of the body),
              * the server will send back an "empty" packet, which is
              * a body packet with a payload length of 0.
@@ -683,7 +680,7 @@ ajp_data_msg_send_body(ngx_http_request_t *r, size_t max_size,
 
     *body = in;
     cl->next = NULL;
-    
+
     ajp_data_msg_end(msg, size);
 
     return out;
@@ -748,7 +745,7 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
         /* This a new data packet */
         if (a->length == 0) {
 
-            if (a->extra_zero_byte) { 
+            if (a->extra_zero_byte) {
                 if (*(buf->pos) == 0x00){
                     buf->pos++;
                 }
@@ -779,8 +776,9 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
         /* Get a zero length packet */
         if (a->length == 0) {
 
-            if (a->extra_zero_byte && 
-                    (buf->pos < buf->last) && (*(buf->pos) == 0x00)) {
+            if (a->extra_zero_byte && (buf->pos < buf->last)
+                && (*(buf->pos) == 0x00))
+            {
                 buf->pos++;
                 a->extra_zero_byte = 0;
             }
@@ -851,8 +849,7 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
         if ((a->length == 0) && a->extra_zero_byte &&
             (buf->pos < buf->last) && (*(buf->pos) == 0x00)) {
 
-            /* 
-             * The last byte of this message always seems to be
+            /* The last byte of this message always seems to be
              * 0x00 and is not part of the chunk.
              */
             buf->pos++;
@@ -900,8 +897,8 @@ ngx_http_ajp_input_filter(ngx_event_pipe_t *p, ngx_buf_t *buf)
 }
 
 
-static ngx_int_t 
-ngx_http_ajp_process_packet_header(ngx_http_request_t *r, 
+static ngx_int_t
+ngx_http_ajp_process_packet_header(ngx_http_request_t *r,
     ngx_http_ajp_ctx_t *a, ngx_buf_t *buf)
 {
     int                            reuse;
@@ -979,7 +976,7 @@ ngx_http_ajp_process_packet_header(ngx_http_request_t *r,
             ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
                            "ngx_http_ajp_end_response: reuse=%d", reuse);
 
-            ngx_http_ajp_end_response(r, reuse); 
+            ngx_http_ajp_end_response(r, reuse);
             a->pstate = ngx_http_ajp_pst_init_state;
 
             return NGX_DONE;
@@ -991,7 +988,7 @@ ngx_http_ajp_process_packet_header(ngx_http_request_t *r,
             break;
 
         case ngx_http_ajp_pst_data_length_lo:
-            a->length = (a->length_hi << 8) + ch; 
+            a->length = (a->length_hi << 8) + ch;
 
             a->pstate = ngx_http_ajp_pst_init_state;
             a->length_hi = 0x00;
@@ -1008,7 +1005,7 @@ ngx_http_ajp_process_packet_header(ngx_http_request_t *r,
 
 
 static void
-ngx_http_ajp_end_response(ngx_http_request_t *r, int reuse) 
+ngx_http_ajp_end_response(ngx_http_request_t *r, int reuse)
 {
     ngx_event_pipe_t          *p;
     ngx_http_ajp_ctx_t        *a;
