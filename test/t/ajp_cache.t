@@ -1,21 +1,3 @@
-#
-#===============================================================================
-#
-#         FILE:  sample.t
-#
-#  DESCRIPTION: test 
-#
-#        FILES:  ---
-#         BUGS:  ---
-#        NOTES:  ---
-#       AUTHOR:  Weibin Yao (http://yaoweibin.cn/), yaoweibin@gmail.com
-#      COMPANY:  
-#      VERSION:  1.0
-#      CREATED:  03/02/2010 03:18:28 PM
-#     REVISION:  ---
-#===============================================================================
-
-
 # vi:filetype=perl
 
 use lib 'lib';
@@ -34,14 +16,14 @@ __DATA__
 
 === TEST 1: the first time request for the cache
 --- http_config
-    upstream tomcats{      
+    upstream tomcats{
         server 127.0.0.1:$TEST_NGINX_TOMCAT_AJP_PORT;
         keepalive 10;
     }
 
     ajp_cache_path /tmp/ajp_cache levels=1:2 keys_zone=ajp_cache_zone:10m inactive=24h max_size=1g;
 --- config
-    location / {      
+    location / {
         ajp_cache "ajp_cache_zone";
         ajp_cache_key "$host$request_uri$cookie_user";
         ajp_cache_valid 200 1d;
@@ -57,14 +39,14 @@ __DATA__
 
 === TEST 2: the second time request for the cache
 --- http_config
-    upstream tomcats{      
+    upstream tomcats{
         server 127.0.0.1:$TEST_NGINX_TOMCAT_AJP_PORT;
         keepalive 10;
     }
 
     ajp_cache_path /tmp/ajp_cache levels=1:2 keys_zone=ajp_cache_zone:10m inactive=24h max_size=1g;
 --- config
-    location / {      
+    location / {
         ajp_cache "ajp_cache_zone";
         ajp_cache_key "$host$request_uri$cookie_user";
         ajp_cache_valid 200 1d;

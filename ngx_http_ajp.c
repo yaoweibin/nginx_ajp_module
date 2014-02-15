@@ -49,7 +49,7 @@ static request_known_headers_t request_known_headers[] = {
 static response_known_headers_t response_known_headers[] = {
     {ngx_string("Content-Type"),     ngx_string("content-type"), 0},
     {ngx_string("Content-Language"), ngx_string("content-language"), 0},
-    {ngx_string("Content-Length"),   ngx_string("content-length"), 0}, 
+    {ngx_string("Content-Length"),   ngx_string("content-length"), 0},
     {ngx_string("Date"),             ngx_string("date"), 0},
     {ngx_string("Last-Modified"),    ngx_string("last-modified"), 0},
     {ngx_string("Location"),         ngx_string("location"), 0},
@@ -387,7 +387,9 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
         return NGX_ERROR;
     }
 
-    /* TODO: is_ssl = ?*/
+#if (NGX_HTTP_SSL)
+    is_ssl = r->http_connection->ssl;
+#endif
 
     part = &r->headers_in.headers.part;
 
@@ -530,10 +532,7 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
         }
     }
 
-    /* TODO SSL */
-
-    /* 
-     * Forward the remote port information, which was forgotten
+    /* Forward the remote port information, which was forgotten
      * from the builtin data of the AJP 13 protocol.
      * Since the servlet spec allows to retrieve it via getRemotePort(),
      * we provide the port to the Tomcat connector as a request
@@ -547,7 +546,7 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
 
         addr = (struct sockaddr_in *) r->connection->sockaddr;
 
-        /* 
+        /*
          * 'struct sockaddr_in' and 'struct sockaddr_in6' has the same
          * offset of port */
         port = ntohs(addr->sin_port);
@@ -747,7 +746,7 @@ ajp_unmarshal_response(ajp_msg_t *msg,
 
         if (hh && hh->handler(r, h, hh->offset) != NGX_OK) {
             ngx_log_error(NGX_LOG_ERR, log, 0,
-                          "ajp_unmarshal_response: hh->handler error: \"%V: %V\"", 
+                          "ajp_unmarshal_response: hh->handler error: \"%V: %V\"",
                           &h->key, &h->value);
 
             return NGX_ERROR;
