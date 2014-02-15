@@ -1,4 +1,4 @@
-﻿﻿= Name =
+﻿= Name =
 
 '''nginx_ajp_module''' - support AJP protocol proxy with Nginx
 
@@ -26,8 +26,7 @@
 </geshi>
 
 = Description =
-With this module, Nginx can connect to AJP port directly. The backend connections can be keepalive, session sticky.
-The motivation of writing these modules is Nginx's high performance and robustness.
+With this module, Nginx can connect to AJP port directly. The motivation of writing these modules is Nginx's high performance and robustness.
 
 = Directives =
 
@@ -475,52 +474,6 @@ This directive works like [[NginxHttpCoreModule#client_body_temp_path|client_bod
 
 Sets the amount of data that will be flushed to the ajp_temp_path when writing. It may be used to prevent a worker process blocking for too long while spooling data.
 
-== jvm_route ==
-
-'''syntax:''' ''jvm_route $cookie_SESSION_COOKIE[|session_url] [reverse]''
-
-'''default:''' ''none''
-
-'''context:''' ''upstream''
-
-This directive comes from [http://code.google.com/p/nginx-upstream-jvm-route/ ngx_http_upstream_jvm_route_module].
-
-'$cookie_SESSION_COOKIE' specifies the session cookie name (0.7.24+). 'session_url' specifies a different session name in the URL when the client does not accept a cookie. The session name is case-insensitive. In this module, if it does not find the session_url, it will use the session cookie name instead. So if the session name in cookie is the name with its in URL, you don't need give the session_url name.
-
-With scanning this cookie, the module will send the request to right backend server. As far as I know, the resin's srun_id name is in the head of cookie. For example, requests with cookie value 'a$$$' are always sent to the server with the srun_id of 'a'. But tomcat's JSESSIONID is opposite, which is like '$$$.a'. The parameter of 'reverse' specifies the cookie scanned from tail to head.
-
-If the request fails to be sent to the chosen backend server, It will try another server with the Round-Robin mode until all the upstream servers tried. The directive ajp_next_upstream can specify in what cases the request will be transmitted to the next server. If you want to force the session sticky, you can set 'ajp_next_upstream off'.
-
-== jvm_route_status ==
-
-'''syntax:''' ''jvm_route_status upstream_name''
-
-'''default:''' ''none''
-
-'''context:'' ''location''
-
-This directive comes from [http://code.google.com/p/nginx-upstream-jvm-route/ ngx_http_upstream_jvm_route_module].
-
-Set the location of pages return the status of the jvm_route peers. Example:
-<geshi lang="nginx">
-	location status {
-		jvm_route_status backend;
-	}
-</geshi>
-
-Parameters:
-* num: Maximum number of connections to cache.  If there isn't enough room to cache new connections - last recently used connections will be kicked off the cache.
-
-== server(in upstream) ==
-
-This directive comes from [http://code.google.com/p/nginx-upstream-jvm-route/ ngx_http_upstream_jvm_route_module].
-
-Main syntax is the same as the official directive. This module add these parameters:
-* 'srun_id': identifies the backend JVM's name by cookie. The default srun_id's value is 'a'. The name can be more than one letter.
-* 'max_busy': the maximum of active connections with the backend server. The default value is 0 which means unlimited. If the server's active connections is higher than this parameter, it will not be chosen until the server is less busier. If all the servers are busy, Nginx will return 502.
-
-NOTE: This module does not support the parameter of 'backup' yet.
-
 = Installation =
 
 Download the latest version of the release tarball of this module from [http://github.com/yaoweibin/nginx_ajp_module github]
@@ -528,30 +481,32 @@ Download the latest version of the release tarball of this module from [http://g
 Grab the nginx source code from [http://nginx.org/ nginx.org], for example, the version 1.2.0 (see nginx compatibility), and then build the source with this module:
 
 <geshi lang="bash">
-    $ wget 'http://nginx.org/download/nginx-1.2.0.tar.gz'
-    $ tar -xzvf nginx-1.2.6.tar.gz
-    $ cd nginx-1.2.6/
+    $ wget 'http://nginx.org/download/nginx-1.4.4.tar.gz'
+    $ tar -xzvf nginx-1.4.4.tar.gz
+    $ cd nginx-1.4.4/
     $ ./configure --add-module=/path/to/nginx_ajp_module
 
     $ make
     $ make install
 </geshi>
-    
+
 = Compatibility =
 
 * The master branch is for Nginx-1.1.4+
-* If you want to use it with Nginx-1.0.x, you can use this [https://github.com/yaoweibin/nginx_ajp_module/tree/nginx-1.0 nginx-1.0] branch. 
+* If you want to use it with Nginx-1.0.x, you can use this [https://github.com/yaoweibin/nginx_ajp_module/tree/nginx-1.0 nginx-1.0] branch.
 
 = TODO =
 
 * SSL
-* refactor with nginx-1.2.x
 
 = Known Issues =
 
-* Developing  
+*
 
 = Changelogs =
+
+== v0.2 ==
+* remove the jvm_route and keepalive module
 
 == v0.1 ==
 * first release
