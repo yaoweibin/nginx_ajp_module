@@ -332,6 +332,43 @@ get_res_unknown_header_by_str(ngx_str_t *name,
     return NGX_OK;
 }
 
+#if (NGX_HTTP_SSL)
+
+static ngx_uint_t
+sc_for_req_get_ssl_cert(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *data) {
+    ngx_ssl_get_raw_certificate(c, pool, data);
+    return data->len;
+}
+
+static ngx_uint_t
+sc_for_req_get_ssl_cipher(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *data) {
+    ngx_ssl_get_cipher_name(c, pool, data);
+    data->len = strlen((char *)data->data);
+    return data->len;
+}
+
+static ngx_uint_t
+sc_for_req_get_ssl_session(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *data) {
+    ngx_ssl_get_session_id(c, pool, data);
+    return data->len;
+}
+
+static ngx_uint_t
+sc_for_req_get_ssl_key_size(ngx_connection_t *c, ngx_pool_t *pool) {
+    int usekeysize = 0, algkeysize = 0;
+    const SSL_CIPHER *cipher;
+
+    if(c->ssl->connection != NULL){        
+        cipher = SSL_get_current_cipher(c->ssl->connection);
+        if(cipher != NULL) {
+            usekeysize = SSL_CIPHER_get_bits(cipher, &algkeysize);
+        }
+    }
+
+    return usekeysize;
+}
+
+#endif
 
 /*
  Message structure
@@ -531,6 +568,62 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
             return AJP_EOVERFLOW;
         }
     }
+
+#if (NGX_HTTP_SSL)
+
+    /*
+     * Only lookup SSL variables if we are currently running HTTPS.
+     * Furthermore ensure that only variables get set in the AJP message
+     * that are not NULL and not empty.
+     */
+    if(is_ssl) {
+        ngx_connection_t *c = r->connection;
+        ngx_pool_t *pool = r->pool;
+        ngx_uint_t keysize;
+        ngx_str_t cert_str, cipher_str, session_str;
+
+        if(sc_for_req_get_ssl_cert(c, pool, &cert_str) > 0) {
+            if (ajp_msg_append_uint8(msg, SC_A_SSL_CERT) ||
+                    ajp_msg_append_string(msg, &cert_str)) {
+                ngx_log_error(NGX_LOG_ERR, log, 0,
+                              "ajp_marshal_into_msgb: "
+                              "Error appending the SSL certificates");
+                return AJP_EOVERFLOW;
+            }
+        }
+
+        if(sc_for_req_get_ssl_cipher(c, pool, &cipher_str) > 0) {
+            if (ajp_msg_append_uint8(msg, SC_A_SSL_CIPHER) ||
+                    ajp_msg_append_string(msg, &cipher_str)) {
+                ngx_log_error(NGX_LOG_ERR, log, 0,
+                              "ajp_marshal_into_msgb: "
+                              "Error appending the SSL ciphers");
+                return AJP_EOVERFLOW;
+            }
+        }
+
+        if(sc_for_req_get_ssl_session(c, pool, &session_str) > 0) {
+            if (ajp_msg_append_uint8(msg, SC_A_SSL_SESSION) ||
+                    ajp_msg_append_string(msg, &session_str)) {
+                ngx_log_error(NGX_LOG_ERR, log, 0,
+                              "ajp_marshal_into_msgb: "
+                              "Error appending the SSL session");
+                return AJP_EOVERFLOW;
+            }
+        }
+
+        /* ssl_key_size is required by Servlet 2.3 API */
+        if((keysize = sc_for_req_get_ssl_key_size(c, pool)) > 0) {
+            if (ajp_msg_append_uint8(msg, SC_A_SSL_KEY_SIZE) ||
+                    ajp_msg_append_uint16(msg, (uint16_t) keysize)) {
+                ngx_log_error(NGX_LOG_ERR, log, 0,
+                              "ajp_marshal_into_msgb: "
+                              "Error appending the SSL key size");
+                return AJP_EOVERFLOW;
+            }
+        }
+    }
+#endif
 
     /* Forward the remote port information, which was forgotten
      * from the builtin data of the AJP 13 protocol.
