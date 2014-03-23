@@ -343,7 +343,7 @@ sc_for_req_get_ssl_cert(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *data) 
 static ngx_uint_t
 sc_for_req_get_ssl_cipher(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *data) {
     ngx_ssl_get_cipher_name(c, pool, data);
-    data->len = strlen((char *)data->data);
+    data->len = ngx_strlen(data->data);
     return data->len;
 }
 
@@ -358,12 +358,9 @@ sc_for_req_get_ssl_key_size(ngx_connection_t *c, ngx_pool_t *pool) {
     int usekeysize = 0, algkeysize = 0;
     const SSL_CIPHER *cipher;
 
-    if(c->ssl->connection != NULL){        
-        cipher = SSL_get_current_cipher(c->ssl->connection);
-        if(cipher != NULL) {
+    if(c->ssl->connection != NULL)
+        if((cipher = SSL_get_current_cipher(c->ssl->connection)) != NULL)
             usekeysize = SSL_CIPHER_get_bits(cipher, &algkeysize);
-        }
-    }
 
     return usekeysize;
 }
