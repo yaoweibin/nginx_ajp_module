@@ -1,5 +1,4 @@
 
-
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
@@ -634,7 +633,7 @@ ajp_data_msg_send_body(ngx_http_request_t *r, size_t max_size,
                 b_out->file_pos = b_in->file_pos;
                 b_out->file_last = b_in->file_pos = b_in->file_last;
 
-                size += b_out->file_last - b_out->file_pos;
+                size += (size_t) b_out->file_last - (size_t) b_out->file_pos;
 
             } else if ((size_t)(b_in->file_last - b_in->file_pos) >
                        (max_size - size)) {
@@ -643,7 +642,7 @@ ajp_data_msg_send_body(ngx_http_request_t *r, size_t max_size,
                 b_in->file_pos += max_size - size;
                 b_out->file_last = b_in->file_pos;
 
-                size += b_out->file_last - b_out->file_pos;
+                size += (size_t) b_out->file_last - (size_t) b_out->file_pos;
             }
 
         } else {
