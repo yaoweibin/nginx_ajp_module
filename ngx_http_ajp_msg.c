@@ -1,4 +1,3 @@
-
 #include "ngx_http_ajp.h"
 
 extern volatile ngx_cycle_t  *ngx_cycle;
@@ -107,7 +106,7 @@ ajp_msg_end(ajp_msg_t *msg)
 }
 
 
-static inline int
+ngx_int_t
 ajp_log_overflow(ajp_msg_t *msg, const char *context)
 {
     ngx_log_error(NGX_LOG_WARN, ngx_cycle->log, 0,
