@@ -1,4 +1,3 @@
-
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
@@ -388,7 +387,7 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
     }
 
 #if (NGX_HTTP_SSL)
-    is_ssl = r->http_connection->ssl;
+    is_ssl = (u_char) r->http_connection->ssl;
 #endif
 
     part = &r->headers_in.headers.part;
@@ -414,7 +413,7 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
     ajp_msg_reset(msg);
 
     if (ajp_msg_append_uint8(msg, CMD_AJP13_FORWARD_REQUEST)  ||
-            ajp_msg_append_uint8(msg, method)                 ||
+            ajp_msg_append_uint8(msg, (u_char) method)        ||
             ajp_msg_append_string(msg, &r->http_protocol)     ||
             ajp_msg_append_string(msg, &uri)                  ||
             ajp_msg_append_string(msg, remote_addr)           ||
