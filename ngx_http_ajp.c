@@ -160,7 +160,7 @@ sc_for_req_get_uri(ngx_http_request_t *r, ngx_str_t *uri)
 }
 
 
-static ngx_uint_t
+static ngx_int_t
 request_known_headers_find_hash (ngx_uint_t hash)
 {
     request_known_headers_t *header;
