@@ -62,7 +62,7 @@ ngx_http_ajp_handler(ngx_http_request_t *r)
     }
 
     a->state = ngx_http_ajp_st_init_state;
-    a->pstate = ngx_http_ajp_st_init_state;
+    a->pstate = ngx_http_ajp_pst_init_state;
 
     ngx_http_set_ctx(r, a, ngx_http_ajp_module);
 
