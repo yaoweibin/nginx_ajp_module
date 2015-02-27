@@ -5,6 +5,7 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
+#include <nginx.h>
 #include "ngx_http_ajp_module.h"
 
 #define AJP13_DEF_HOST "127.0.0.1"
