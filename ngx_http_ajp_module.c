@@ -464,8 +464,7 @@ ngx_http_ajp_store(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 #if (NGX_HTTP_CACHE)
 
-    if (alcf->upstream.cache != NGX_CONF_UNSET_PTR
-        && alcf->upstream.cache != NULL)
+    if (alcf->upstream.cache > 0)
     {
         return "is incompatible with \"ajp_cache\"";
     }
@@ -537,12 +536,12 @@ ngx_http_ajp_cache(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     value = cf->args->elts;
 
-    if (alcf->upstream.cache != NGX_CONF_UNSET_PTR) {
+    if (alcf->upstream.cache > 0) {
         return "is duplicate";
     }
 
     if (ngx_strcmp(value[1].data, "off") == 0) {
-        alcf->upstream.cache = NULL;
+        alcf->upstream.cache = 0;
         return NGX_CONF_OK;
     }
 
@@ -550,9 +549,9 @@ ngx_http_ajp_cache(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return "is incompatible with \"ajp_store\"";
     }
 
-    alcf->upstream.cache = ngx_shared_memory_add(cf, &value[1], 0,
+    alcf->upstream.cache_zone = ngx_shared_memory_add(cf, &value[1], 0,
                                                  &ngx_http_ajp_module);
-    if (alcf->upstream.cache == NULL) {
+    if (alcf->upstream.cache_zone == NULL) {
         return NGX_CONF_ERROR;
     }
 
@@ -666,7 +665,6 @@ ngx_http_ajp_create_loc_conf(ngx_conf_t *cf)
     conf->upstream.pass_request_body = NGX_CONF_UNSET;
 
 #if (NGX_HTTP_CACHE)
-    conf->upstream.cache = NGX_CONF_UNSET_PTR;
     conf->upstream.cache_min_uses = NGX_CONF_UNSET_UINT;
     conf->upstream.cache_valid = NGX_CONF_UNSET_PTR;
     conf->upstream.cache_lock = NGX_CONF_UNSET;
@@ -864,13 +862,13 @@ ngx_http_ajp_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 
 #if (NGX_HTTP_CACHE)
 
-    ngx_conf_merge_ptr_value(conf->upstream.cache,
-                             prev->upstream.cache, NULL);
+    ngx_conf_merge_ptr_value(conf->upstream.cache_zone,
+                             prev->upstream.cache_zone, NULL);
 
-    if (conf->upstream.cache && conf->upstream.cache->data == NULL) {
+    if (conf->upstream.cache_zone && conf->upstream.cache_zone->data == NULL) {
         ngx_shm_zone_t  *shm_zone;
 
-        shm_zone = conf->upstream.cache;
+        shm_zone = conf->upstream.cache_zone;
 
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
                            "\"ajp_cache\" zone \"%V\" is unknown, "
