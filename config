@@ -14,11 +14,22 @@ if [ $ngx_found = yes ]; then
     have=NGX_HTTP_AJP_TEMP_PATH value="\"ajp_temp\""
     . auto/define
     have=NGX_AJP_MODULE . auto/have
-    CORE_INCS="$CORE_INCS $ngx_feature_path"
-    ngx_addon_name=ngx_ajp_module
-    HTTP_MODULES="$HTTP_MODULES ngx_http_ajp_module"
-    NGX_ADDON_DEPS="$NGX_ADDON_DEPS $ngx_feature_deps"
-    NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_ajp_src"
+
+    if test -n "$ngx_module_link"; then
+        ngx_module_type=HTTP
+        ngx_module_name=ngx_http_ajp_module
+        ngx_module_incs="$ngx_feature_path"
+        ngx_module_deps="$ngx_feature_deps"
+        ngx_module_srcs="$ngx_ajp_src"
+        ngx_module_libs="$ngx_feature_libs"
+        . auto/module
+    else
+        CORE_INCS="$CORE_INCS $ngx_feature_path"
+        ngx_addon_name=ngx_ajp_module
+        HTTP_MODULES="$HTTP_MODULES ngx_http_ajp_module"
+        NGX_ADDON_DEPS="$NGX_ADDON_DEPS $ngx_feature_deps"
+        NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_ajp_src"
+    fi
 else 
     cat << END
     $0: error: the ngx_ajp_module addon error.
