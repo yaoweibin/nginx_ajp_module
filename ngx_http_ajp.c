@@ -565,6 +565,18 @@ ajp_marshal_into_msgb(ajp_msg_t *msg,
         }
     }
 
+    // secret
+    ngx_str_t* secret = alcf->secret;
+    if (secret != NULL) {
+        if (ajp_msg_append_uint8(msg, SC_A_SECRET) ||
+                ajp_msg_append_string(msg, secret)) {
+            ngx_log_error(NGX_LOG_ERR, log, 0,
+                          "ajp_marshal_into_msgb: "
+                          "Error appending the secret");
+            return AJP_EOVERFLOW;
+        }
+    }
+
 #if (NGX_HTTP_SSL)
 
     /*

@@ -298,6 +298,14 @@ You may also use an upstream block.
 
         ajp_pass   backend;
 
+## ajp\_secret
+
+__syntax:__ _ajp\_secret ajpsecret
+
+__default:__ _none_
+
+Directive assigns the secret of the AJP-server. 
+        
 ## ajp\_pass\_header
 
 __syntax:__ _ajp\_pass\_header name;_
