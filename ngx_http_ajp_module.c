@@ -11,7 +11,6 @@ static char *ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 static char *ngx_http_ajp_store(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
-
 static char *ngx_http_ajp_secret(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 
@@ -89,7 +88,7 @@ static ngx_str_t  ngx_http_ajp_hide_cache_headers[] = {
 static ngx_command_t  ngx_http_ajp_commands[] = {
 
     { ngx_string("ajp_pass"),
-      NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF|NGX_CONF_TAKE1,
+      NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF|NGX_CONF_TAKE12,
       ngx_http_ajp_pass,
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
@@ -426,6 +425,10 @@ ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             return NGX_CONF_ERROR;
         }
 
+	if( cf->args->nelts>2 ) {
+            alcf->secret = &value[2];
+	}
+
         return NGX_CONF_OK;
     }
 
@@ -448,6 +451,9 @@ ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
+    if( cf->args->nelts>2 ) {
+         alcf->secret = &value[2];
+    }
     return NGX_CONF_OK;
 }
 
@@ -460,7 +466,6 @@ ngx_http_ajp_secret(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     value = cf->args->elts;
     secret = &value[1];
     alcf->secret = secret;
-
     return NGX_CONF_OK;
 }
 
