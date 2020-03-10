@@ -23,7 +23,7 @@ typedef struct {
     ngx_http_complex_value_t   cache_key;
 #endif
 
-    ngx_str_t*		       secret;
+    ngx_str_t		       secret;
 
 } ngx_http_ajp_loc_conf_t;
 
