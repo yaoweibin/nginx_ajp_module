@@ -276,7 +276,7 @@ If ajp\_max\_temp\_file\_size is equal to zero, temporary files usage will be di
 
 ## ajp\_pass
 
-__syntax:__ _ajp\_pass ajp-server_
+__syntax:__ _ajp\_pass ajp-server [ajp-secret_];
 
 __default:__ _none_
 
@@ -297,6 +297,10 @@ You may also use an upstream block.
         }
 
         ajp_pass   backend;
+        
+You may also add secret as second parameter.
+
+        ajp_pass backend secret;
 
 ## ajp\_secret
 

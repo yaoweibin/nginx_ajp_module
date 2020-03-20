@@ -377,6 +377,13 @@ ngx_module_t  ngx_http_ajp_module = {
     NGX_MODULE_V1_PADDING
 };
 
+static void ngx_http_ajp_strdup( ngx_conf_t* cf, ngx_str_t* dst, ngx_str_t* src )
+{
+    dst->data = ngx_pstrdup( cf->pool, src );
+    if( dst->data ) {
+       dst->len = src->len;
+    }
+}
 
 static char *
 ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
@@ -426,7 +433,7 @@ ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
 
 	if( cf->args->nelts>2 ) {
-            alcf->secret = &value[2];
+            ngx_http_ajp_strdup( cf, &alcf->secret, &value[2] );
 	}
 
         return NGX_CONF_OK;
@@ -452,7 +459,7 @@ ngx_http_ajp_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     if( cf->args->nelts>2 ) {
-         alcf->secret = &value[2];
+         ngx_http_ajp_strdup( cf, &alcf->secret, &value[2] );
     }
     return NGX_CONF_OK;
 }
@@ -465,7 +472,7 @@ ngx_http_ajp_secret(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     value = cf->args->elts;
     secret = &value[1];
-    alcf->secret = secret;
+    ngx_http_ajp_strdup( cf, &alcf->secret, secret );
     return NGX_CONF_OK;
 }
 
@@ -766,7 +773,7 @@ ngx_http_ajp_create_loc_conf(ngx_conf_t *cf)
 
     ngx_str_set(&conf->upstream.module, "ajp");
 
-    conf->secret = NULL;
+    // conf->secret = NULL;
 
     return conf;
 }
