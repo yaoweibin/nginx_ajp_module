@@ -136,7 +136,7 @@ sc_for_req_get_uri(ngx_http_request_t *r, ngx_str_t *uri)
 
     escape = 0;
 
-    if (r->quoted_uri || r->space_in_uri || r->internal) {
+    if (r->quoted_uri || r->internal) {
         escape = 2 * ngx_escape_uri(NULL, r->uri.data,
                 r->uri.len, NGX_ESCAPE_URI);
     }
