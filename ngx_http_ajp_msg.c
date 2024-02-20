@@ -292,7 +292,7 @@ ngx_int_t
 ajp_msg_get_string(ajp_msg_t *msg, ngx_str_t *value)
 {
     u_char    *start;
-    uint16_t   size;
+    uint16_t   size = 0;
     ngx_int_t  status;
     ngx_buf_t *buf;
 
